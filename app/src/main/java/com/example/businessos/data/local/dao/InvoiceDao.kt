@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface InvoiceDao {
-    @Query("SELECT * FROM invoices WHERE businessId = :businessId ORDER BY issueDate DESC, createdAt DESC")
+    @Query("SELECT * FROM invoices WHERE businessId = :businessId AND status != 'VOIDED' ORDER BY issueDate DESC, createdAt DESC")
     fun observeInvoices(businessId: String): Flow<List<InvoiceEntity>>
 
     @Query("SELECT * FROM invoices WHERE businessId = :businessId AND status = :status ORDER BY issueDate DESC")
@@ -19,8 +19,8 @@ interface InvoiceDao {
     @Query("SELECT * FROM invoices WHERE id = :id AND businessId = :businessId LIMIT 1")
     suspend fun getInvoiceById(id: String, businessId: String): InvoiceEntity?
 
-    @Query("SELECT SUM(balanceDue) FROM invoices WHERE businessId = :businessId AND status != 'PAID' AND status != 'CANCELLED'")
-    fun observeTotalReceivables(businessId: String): Flow<Double?>
+    @Query("SELECT COALESCE(SUM(balanceDueCents), 0) FROM invoices WHERE businessId = :businessId AND status != 'PAID' AND status != 'VOIDED'")
+    fun observeTotalReceivables(businessId: String): Flow<Long>
 
     @Query("SELECT COUNT(*) FROM invoices WHERE businessId = :businessId")
     suspend fun countInvoices(businessId: String): Int
@@ -31,9 +31,9 @@ interface InvoiceDao {
     @Update
     suspend fun updateInvoice(invoice: InvoiceEntity)
 
-    @Query("UPDATE invoices SET paidAmount = paidAmount + :amountPaid, balanceDue = totalAmount - (paidAmount + :amountPaid), status = :newStatus, updatedAt = :updatedAt WHERE id = :id AND businessId = :businessId")
-    suspend fun recordInvoicePayment(id: String, businessId: String, amountPaid: Double, newStatus: InvoiceStatus, updatedAt: Long = System.currentTimeMillis())
+    @Query("UPDATE invoices SET paidAmountCents = paidAmountCents + :amountPaidCents, balanceDueCents = totalAmountCents - (paidAmountCents + :amountPaidCents), status = :newStatus, updatedAt = :updatedAt WHERE id = :id AND businessId = :businessId")
+    suspend fun recordInvoicePayment(id: String, businessId: String, amountPaidCents: Long, newStatus: InvoiceStatus, updatedAt: Long = System.currentTimeMillis())
 
-    @Query("DELETE FROM invoices WHERE id = :id AND businessId = :businessId")
-    suspend fun deleteInvoice(id: String, businessId: String)
+    @Query("UPDATE invoices SET status = 'VOIDED', updatedAt = :updatedAt WHERE id = :id AND businessId = :businessId")
+    suspend fun markVoided(id: String, businessId: String, updatedAt: Long = System.currentTimeMillis())
 }

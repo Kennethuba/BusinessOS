@@ -15,12 +15,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.businessos.sync.SyncUiState
 import com.example.businessos.ui.components.BusinessOsTopBar
 
 @Composable
 fun UserManualScreen(
-    syncState: SyncUiState,
     businessName: String?,
     onSwitchWorkspace: () -> Unit,
     onBack: () -> Unit
@@ -38,7 +36,6 @@ fun UserManualScreen(
                     title = "Manual & User Guide",
                     businessName = businessName,
                     role = null,
-                    syncState = syncState,
                     onSwitchWorkspace = onSwitchWorkspace,
                     modifier = Modifier.weight(1f)
                 )

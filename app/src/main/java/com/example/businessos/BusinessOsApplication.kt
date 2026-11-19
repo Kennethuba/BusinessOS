@@ -4,8 +4,6 @@ import android.app.Application
 import com.example.businessos.data.local.AppDatabase
 import com.example.businessos.data.repository.AuthRepository
 import com.example.businessos.data.repository.BusinessOsRepository
-import com.example.businessos.data.repository.SyncRepository
-import com.example.businessos.sync.SyncManager
 import com.example.businessos.ui.ViewModelFactory
 
 class BusinessOsApplication : Application() {
@@ -16,6 +14,7 @@ class BusinessOsApplication : Application() {
 
     val authRepository: AuthRepository by lazy {
         AuthRepository(
+            database = database,
             userDao = database.userDao(),
             businessDao = database.businessDao(),
             businessMemberDao = database.businessMemberDao()
@@ -24,53 +23,38 @@ class BusinessOsApplication : Application() {
 
     val businessOsRepository: BusinessOsRepository by lazy {
         BusinessOsRepository(
+            database = database,
             authRepository = authRepository,
             businessDao = database.businessDao(),
             businessMemberDao = database.businessMemberDao(),
             userDao = database.userDao(),
             itemDao = database.itemDao(),
             saleDao = database.saleDao(),
+            saleItemDao = database.saleItemDao(),
+            stockMovementDao = database.stockMovementDao(),
+            documentCounterDao = database.documentCounterDao(),
             customerDao = database.customerDao(),
             jobCardDao = database.jobCardDao(),
+            jobPartDao = database.jobPartDao(),
+            jobStageTransitionDao = database.jobStageTransitionDao(),
             auditLogDao = database.auditLogDao(),
             expenseDao = database.expenseDao(),
             accountDao = database.accountDao(),
             journalEntryDao = database.journalEntryDao(),
+            journalLineDao = database.journalLineDao(),
             invoiceDao = database.invoiceDao(),
+            invoiceItemDao = database.invoiceItemDao(),
             supplierDao = database.supplierDao(),
-            billDao = database.billDao(),
             paymentDao = database.paymentDao(),
-            assetDao = database.assetDao(),
-            liabilityDao = database.liabilityDao(),
             wagePaymentDao = database.wagePaymentDao(),
             layawayDao = database.layawayDao()
-        )
-    }
-
-    val syncRepository: SyncRepository by lazy {
-        SyncRepository(
-            userDao = database.userDao(),
-            businessDao = database.businessDao(),
-            businessMemberDao = database.businessMemberDao(),
-            itemDao = database.itemDao(),
-            saleDao = database.saleDao(),
-            customerDao = database.customerDao(),
-            jobCardDao = database.jobCardDao()
-        )
-    }
-
-    val syncManager: SyncManager by lazy {
-        SyncManager(
-            context = this,
-            syncRepository = syncRepository
         )
     }
 
     val viewModelFactory: ViewModelFactory by lazy {
         ViewModelFactory(
             authRepository = authRepository,
-            businessRepository = businessOsRepository,
-            syncManager = syncManager
+            businessRepository = businessOsRepository
         )
     }
 }

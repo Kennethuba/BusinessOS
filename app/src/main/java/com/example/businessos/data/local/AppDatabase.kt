@@ -15,24 +15,28 @@ import com.example.businessos.data.local.entity.*
         BusinessEntity::class,
         BusinessMemberEntity::class,
         JobCardEntity::class,
+        JobPartEntity::class,
+        JobStageTransitionEntity::class,
         ItemEntity::class,
         SaleEntity::class,
+        SaleItemEntity::class,
+        StockMovementEntity::class,
+        DocumentCounterEntity::class,
         CustomerEntity::class,
         AuditLogEntity::class,
         ExpenseEntity::class,
         AccountEntity::class,
         JournalEntryEntity::class,
+        JournalLineEntity::class,
         InvoiceEntity::class,
+        InvoiceItemEntity::class,
         SupplierEntity::class,
-        BillEntity::class,
         PaymentEntity::class,
-        AssetEntity::class,
-        LiabilityEntity::class,
         WagePaymentEntity::class,
         LayawayEntity::class
     ],
-    version = 5,
-    exportSchema = false
+    version = 1,
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -40,19 +44,23 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun businessDao(): BusinessDao
     abstract fun businessMemberDao(): BusinessMemberDao
     abstract fun jobCardDao(): JobCardDao
+    abstract fun jobPartDao(): JobPartDao
+    abstract fun jobStageTransitionDao(): JobStageTransitionDao
     abstract fun itemDao(): ItemDao
     abstract fun saleDao(): SaleDao
+    abstract fun saleItemDao(): SaleItemDao
+    abstract fun stockMovementDao(): StockMovementDao
+    abstract fun documentCounterDao(): DocumentCounterDao
     abstract fun customerDao(): CustomerDao
     abstract fun auditLogDao(): AuditLogDao
     abstract fun expenseDao(): ExpenseDao
     abstract fun accountDao(): AccountDao
     abstract fun journalEntryDao(): JournalEntryDao
+    abstract fun journalLineDao(): JournalLineDao
     abstract fun invoiceDao(): InvoiceDao
+    abstract fun invoiceItemDao(): InvoiceItemDao
     abstract fun supplierDao(): SupplierDao
-    abstract fun billDao(): BillDao
     abstract fun paymentDao(): PaymentDao
-    abstract fun assetDao(): AssetDao
-    abstract fun liabilityDao(): LiabilityDao
     abstract fun wagePaymentDao(): WagePaymentDao
     abstract fun layawayDao(): LayawayDao
 
@@ -65,9 +73,9 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "business_os_v4.db"
+                    "business_os.db"
                 )
-                    .fallbackToDestructiveMigration()
+                    // No fallbackToDestructiveMigration — explicit migrations required from v1 onward.
                     .build()
                 INSTANCE = instance
                 instance

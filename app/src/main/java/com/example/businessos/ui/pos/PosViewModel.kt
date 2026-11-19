@@ -5,13 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.businessos.data.local.entity.CustomerEntity
 import com.example.businessos.data.local.entity.ItemEntity
 import com.example.businessos.data.model.CurrentUserSession
+import com.example.businessos.data.model.Money
 import com.example.businessos.data.model.PaymentMethod
 import com.example.businessos.data.model.PriceType
 import com.example.businessos.data.model.Role
 import com.example.businessos.data.model.SaleLineItem
 import com.example.businessos.data.repository.AuthRepository
 import com.example.businessos.data.repository.BusinessOsRepository
-import com.example.businessos.sync.SyncManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,19 +23,18 @@ data class CartItem(
     val item: ItemEntity,
     var qty: Int = 1,
     var priceType: PriceType = PriceType.RETAIL,
-    var customPrice: Double? = null
+    var customPrice: Money? = null
 ) {
-    val unitPrice: Double
-        get() = customPrice ?: if (priceType == PriceType.RETAIL) item.retailPrice else item.wholesalePrice
+    val unitPrice: Money
+        get() = customPrice ?: if (priceType == PriceType.RETAIL) Money(item.retailPriceCents) else Money(item.wholesalePriceCents)
 
-    val subtotal: Double
-        get() = qty * unitPrice
+    val subtotal: Money
+        get() = unitPrice * qty
 }
 
 class PosViewModel(
     private val authRepository: AuthRepository,
-    private val repository: BusinessOsRepository,
-    val syncManager: SyncManager
+    private val repository: BusinessOsRepository
 ) : ViewModel() {
 
     val session: StateFlow<CurrentUserSession?> = authRepository.session
@@ -100,10 +99,10 @@ class PosViewModel(
         }
     }
 
-    fun overrideItemPrice(itemId: String, newPrice: Double) {
-        val userRole = session.value?.activeRole ?: Role.STAFF
-        if (userRole == Role.STAFF) {
-            _errorMessage.value = "Staff members are not allowed to override prices."
+    fun overrideItemPrice(itemId: String, newPrice: Money) {
+        val userRole = session.value?.activeRole ?: Role.CASHIER
+        if (userRole == Role.CASHIER || userRole == Role.VIEWER) {
+            _errorMessage.value = "Cashiers are not allowed to override prices."
             return
         }
         val currentList = _cart.value.toMutableList()
@@ -120,15 +119,21 @@ class PosViewModel(
 
     fun addItemToInventory(
         name: String,
-        retail: Double,
-        wholesale: Double,
-        stock: Int,
+        retail: Money,
+        wholesale: Money,
+        stock: Long,
         minStockLevel: Int = 3,
         onItemCreated: ((ItemEntity) -> Unit)? = null
     ) {
         viewModelScope.launch {
             _errorMessage.value = null
-            val result = repository.createItem(name, retail, wholesale, stock, minStockLevel)
+            val result = repository.createItem(
+                name = name,
+                retailPrice = retail,
+                wholesalePrice = wholesale,
+                initialStock = stock,
+                lowStockThreshold = minStockLevel
+            )
             result.onSuccess {
                 _successMessage.value = "Bidhaa ${it.name} imeongezwa dukani"
                 onItemCreated?.invoke(it)
@@ -149,13 +154,13 @@ class PosViewModel(
             return
         }
 
-        val hasPriceOverride = _cart.value.any { it.customPrice != null }
         val lineItems = _cart.value.map {
             SaleLineItem(
                 itemId = it.item.id,
                 itemName = it.item.name,
                 qty = it.qty,
-                priceUsed = it.unitPrice,
+                unitPrice = it.unitPrice,
+                costPrice = Money(it.item.costPriceCents),
                 priceType = it.priceType
             )
         }
@@ -163,15 +168,15 @@ class PosViewModel(
         viewModelScope.launch {
             _errorMessage.value = null
             val result = repository.recordSale(
+                customerId = customerId,
+                customerName = customers.value.find { it.id == customerId }?.name,
                 items = lineItems,
                 paymentMethod = paymentMethod,
-                customerId = customerId,
-                mpesaCode = mpesaCode,
-                priceOverridden = hasPriceOverride
+                mpesaReference = mpesaCode
             )
             result.onSuccess {
                 clearCart()
-                _successMessage.value = "Sale recorded successfully (KSh ${it.total.toInt()})"
+                _successMessage.value = "Sale recorded successfully (${Money(it.totalCents).formatted})"
                 onComplete()
             }.onFailure {
                 _errorMessage.value = it.message ?: "Failed to complete checkout"
@@ -184,7 +189,7 @@ class PosViewModel(
         _successMessage.value = null
     }
 
-    suspend fun updateStockItemCount(itemId: String, physicalCount: Int) {
+    suspend fun updateStockItemCount(itemId: String, physicalCount: Long) {
         repository.updateStockItemCount(itemId, physicalCount, "Ukaguzi wa akiba (Stock Take)")
     }
 }

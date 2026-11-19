@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.businessos.data.local.entity.LayawayEntity
 import com.example.businessos.data.model.PaymentMethod
-import com.example.businessos.sync.SyncUiState
 import com.example.businessos.ui.components.BusinessOsTopBar
 import com.example.businessos.ui.components.WhatsAppHelper
 import com.example.businessos.ui.theme.*
@@ -38,7 +37,6 @@ import java.util.*
 fun LayawayScreen(
     layaways: List<LayawayEntity>,
     businessName: String?,
-    syncState: SyncUiState,
     onSwitchWorkspace: () -> Unit,
     onNavigateBack: () -> Unit,
     onCreateLayaway: suspend (name: String, phone: String, desc: String, total: Double, deposit: Double, dueDate: Long) -> Unit,
@@ -75,7 +73,6 @@ fun LayawayScreen(
                         title = "Awali / Layaway (Malipo ya Kidogo)",
                         businessName = businessName,
                         role = null,
-                        syncState = syncState,
                         onSwitchWorkspace = onSwitchWorkspace,
                         modifier = Modifier.weight(1f)
                     )

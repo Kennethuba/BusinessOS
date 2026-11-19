@@ -12,7 +12,7 @@ interface LayawayDao {
     @Query("SELECT * FROM layaways WHERE businessId = :businessId AND status = 'ACTIVE' ORDER BY dueDate ASC")
     fun observeActiveLayaways(businessId: String): Flow<List<LayawayEntity>>
 
-    @Query("SELECT * FROM layaways WHERE id = :id")
+    @Query("SELECT * FROM layaways WHERE id = :id LIMIT 1")
     suspend fun getLayawayById(id: String): LayawayEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

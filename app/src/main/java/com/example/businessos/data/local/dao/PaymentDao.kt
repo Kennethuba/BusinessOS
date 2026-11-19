@@ -6,14 +6,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PaymentDao {
-    @Query("SELECT * FROM payments WHERE businessId = :businessId ORDER BY date DESC, createdAt DESC")
+    @Query("SELECT * FROM payments WHERE businessId = :businessId ORDER BY createdAt DESC")
     fun observePayments(businessId: String): Flow<List<PaymentEntity>>
 
-    @Query("SELECT * FROM payments WHERE targetInvoiceId = :invoiceId ORDER BY date DESC")
+    @Query("SELECT * FROM payments WHERE referenceId = :invoiceId ORDER BY createdAt DESC")
     fun observePaymentsForInvoice(invoiceId: String): Flow<List<PaymentEntity>>
-
-    @Query("SELECT * FROM payments WHERE targetBillId = :billId ORDER BY date DESC")
-    fun observePaymentsForBill(billId: String): Flow<List<PaymentEntity>>
 
     @Query("SELECT * FROM payments WHERE id = :id AND businessId = :businessId LIMIT 1")
     suspend fun getPaymentById(id: String, businessId: String): PaymentEntity?
@@ -24,6 +21,6 @@ interface PaymentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPayment(payment: PaymentEntity)
 
-    @Delete
-    suspend fun deletePayment(payment: PaymentEntity)
+    @Update
+    suspend fun updatePayment(payment: PaymentEntity)
 }

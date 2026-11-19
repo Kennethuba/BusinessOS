@@ -1,19 +1,27 @@
 package com.example.businessos.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.example.businessos.data.model.BusinessType
-import com.example.businessos.data.model.SubscriptionPlan
-import com.example.businessos.data.model.SyncStatus
 
-@Entity(tableName = "businesses")
+@Entity(
+    tableName = "businesses",
+    indices = [
+        Index(value = ["ownerId"]),
+        Index(value = ["isDemo"])
+    ]
+)
 data class BusinessEntity(
     @PrimaryKey val id: String,
     val name: String,
-    val type: BusinessType,
-    val createdAt: Long = System.currentTimeMillis(),
+    val phone: String,
+    val address: String = "",
+    val receiptFooter: String = "",
+    val isShopEnabled: Boolean = true,
+    val isGarageEnabled: Boolean = false,
+    val isDemo: Boolean = false,
+    val allowNegativeStock: Boolean = false,
     val ownerId: String,
-    val subscriptionPlan: SubscriptionPlan = SubscriptionPlan.STARTER,
-    val syncStatus: SyncStatus = SyncStatus.PENDING,
+    val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

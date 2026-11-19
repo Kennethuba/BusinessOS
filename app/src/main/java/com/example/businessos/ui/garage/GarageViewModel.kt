@@ -6,10 +6,10 @@ import com.example.businessos.data.local.dao.MemberWithUser
 import com.example.businessos.data.local.entity.JobCardEntity
 import com.example.businessos.data.model.CurrentUserSession
 import com.example.businessos.data.model.JobStage
+import com.example.businessos.data.model.Money
 import com.example.businessos.data.model.PartItem
 import com.example.businessos.data.repository.AuthRepository
 import com.example.businessos.data.repository.BusinessOsRepository
-import com.example.businessos.sync.SyncManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,8 +19,7 @@ import kotlinx.coroutines.launch
 
 class GarageViewModel(
     private val authRepository: AuthRepository,
-    private val repository: BusinessOsRepository,
-    val syncManager: SyncManager
+    private val repository: BusinessOsRepository
 ) : ViewModel() {
 
     val session: StateFlow<CurrentUserSession?> = authRepository.session
@@ -49,7 +48,7 @@ class GarageViewModel(
         customerName: String,
         customerPhone: String,
         description: String,
-        assignedStaffId: String?,
+        assignedStaffId: String? = null,
         onSuccess: (JobCardEntity) -> Unit
     ) {
         if (plate.isBlank() || customerName.isBlank() || customerPhone.isBlank()) {
@@ -61,10 +60,11 @@ class GarageViewModel(
             _errorMessage.value = null
             val result = repository.createJobCard(
                 vehiclePlate = plate,
+                vehicleMake = "",
+                vehicleModel = "",
                 customerName = customerName,
                 customerPhone = customerPhone,
-                description = description,
-                assignedStaffId = assignedStaffId
+                issueDescription = description
             )
             result.onSuccess {
                 _successMessage.value = "Job Card for ${it.vehiclePlate} created"
@@ -79,8 +79,8 @@ class GarageViewModel(
         viewModelScope.launch {
             _errorMessage.value = null
             val result = repository.advanceJobStage(jobCardId, note)
-            result.onSuccess {
-                _successMessage.value = "Moved to ${it.stage.title}"
+            result.onSuccess { stage ->
+                _successMessage.value = "Moved to ${stage?.title ?: "Next Stage"}"
             }.onFailure {
                 _errorMessage.value = it.message
             }
@@ -96,24 +96,24 @@ class GarageViewModel(
             _errorMessage.value = null
             val result = repository.reopenJobStage(jobCardId, targetStage, reason)
             result.onSuccess {
-                _successMessage.value = "Job Card reopened to ${it.stage.title} (Logged to Audit)"
+                _successMessage.value = "Job Card reopened to ${targetStage.title} (Logged to Audit)"
             }.onFailure {
                 _errorMessage.value = it.message
             }
         }
     }
 
-    fun addPartToJob(jobCardId: String, currentParts: List<PartItem>, partName: String, cost: Double) {
-        if (partName.isBlank() || cost < 0) {
+    fun addPartToJob(jobCardId: String, currentParts: List<PartItem>, partName: String, cost: Money) {
+        if (partName.isBlank() || cost < Money.ZERO) {
             _errorMessage.value = "Valid part name and cost are required"
             return
         }
-        val newParts = currentParts + PartItem(name = partName.trim(), cost = cost)
+        val newParts = currentParts + PartItem(name = partName.trim(), unitPrice = cost)
         viewModelScope.launch {
             _errorMessage.value = null
             val result = repository.updateJobParts(jobCardId, newParts)
             result.onSuccess {
-                _successMessage.value = "Part added. New estimate: KSh ${it.estimateTotal.toInt()}"
+                _successMessage.value = "Part added to job"
             }.onFailure {
                 _errorMessage.value = it.message
             }
@@ -126,7 +126,7 @@ class GarageViewModel(
             _errorMessage.value = null
             val result = repository.updateJobParts(jobCardId, newParts)
             result.onSuccess {
-                _successMessage.value = "Part removed. New estimate: KSh ${it.estimateTotal.toInt()}"
+                _successMessage.value = "Part removed from job"
             }.onFailure {
                 _errorMessage.value = it.message
             }

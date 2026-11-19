@@ -1,2301 +1,1338 @@
 package com.example.businessos.data.repository
 
-import com.example.businessos.data.local.dao.AuditLogDao
-import com.example.businessos.data.local.dao.BusinessDao
-import com.example.businessos.data.local.dao.BusinessMemberDao
-import com.example.businessos.data.local.dao.CustomerDao
-import com.example.businessos.data.local.dao.ExpenseDao
-import com.example.businessos.data.local.dao.ItemDao
-import com.example.businessos.data.local.dao.JobCardDao
-import com.example.businessos.data.local.dao.MemberWithUser
-import com.example.businessos.data.local.dao.SaleDao
-import com.example.businessos.data.local.dao.UserDao
-import com.example.businessos.data.local.entity.AuditLogEntity
-import com.example.businessos.data.local.entity.BusinessEntity
-import com.example.businessos.data.local.entity.BusinessMemberEntity
-import com.example.businessos.data.local.entity.CustomerEntity
-import com.example.businessos.data.local.entity.ExpenseEntity
-import com.example.businessos.data.local.entity.ItemEntity
-import com.example.businessos.data.local.entity.JobCardEntity
-import com.example.businessos.data.local.entity.SaleEntity
-import com.example.businessos.data.local.entity.UserEntity
-import com.example.businessos.data.model.ActionType
-import com.example.businessos.data.model.CurrentUserSession
-import com.example.businessos.data.model.JobStage
-import com.example.businessos.data.model.PartItem
-import com.example.businessos.data.model.PaymentMethod
-import com.example.businessos.data.model.Role
-import com.example.businessos.data.model.SaleLineItem
-import com.example.businessos.data.model.StageTransition
-import com.example.businessos.data.model.SubscriptionPlan
-import com.example.businessos.data.model.SyncStatus
+import androidx.room.withTransaction
+import com.example.businessos.data.local.AppDatabase
+import com.example.businessos.data.local.dao.*
+import com.example.businessos.data.local.entity.*
+import com.example.businessos.data.model.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import java.util.UUID
 
-import com.example.businessos.data.local.dao.AccountDao
-import com.example.businessos.data.local.dao.AssetDao
-import com.example.businessos.data.local.dao.BillDao
-import com.example.businessos.data.local.dao.InvoiceDao
-import com.example.businessos.data.local.dao.JournalEntryDao
-import com.example.businessos.data.local.dao.LiabilityDao
-import com.example.businessos.data.local.dao.PaymentDao
-import com.example.businessos.data.local.dao.SupplierDao
-import com.example.businessos.data.local.dao.WagePaymentDao
-import com.example.businessos.data.local.dao.LayawayDao
-import com.example.businessos.data.local.entity.AccountEntity
-import com.example.businessos.data.local.entity.AssetEntity
-import com.example.businessos.data.local.entity.BillEntity
-import com.example.businessos.data.local.entity.InvoiceEntity
-import com.example.businessos.data.local.entity.JournalEntryEntity
-import com.example.businessos.data.local.entity.LiabilityEntity
-import com.example.businessos.data.local.entity.PaymentEntity
-import com.example.businessos.data.local.entity.SupplierEntity
-import com.example.businessos.data.local.entity.WagePaymentEntity
-import com.example.businessos.data.local.entity.LayawayEntity
-import com.example.businessos.data.model.AccountAmountItem
-import com.example.businessos.data.model.AccountCategory
-import com.example.businessos.data.model.AccountSubCategory
-import com.example.businessos.data.model.AccountsPayableAgeingReport
-import com.example.businessos.data.model.AccountsReceivableAgeingReport
-import com.example.businessos.data.model.AgeingBucket
-import com.example.businessos.data.model.BalanceSheetReport
-import com.example.businessos.data.model.BillStatus
-import com.example.businessos.data.model.DepreciationMethod
-import com.example.businessos.data.model.EntityAgeingItem
-import com.example.businessos.data.model.InvoiceLineItem
-import com.example.businessos.data.model.InvoiceStatus
-import com.example.businessos.data.model.JournalLineItem
-import com.example.businessos.data.model.JournalSourceType
-import com.example.businessos.data.model.PaymentType
-import com.example.businessos.data.model.ProfitAndLossReport
-import com.example.businessos.data.model.TrialBalanceItem
-import com.example.businessos.data.model.TrialBalanceReport
-
 class BusinessOsRepository(
+    val database: AppDatabase,
     private val authRepository: AuthRepository,
     private val businessDao: BusinessDao,
     private val businessMemberDao: BusinessMemberDao,
     private val userDao: UserDao,
     private val itemDao: ItemDao,
     private val saleDao: SaleDao,
+    private val saleItemDao: SaleItemDao,
+    private val stockMovementDao: StockMovementDao,
+    private val documentCounterDao: DocumentCounterDao,
     private val customerDao: CustomerDao,
     private val jobCardDao: JobCardDao,
+    private val jobPartDao: JobPartDao,
+    private val jobStageTransitionDao: JobStageTransitionDao,
     private val auditLogDao: AuditLogDao,
     private val expenseDao: ExpenseDao,
     private val accountDao: AccountDao,
     private val journalEntryDao: JournalEntryDao,
+    private val journalLineDao: JournalLineDao,
     private val invoiceDao: InvoiceDao,
+    private val invoiceItemDao: InvoiceItemDao,
     private val supplierDao: SupplierDao,
-    private val billDao: BillDao,
     private val paymentDao: PaymentDao,
-    private val assetDao: AssetDao,
-    private val liabilityDao: LiabilityDao,
     private val wagePaymentDao: WagePaymentDao,
     private val layawayDao: LayawayDao
 ) {
-    private fun getSession(): CurrentUserSession {
-        return authRepository.session.value
-            ?: throw SecurityException("User is not authenticated")
+
+    // ── Session Helpers ──────────────────────────────────────────────────────
+
+    fun getSession(): CurrentUserSession =
+        authRepository.session.value ?: throw IllegalStateException("Not logged in")
+
+    fun getActiveBusinessId(): String =
+        getSession().activeBusinessId ?: throw IllegalStateException("No active business selected")
+
+    fun getActiveUserId(): String = getSession().userId
+
+    // ── Business & Observables ───────────────────────────────────────────────
+
+    fun observeCurrentBusiness(): Flow<BusinessEntity?> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(null)
+        return businessDao.observeBusinessById(bizId)
     }
 
-    private fun getActiveBusinessId(): String {
-        return getSession().activeBusinessId
-            ?: throw IllegalStateException("No active business selected")
-    }
+    suspend fun getBusiness(businessId: String): BusinessEntity? =
+        businessDao.getBusinessById(businessId)
 
-    private suspend fun getActiveRole(businessId: String, userId: String): Role {
-        val member = businessMemberDao.getMember(businessId, userId)
-            ?: throw SecurityException("User is not a member of this business")
-        return member.role
-    }
-
-    private suspend fun logAudit(
-        businessId: String,
-        actionType: ActionType,
-        beforeValue: String,
-        afterValue: String
-    ) {
-        val session = getSession()
-        auditLogDao.insertAuditLog(
-            AuditLogEntity(
-                businessId = businessId,
-                actorUserId = session.userId,
-                actorName = session.name,
-                actionType = actionType,
-                beforeValue = beforeValue,
-                afterValue = afterValue,
-                timestamp = System.currentTimeMillis()
-            )
+    suspend fun updateBusinessSettings(
+        name: String,
+        phone: String,
+        address: String,
+        receiptFooter: String,
+        isShopEnabled: Boolean,
+        isGarageEnabled: Boolean,
+        allowNegativeStock: Boolean
+    ): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        val existing = businessDao.getBusinessById(bizId)
+            ?: throw IllegalStateException("Business not found")
+        val updated = existing.copy(
+            name = name.trim(),
+            phone = phone.trim(),
+            address = address.trim(),
+            receiptFooter = receiptFooter.trim(),
+            isShopEnabled = isShopEnabled,
+            isGarageEnabled = isGarageEnabled,
+            allowNegativeStock = allowNegativeStock,
+            updatedAt = System.currentTimeMillis()
         )
+        businessDao.updateBusiness(updated)
     }
-
-    // ==========================================
-    // AUTO GARAGE REPOSITORY
-    // ==========================================
-
-    fun observeJobCards(stage: JobStage? = null): Flow<List<JobCardEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return if (stage != null) {
-            jobCardDao.observeJobCardsByStage(businessId, stage)
-        } else {
-            jobCardDao.observeJobCardsForBusiness(businessId)
-        }
-    }
-
-    fun observeJobCard(id: String): Flow<JobCardEntity?> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(null)
-        return jobCardDao.observeJobCardById(id, businessId)
-    }
-
-    fun observeVehicleHistory(vehiclePlate: String): Flow<List<JobCardEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return jobCardDao.observeVehicleHistory(businessId, vehiclePlate)
-    }
-
-    suspend fun createJobCard(
-        vehiclePlate: String,
-        customerName: String,
-        customerPhone: String,
-        description: String,
-        assignedStaffId: String? = null,
-        initialParts: List<PartItem> = emptyList()
-    ): Result<JobCardEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val total = initialParts.sumOf { it.cost }
-            val card = JobCardEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                vehiclePlate = vehiclePlate.trim().uppercase(),
-                customerName = customerName.trim(),
-                customerPhone = customerPhone.trim(),
-                description = description.trim(),
-                stage = JobStage.INTAKE,
-                assignedStaffId = assignedStaffId,
-                partsList = initialParts,
-                estimateTotal = total,
-                stageHistory = listOf(StageTransition(JobStage.INTAKE, note = "Vehicle checked into intake"))
-            )
-            jobCardDao.insertJobCard(card)
-            Result.success(card)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun advanceJobStage(jobCardId: String, note: String? = null): Result<JobCardEntity> {
-        return try {
-            val businessId = getActiveBusinessId()
-            val card = jobCardDao.getJobCardById(jobCardId, businessId)
-                ?: return Result.failure(Exception("Job card not found"))
-
-            val nextStage = card.stage.next()
-                ?: return Result.failure(Exception("Job card is already at final stage (${card.stage.title})"))
-
-            val updatedHistory = card.stageHistory + StageTransition(nextStage, note = note)
-            val updated = card.copy(
-                stage = nextStage,
-                stageHistory = updatedHistory,
-                syncStatus = SyncStatus.PENDING,
-                updatedAt = System.currentTimeMillis()
-            )
-            jobCardDao.updateJobCard(updated)
-            Result.success(updated)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun reopenJobStage(jobCardId: String, targetStage: JobStage, reason: String): Result<JobCardEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val role = getActiveRole(businessId, session.userId)
-
-            if (role == Role.STAFF) {
-                return Result.failure(SecurityException("Staff cannot reopen or roll back job cards"))
-            }
-
-            val card = jobCardDao.getJobCardById(jobCardId, businessId)
-                ?: return Result.failure(Exception("Job card not found"))
-
-            val beforeStage = card.stage
-            val updatedHistory = card.stageHistory + StageTransition(
-                targetStage,
-                note = "Reopened backwards: $reason by ${session.name}"
-            )
-            val updated = card.copy(
-                stage = targetStage,
-                stageHistory = updatedHistory,
-                syncStatus = SyncStatus.PENDING,
-                updatedAt = System.currentTimeMillis()
-            )
-            jobCardDao.updateJobCard(updated)
-
-            // Audit log JOB_CANCELLED / Rollback
-            logAudit(
-                businessId = businessId,
-                actionType = ActionType.JOB_CANCELLED,
-                beforeValue = "Job ${card.vehiclePlate} at ${beforeStage.title}",
-                afterValue = "Rolled back to ${targetStage.title}. Reason: $reason"
-            )
-
-            Result.success(updated)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun updateJobParts(jobCardId: String, parts: List<PartItem>): Result<JobCardEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val role = getActiveRole(businessId, session.userId)
-
-            val card = jobCardDao.getJobCardById(jobCardId, businessId)
-                ?: return Result.failure(Exception("Job card not found"))
-
-            val oldTotal = card.estimateTotal
-            val newTotal = parts.sumOf { it.cost }
-
-            if (role == Role.STAFF && oldTotal > 0 && oldTotal != newTotal) {
-                return Result.failure(SecurityException("Staff cannot modify job estimate totals"))
-            }
-
-            val updated = card.copy(
-                partsList = parts,
-                estimateTotal = newTotal,
-                syncStatus = SyncStatus.PENDING,
-                updatedAt = System.currentTimeMillis()
-            )
-            jobCardDao.updateJobCard(updated)
-
-            if (oldTotal != newTotal && (role == Role.MANAGER || role == Role.OWNER)) {
-                logAudit(
-                    businessId = businessId,
-                    actionType = ActionType.PRICE_OVERRIDE,
-                    beforeValue = "Job ${card.vehiclePlate} Estimate: KSh $oldTotal",
-                    afterValue = "New Estimate: KSh $newTotal (${parts.size} parts)"
-                )
-            }
-
-            Result.success(updated)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    // ==========================================
-    // KARIAKOR STALL (POS) REPOSITORY
-    // ==========================================
 
     fun observeItems(): Flow<List<ItemEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return itemDao.observeItemsForBusiness(businessId)
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return itemDao.observeItems(bizId)
     }
+
+    fun observeCustomers(): Flow<List<CustomerEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return customerDao.observeCustomersForBusiness(bizId)
+    }
+
+    fun observeDeniLedger(): Flow<List<CustomerEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return customerDao.observeDeniLedger(bizId)
+    }
+
+    fun observeSales(): Flow<List<SaleEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return saleDao.observeSalesForBusiness(bizId)
+    }
+
+    fun observeJobCards(): Flow<List<JobCardEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return jobCardDao.observeJobCardsForBusiness(bizId)
+    }
+
+    fun observeExpenses(): Flow<List<ExpenseEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return expenseDao.observeExpenses(bizId)
+    }
+
+    fun observeStaffMembers(): Flow<List<MemberWithUser>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return businessMemberDao.observeMembersWithUser(bizId)
+    }
+
+    fun observeAuditLogs(): Flow<List<AuditLogEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return auditLogDao.observeAuditLogsForBusiness(bizId)
+    }
+
+    fun observeAccounts(): Flow<List<AccountEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return accountDao.observeAccounts(bizId)
+    }
+
+    fun observeJournalEntries(): Flow<List<JournalEntryEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return journalEntryDao.observeJournalEntries(bizId)
+    }
+
+    fun observeInvoices(): Flow<List<InvoiceEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return invoiceDao.observeInvoices(bizId)
+    }
+
+    fun observeSuppliers(): Flow<List<SupplierEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return supplierDao.observeSuppliers(bizId)
+    }
+
+    fun observePayments(): Flow<List<PaymentEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return paymentDao.observePayments(bizId)
+    }
+
+    fun observeWagePayments(): Flow<List<WagePaymentEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return wagePaymentDao.observeWagePayments(bizId)
+    }
+
+    fun observeLayaways(): Flow<List<LayawayEntity>> {
+        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
+        return layawayDao.observeLayaways(bizId)
+    }
+
+    // ── Item / Inventory Operations ──────────────────────────────────────────
 
     suspend fun createItem(
         name: String,
-        retailPrice: Double,
-        wholesalePrice: Double,
-        stockQty: Int,
-        minStockLevel: Int = 3
-    ): Result<ItemEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val role = getActiveRole(businessId, session.userId)
+        retailPrice: Money,
+        wholesalePrice: Money,
+        initialStock: Long = 0L,
+        lowStockThreshold: Int = 5,
+        sku: String? = null,
+        category: String? = null,
+        unit: String = "pcs",
+        costPrice: Money = Money.ZERO
+    ): Result<ItemEntity> = runCatching {
+        val bizId = getActiveBusinessId()
+        val itemId = UUID.randomUUID().toString()
+        val item = ItemEntity(
+            id = itemId,
+            businessId = bizId,
+            name = name.trim(),
+            sku = sku?.trim()?.ifBlank { null },
+            category = category?.trim()?.ifBlank { null },
+            unit = unit.trim().ifBlank { "pcs" },
+            costPriceCents = costPrice.cents,
+            retailPriceCents = retailPrice.cents,
+            wholesalePriceCents = wholesalePrice.cents,
+            stockQty = initialStock,
+            lowStockThreshold = lowStockThreshold,
+            isActive = true
+        )
 
-            if (role == Role.STAFF) {
-                return Result.failure(SecurityException("Staff cannot create new inventory items"))
-            }
-
-            val item = ItemEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                name = name.trim(),
-                retailPrice = retailPrice,
-                wholesalePrice = wholesalePrice,
-                stockQty = stockQty,
-                minStockLevel = minStockLevel,
-                syncStatus = SyncStatus.PENDING
-            )
+        database.withTransaction {
             itemDao.insertItem(item)
+            if (initialStock != 0L) {
+                stockMovementDao.insertMovement(
+                    StockMovementEntity(
+                        businessId = bizId,
+                        itemId = itemId,
+                        movementType = StockMovementType.OPENING,
+                        deltaQty = initialStock,
+                        balanceAfter = initialStock,
+                        reference = "Initial opening stock",
+                        recordedByUserId = getActiveUserId()
+                    )
+                )
+            }
+        }
+        item
+    }
 
-            logAudit(
-                businessId = businessId,
-                actionType = ActionType.STOCK_EDITED,
-                beforeValue = "Created item ${item.name}",
-                afterValue = "Retail: $retailPrice, Wholesale: $wholesalePrice, Stock: $stockQty"
+    suspend fun updateStockItemCount(
+        itemId: String,
+        physicalCount: Long,
+        reason: String
+    ): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        database.withTransaction {
+            val item = itemDao.getItemById(itemId, bizId)
+                ?: throw IllegalArgumentException("Item not found")
+            val delta = physicalCount - item.stockQty
+            itemDao.adjustStock(itemId, bizId, delta)
+            stockMovementDao.insertMovement(
+                StockMovementEntity(
+                    businessId = bizId,
+                    itemId = itemId,
+                    movementType = StockMovementType.ADJUSTMENT,
+                    deltaQty = delta,
+                    balanceAfter = physicalCount,
+                    reference = reason.ifBlank { "Stock count adjustment" },
+                    recordedByUserId = getActiveUserId()
+                )
             )
-
-            Result.success(item)
-        } catch (e: Exception) {
-            Result.failure(e)
+            auditLogDao.insertAuditLog(
+                AuditLogEntity(
+                    id = UUID.randomUUID().toString(),
+                    businessId = bizId,
+                    userId = getActiveUserId(),
+                    userName = getSession().name,
+                    actionType = ActionType.STOCK_ADJUSTED,
+                    entityId = itemId,
+                    details = "Adjusted ${item.name} stock from ${item.stockQty} to $physicalCount. Reason: $reason"
+                )
+            )
         }
     }
 
+    // ── Journal Posting Engine (Debits == Credits Invariant) ──────────────────
+
+    suspend fun postJournalEntry(
+        businessId: String,
+        date: Long,
+        description: String,
+        sourceType: JournalSourceType,
+        sourceId: String?,
+        side: BusinessSide,
+        lines: List<JournalLineItem>
+    ): Result<JournalEntryEntity> = runCatching {
+        val totalDebit = lines.fold(Money.ZERO) { acc, l -> acc + l.debit }
+        val totalCredit = lines.fold(Money.ZERO) { acc, l -> acc + l.credit }
+
+        if (totalDebit != totalCredit || totalDebit <= Money.ZERO) {
+            throw IllegalArgumentException(
+                "Unbalanced journal: total debits (${totalDebit.formatted}) must equal total credits (${totalCredit.formatted}) and be greater than 0"
+            )
+        }
+
+        database.withTransaction {
+            val entryNum = documentCounterDao.nextNumber(businessId, DocumentType.JOURNAL, "JRN-")
+            val entryId = UUID.randomUUID().toString()
+
+            val entry = JournalEntryEntity(
+                id = entryId,
+                businessId = businessId,
+                entryNumber = entryNum,
+                date = date,
+                description = description.trim(),
+                sourceType = sourceType,
+                sourceId = sourceId,
+                totalDebitCents = totalDebit.cents,
+                totalCreditCents = totalCredit.cents,
+                side = side,
+                isReversed = false,
+                reversedByEntryId = null,
+                createdAt = System.currentTimeMillis()
+            )
+            journalEntryDao.insertEntry(entry)
+
+            val childLines = lines.map { l ->
+                JournalLineEntity(
+                    entryId = entryId,
+                    accountId = l.accountId,
+                    debitCents = l.debit.cents,
+                    creditCents = l.credit.cents,
+                    narration = l.narration
+                )
+            }
+            journalLineDao.insertLines(childLines)
+
+            // Adjust account balances atomically:
+            // Assets & Expenses: balance += debit - credit
+            // Liabilities, Equity, Revenue: balance += credit - debit
+            for (line in lines) {
+                val account = accountDao.getAccountById(line.accountId, businessId)
+                    ?: continue
+                val delta = when (account.category) {
+                    AccountCategory.ASSET, AccountCategory.EXPENSE ->
+                        line.debit.cents - line.credit.cents
+                    AccountCategory.LIABILITY, AccountCategory.EQUITY, AccountCategory.INCOME ->
+                        line.credit.cents - line.debit.cents
+                }
+                accountDao.adjustBalance(line.accountId, businessId, delta)
+            }
+            entry
+        }
+    }
+
+    // ── Sales Engine & Void Operations ───────────────────────────────────────
+
     suspend fun recordSale(
+        customerId: String?,
+        customerName: String?,
         items: List<SaleLineItem>,
-        paymentMethod: PaymentMethod,
-        customerId: String? = null,
-        mpesaCode: String? = null,
-        priceOverridden: Boolean = false
-    ): Result<SaleEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val role = getActiveRole(businessId, session.userId)
+        discount: Money = Money.ZERO,
+        paymentMethod: PaymentMethod = PaymentMethod.CASH,
+        mpesaReference: String? = null,
+        side: BusinessSide = BusinessSide.SHOP
+    ): Result<SaleEntity> = runCatching {
+        val bizId = getActiveBusinessId()
+        val userId = getActiveUserId()
+        if (items.isEmpty()) throw IllegalArgumentException("Cannot record an empty sale")
 
-            if (items.isEmpty()) {
-                return Result.failure(IllegalArgumentException("Cart cannot be empty"))
+        val subtotal = items.fold(Money.ZERO) { acc, item -> acc + item.subtotal }
+        val total = (subtotal - discount).coerceAtLeast(Money.ZERO)
+
+        val member = businessMemberDao.getMember(bizId, userId)
+        val biz = businessDao.getBusinessById(bizId)
+        val canSellNegative = (member?.canSellNegativeStock == true) || (biz?.allowNegativeStock == true)
+
+        database.withTransaction {
+            // Verify stock constraints before writing
+            for (line in items) {
+                val dbItem = itemDao.getItemById(line.itemId, bizId)
+                    ?: throw IllegalArgumentException("Item ${line.itemName} not found")
+                if (!canSellNegative && dbItem.stockQty < line.qty) {
+                    throw IllegalStateException("Insufficient stock for ${dbItem.name}. In stock: ${dbItem.stockQty}, selling: ${line.qty}")
+                }
             }
 
-            if (paymentMethod == PaymentMethod.CREDIT && customerId.isNullOrEmpty()) {
-                return Result.failure(IllegalArgumentException("Customer is required for credit (Deni) sales"))
-            }
-
-            if (priceOverridden && role == Role.STAFF) {
-                return Result.failure(SecurityException("Staff members are not permitted to override prices"))
-            }
-
-            val total = items.sumOf { it.subtotal }
+            val saleNum = documentCounterDao.nextNumber(bizId, DocumentType.SALE, "SAL-")
+            val saleId = UUID.randomUUID().toString()
 
             val sale = SaleEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                items = items,
-                total = total,
-                paymentMethod = paymentMethod,
+                id = saleId,
+                businessId = bizId,
+                saleNumber = saleNum,
                 customerId = customerId,
-                mpesaCode = mpesaCode,
-                createdByUserId = session.userId,
-                syncStatus = SyncStatus.PENDING
+                customerName = customerName,
+                subtotalCents = subtotal.cents,
+                discountCents = discount.cents,
+                totalCents = total.cents,
+                paymentMethod = paymentMethod,
+                mpesaReference = mpesaReference?.trim()?.ifBlank { null },
+                side = side,
+                userId = userId,
+                createdAt = System.currentTimeMillis()
             )
             saleDao.insertSale(sale)
 
-            for (line in items) {
-                itemDao.decrementStock(line.itemId, businessId, line.qty)
-            }
-
-            if (paymentMethod == PaymentMethod.CREDIT && !customerId.isNullOrEmpty()) {
-                customerDao.updateBalance(customerId, businessId, total)
-            }
-
-            if (priceOverridden) {
-                logAudit(
-                    businessId = businessId,
-                    actionType = ActionType.PRICE_OVERRIDE,
-                    beforeValue = "Standard Line items",
-                    afterValue = "Custom override sale total: KSh $total"
+            val childItems = items.map { l ->
+                SaleItemEntity(
+                    saleId = saleId,
+                    itemId = l.itemId,
+                    itemName = l.itemName,
+                    qty = l.qty,
+                    unitPriceCents = l.unitPrice.cents,
+                    costPriceCents = l.costPrice.cents,
+                    subtotalCents = l.subtotal.cents,
+                    priceType = l.priceType
                 )
             }
+            saleItemDao.insertSaleItems(childItems)
 
-            // Post double entry journal entry to General Ledger
-            ensureDefaultAccounts(businessId)
-            val revAccount = accountDao.getAccountByCode("4010", businessId)
-            val cashAccount = accountDao.getAccountByCode("1010", businessId)
-            val mpesaAccount = accountDao.getAccountByCode("1020", businessId)
-            val bankAccount = accountDao.getAccountByCode("1030", businessId)
-            val arAccount = accountDao.getAccountByCode("1200", businessId)
-
-            val debitAccount = when (paymentMethod) {
-                PaymentMethod.CREDIT -> arAccount
-                PaymentMethod.MPESA -> mpesaAccount ?: cashAccount
-                PaymentMethod.BANK -> bankAccount ?: cashAccount
-                else -> cashAccount
-            }
-
-            if (debitAccount != null && revAccount != null) {
-                postJournalEntry(
-                    date = sale.createdAt,
-                    description = "POS Sale - ${items.size} item(s) (${paymentMethod.name})",
-                    sourceType = JournalSourceType.SALE,
-                    sourceReferenceId = sale.id,
-                    lines = listOf(
-                        JournalLineItem(debitAccount.id, debitAccount.code, debitAccount.name, debit = total, credit = 0.0),
-                        JournalLineItem(revAccount.id, revAccount.code, revAccount.name, debit = 0.0, credit = total)
+            // Deduct stock and write stock movements
+            for (line in items) {
+                itemDao.adjustStock(line.itemId, bizId, -line.qty.toLong())
+                val currentItem = itemDao.getItemById(line.itemId, bizId)
+                val balanceAfter = currentItem?.stockQty ?: 0L
+                stockMovementDao.insertMovement(
+                    StockMovementEntity(
+                        businessId = bizId,
+                        itemId = line.itemId,
+                        movementType = StockMovementType.SALE,
+                        deltaQty = -line.qty.toLong(),
+                        balanceAfter = balanceAfter,
+                        reference = "Sale $saleNum",
+                        recordedByUserId = userId
                     )
                 )
             }
 
-            Result.success(sale)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun deleteSale(saleId: String): Result<Unit> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val role = getActiveRole(businessId, session.userId)
-
-            if (role != Role.OWNER) {
-                return Result.failure(SecurityException("Only business owners can delete sales"))
+            // Customer Deni update if credit
+            if (paymentMethod == PaymentMethod.CREDIT && customerId != null) {
+                customerDao.updateBalanceCents(customerId, bizId, total.cents)
             }
 
-            val sale = saleDao.getSaleById(saleId, businessId)
-                ?: return Result.failure(Exception("Sale not found"))
+            // Financial Posting
+            val cashAccCode = when (paymentMethod) {
+                PaymentMethod.CASH -> "1010"
+                PaymentMethod.MPESA -> "1020"
+                PaymentMethod.BANK -> "1030"
+                PaymentMethod.CREDIT -> "1200"
+                PaymentMethod.SPLIT -> "1010"
+            }
+            val cashAccount = accountDao.getAccountByCode(cashAccCode, bizId)
+            val revenueAccount = accountDao.getAccountByCode("4010", bizId)
 
-            if (sale.paymentMethod == PaymentMethod.CREDIT && !sale.customerId.isNullOrEmpty()) {
-                customerDao.updateBalance(sale.customerId, businessId, -sale.total)
+            if (cashAccount != null && revenueAccount != null && total > Money.ZERO) {
+                postJournalEntry(
+                    businessId = bizId,
+                    date = sale.createdAt,
+                    description = "Sale $saleNum to ${customerName ?: "Cash Customer"}",
+                    sourceType = JournalSourceType.SALE,
+                    sourceId = saleId,
+                    side = side,
+                    lines = listOf(
+                        JournalLineItem(cashAccount.id, cashAccount.code, cashAccount.name, debit = total),
+                        JournalLineItem(revenueAccount.id, revenueAccount.code, revenueAccount.name, credit = total)
+                    )
+                )
             }
 
-            for (item in sale.items) {
-                itemDao.decrementStock(item.itemId, businessId, -item.qty)
-            }
-
-            saleDao.deleteSale(saleId, businessId)
-
-            logAudit(
-                businessId = businessId,
-                actionType = ActionType.SALE_DELETED,
-                beforeValue = "Sale $saleId for KSh ${sale.total} (${sale.paymentMethod})",
-                afterValue = "Deleted by Owner ${session.name}"
+            auditLogDao.insertAuditLog(
+                AuditLogEntity(
+                    id = UUID.randomUUID().toString(),
+                    businessId = bizId,
+                    userId = userId,
+                    userName = getSession().name,
+                    actionType = ActionType.PRICE_OVERRIDE,
+                    entityId = saleId,
+                    details = "Recorded sale $saleNum for ${total.formatted} via $paymentMethod"
+                )
             )
 
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
+            sale
         }
     }
 
-    fun observeSales(): Flow<List<SaleEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return saleDao.observeSalesForBusiness(businessId)
+    suspend fun voidSale(saleId: String, reason: String): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        val userId = getActiveUserId()
+
+        database.withTransaction {
+            val sale = saleDao.getSaleById(saleId, bizId)
+                ?: throw IllegalArgumentException("Sale not found")
+            if (sale.isVoided) throw IllegalStateException("Sale is already voided")
+
+            saleDao.markVoided(saleId, bizId, reason.trim(), userId)
+
+            // Restore inventory
+            val saleItems = saleItemDao.getBySale(saleId)
+            for (item in saleItems) {
+                itemDao.adjustStock(item.itemId, bizId, item.qty.toLong())
+                val current = itemDao.getItemById(item.itemId, bizId)
+                stockMovementDao.insertMovement(
+                    StockMovementEntity(
+                        businessId = bizId,
+                        itemId = item.itemId,
+                        movementType = StockMovementType.VOID_SALE,
+                        deltaQty = item.qty.toLong(),
+                        balanceAfter = current?.stockQty ?: 0L,
+                        reference = "Void Sale ${sale.saleNumber}: $reason",
+                        recordedByUserId = userId
+                    )
+                )
+            }
+
+            // Restore customer balance if credit sale
+            if (sale.paymentMethod == PaymentMethod.CREDIT && sale.customerId != null) {
+                customerDao.updateBalanceCents(sale.customerId, bizId, -sale.totalCents)
+            }
+
+            // Post Reversing Journal Entry
+            val cashAccCode = when (sale.paymentMethod) {
+                PaymentMethod.CASH -> "1010"
+                PaymentMethod.MPESA -> "1020"
+                PaymentMethod.BANK -> "1030"
+                PaymentMethod.CREDIT -> "1200"
+                PaymentMethod.SPLIT -> "1010"
+            }
+            val cashAccount = accountDao.getAccountByCode(cashAccCode, bizId)
+            val revenueAccount = accountDao.getAccountByCode("4010", bizId)
+            val saleMoney = Money(sale.totalCents)
+
+            if (cashAccount != null && revenueAccount != null && saleMoney > Money.ZERO) {
+                postJournalEntry(
+                    businessId = bizId,
+                    date = System.currentTimeMillis(),
+                    description = "VOID Sale ${sale.saleNumber} ($reason)",
+                    sourceType = JournalSourceType.VOID_REVERSAL,
+                    sourceId = saleId,
+                    side = sale.side,
+                    lines = listOf(
+                        JournalLineItem(revenueAccount.id, revenueAccount.code, revenueAccount.name, debit = saleMoney),
+                        JournalLineItem(cashAccount.id, cashAccount.code, cashAccount.name, credit = saleMoney)
+                    )
+                )
+            }
+
+            auditLogDao.insertAuditLog(
+                AuditLogEntity(
+                    id = UUID.randomUUID().toString(),
+                    businessId = bizId,
+                    userId = userId,
+                    userName = getSession().name,
+                    actionType = ActionType.SALE_VOIDED,
+                    entityId = saleId,
+                    details = "Voided sale ${sale.saleNumber}. Reason: $reason"
+                )
+            )
+        }
     }
 
-    // ==========================================
-    // DENI (CREDIT) LEDGER
-    // ==========================================
-
-    fun observeDeniLedger(): Flow<List<CustomerEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return customerDao.observeDeniLedger(businessId)
-    }
-
-    fun observeCustomers(): Flow<List<CustomerEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return customerDao.observeCustomersForBusiness(businessId)
-    }
+    // ── Customer & Deni Operations ───────────────────────────────────────────
 
     suspend fun createCustomer(
         name: String,
         phone: String,
-        initialBalance: Double = 0.0,
+        initialCredit: Money = Money.ZERO,
         dueDate: Long? = null,
-        notes: String = ""
-    ): Result<CustomerEntity> {
-        return try {
-            val businessId = getActiveBusinessId()
-            val customer = CustomerEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                name = name.trim(),
-                phone = phone.trim(),
-                balance = initialBalance,
-                dueDate = dueDate,
-                notes = notes,
-                syncStatus = SyncStatus.PENDING
-            )
+        notes: String? = null
+    ): Result<CustomerEntity> = runCatching {
+        val bizId = getActiveBusinessId()
+        val customerId = UUID.randomUUID().toString()
+        val customer = CustomerEntity(
+            id = customerId,
+            businessId = bizId,
+            name = name.trim(),
+            phone = phone.trim(),
+            balanceCents = initialCredit.cents,
+            dueDate = dueDate,
+            notes = notes?.trim()?.ifBlank { null }
+        )
+
+        database.withTransaction {
             customerDao.insertCustomer(customer)
-            Result.success(customer)
-        } catch (e: Exception) {
-            Result.failure(e)
+            if (initialCredit > Money.ZERO) {
+                val arAccount = accountDao.getAccountByCode("1200", bizId)
+                val equityAccount = accountDao.getAccountByCode("3010", bizId)
+                if (arAccount != null && equityAccount != null) {
+                    postJournalEntry(
+                        businessId = bizId,
+                        date = System.currentTimeMillis(),
+                        description = "Opening Deni balance for ${customer.name}",
+                        sourceType = JournalSourceType.OPENING_BALANCE,
+                        sourceId = customerId,
+                        side = BusinessSide.SHOP,
+                        lines = listOf(
+                            JournalLineItem(arAccount.id, arAccount.code, arAccount.name, debit = initialCredit),
+                            JournalLineItem(equityAccount.id, equityAccount.code, equityAccount.name, credit = initialCredit)
+                        )
+                    )
+                }
+            }
         }
+        customer
     }
 
     suspend fun recordDeniPayment(
         customerId: String,
-        amountPaid: Double,
+        amountPaid: Money,
         paymentMethod: PaymentMethod = PaymentMethod.CASH,
         mpesaCode: String? = null
-    ): Result<Unit> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val customer = customerDao.getCustomerById(customerId, businessId)
-            customerDao.updateBalance(customerId, businessId, -amountPaid)
+    ): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        database.withTransaction {
+            val customer = customerDao.getCustomerById(customerId, bizId)
+                ?: throw IllegalArgumentException("Customer not found")
 
-            // Double entry: Dr Cash/Mpesa, Cr Accounts Receivable (1040)
-            val debitAccount = when (paymentMethod) {
-                PaymentMethod.MPESA -> accountDao.getAccountByCode("1020", businessId)
-                PaymentMethod.BANK -> accountDao.getAccountByCode("1030", businessId)
-                else -> accountDao.getAccountByCode("1010", businessId)
-            }
-            val arAccount = accountDao.getAccountByCode("1040", businessId)
-            if (debitAccount != null && arAccount != null) {
+            customerDao.updateBalanceCents(customerId, bizId, -amountPaid.cents)
+
+            val cashAccCode = if (paymentMethod == PaymentMethod.MPESA) "1020" else "1010"
+            val cashAccount = accountDao.getAccountByCode(cashAccCode, bizId)
+            val arAccount = accountDao.getAccountByCode("1200", bizId)
+
+            if (cashAccount != null && arAccount != null && amountPaid > Money.ZERO) {
                 postJournalEntry(
+                    businessId = bizId,
                     date = System.currentTimeMillis(),
-                    description = "Malipo ya Deni: ${customer?.name ?: "Customer"} (KSh ${amountPaid.toInt()}${if (!mpesaCode.isNullOrBlank()) " - $mpesaCode" else ""})",
+                    description = "Deni repayment from ${customer.name} (${mpesaCode ?: paymentMethod.name})",
                     sourceType = JournalSourceType.CUSTOMER_PAYMENT,
-                    sourceReferenceId = customerId,
+                    sourceId = customerId,
+                    side = BusinessSide.SHOP,
                     lines = listOf(
-                        JournalLineItem(debitAccount.id, debitAccount.code, debitAccount.name, debit = amountPaid, credit = 0.0),
-                        JournalLineItem(arAccount.id, arAccount.code, arAccount.name, debit = 0.0, credit = amountPaid)
+                        JournalLineItem(cashAccount.id, cashAccount.code, cashAccount.name, debit = amountPaid),
+                        JournalLineItem(arAccount.id, arAccount.code, arAccount.name, credit = amountPaid)
                     )
                 )
             }
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
-    // ==========================================
-    // STAFF MANAGEMENT
-    // ==========================================
-
-    fun observeStaffMembers(): Flow<List<MemberWithUser>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return businessMemberDao.observeMembersWithUser(businessId)
+    suspend fun updateCustomerReminder(
+        customerId: String,
+        dueDate: Long?,
+        notes: String?
+    ): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        val customer = customerDao.getCustomerById(customerId, bizId)
+            ?: throw IllegalArgumentException("Customer not found")
+        customerDao.updateCustomer(
+            customer.copy(dueDate = dueDate, notes = notes?.trim()?.ifBlank { null })
+        )
     }
 
-    suspend fun inviteOrAddStaff(
-        name: String,
-        email: String,
-        phone: String,
-        role: Role
-    ): Result<Unit> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val myRole = getActiveRole(businessId, session.userId)
+    // ── Garage Job Cards & Workflows ─────────────────────────────────────────
 
-            if (myRole != Role.OWNER) {
-                return Result.failure(SecurityException("Only business owners can invite staff"))
-            }
+    suspend fun createJobCard(
+        vehiclePlate: String,
+        vehicleMake: String,
+        vehicleModel: String,
+        customerName: String,
+        customerPhone: String,
+        issueDescription: String,
+        laborCost: Money = Money.ZERO,
+        partsCost: Money = Money.ZERO,
+        estimateTotal: Money = Money.ZERO,
+        targetDeliveryDate: Long? = null
+    ): Result<JobCardEntity> = runCatching {
+        val bizId = getActiveBusinessId()
+        val userId = getActiveUserId()
+        val jobId = UUID.randomUUID().toString()
 
-            val business = businessDao.getBusinessById(businessId)
-                ?: return Result.failure(Exception("Business not found"))
-
-            val currentMemberCount = businessMemberDao.getMemberCount(businessId)
-            if (currentMemberCount >= business.subscriptionPlan.maxUsers) {
-                return Result.failure(
-                    IllegalStateException(
-                        "Plan limit reached! ${business.subscriptionPlan.name} allows up to ${business.subscriptionPlan.maxUsers} users. Upgrade your plan."
-                    )
+        database.withTransaction {
+            val jobNum = documentCounterDao.nextNumber(bizId, DocumentType.INVOICE, "JOB-")
+            val jobCard = JobCardEntity(
+                id = jobId,
+                businessId = bizId,
+                jobNumber = jobNum,
+                vehiclePlate = vehiclePlate.trim().uppercase(),
+                vehicleMake = vehicleMake.trim(),
+                vehicleModel = vehicleModel.trim(),
+                customerName = customerName.trim(),
+                customerPhone = customerPhone.trim(),
+                issueDescription = issueDescription.trim(),
+                laborCostCents = laborCost.cents,
+                partsCostCents = partsCost.cents,
+                estimateTotalCents = estimateTotal.cents,
+                targetDeliveryDate = targetDeliveryDate,
+                stage = JobStage.INTAKE,
+                assignedTechnicianId = userId,
+                invoiceId = null,
+                isVoided = false
+            )
+            jobCardDao.insertJobCard(jobCard)
+            jobStageTransitionDao.insertTransition(
+                JobStageTransitionEntity(
+                    jobCardId = jobId,
+                    toStage = JobStage.INTAKE,
+                    note = "Initial intake"
                 )
-            }
-
-            var user = userDao.getUserByAuthId(email)
-            if (user == null) {
-                val newUserId = UUID.randomUUID().toString()
-                user = UserEntity(
-                    id = newUserId,
-                    name = name,
-                    email = email,
-                    phone = phone,
-                    authId = email
-                )
-                userDao.insertUser(user)
-            }
-
-            val member = BusinessMemberEntity(
-                businessId = businessId,
-                userId = user.id,
-                role = role
             )
-            businessMemberDao.insertMember(member)
-
-            logAudit(
-                businessId = businessId,
-                actionType = ActionType.ROLE_CHANGED,
-                beforeValue = "No membership",
-                afterValue = "Added ${user.name} ($email) as ${role.name}"
-            )
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
+            jobCard
         }
     }
 
-    suspend fun updateStaffRole(userId: String, newRole: Role): Result<Unit> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val myRole = getActiveRole(businessId, session.userId)
+    suspend fun updateJobParts(jobCardId: String, newParts: List<PartItem>): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        val userId = getActiveUserId()
 
-            if (myRole != Role.OWNER) {
-                return Result.failure(SecurityException("Only business owners can change staff roles"))
-            }
+        database.withTransaction {
+            val job = jobCardDao.getJobCardById(jobCardId, bizId)
+                ?: throw IllegalArgumentException("Job card not found")
 
-            val member = businessMemberDao.getMember(businessId, userId)
-                ?: return Result.failure(Exception("Member not found"))
-
-            val oldRole = member.role
-            businessMemberDao.updateMember(member.copy(role = newRole))
-
-            logAudit(
-                businessId = businessId,
-                actionType = ActionType.ROLE_CHANGED,
-                beforeValue = "User $userId was ${oldRole.name}",
-                afterValue = "Changed to ${newRole.name} by Owner ${session.name}"
-            )
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun removeStaff(userId: String): Result<Unit> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val myRole = getActiveRole(businessId, session.userId)
-
-            if (myRole != Role.OWNER) {
-                return Result.failure(SecurityException("Only business owners can remove staff"))
-            }
-
-            if (userId == session.userId) {
-                return Result.failure(IllegalArgumentException("Cannot remove yourself as owner"))
-            }
-
-            businessMemberDao.deleteMember(businessId, userId)
-            logAudit(
-                businessId = businessId,
-                actionType = ActionType.ROLE_CHANGED,
-                beforeValue = "Active member $userId",
-                afterValue = "Removed by Owner ${session.name}"
-            )
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    // ==========================================
-    // AUDIT LOG & SUBSCRIPTIONS
-    // ==========================================
-
-    fun observeAuditLogs(): Flow<List<AuditLogEntity>> {
-        val session = getSession()
-        val businessId = session.activeBusinessId ?: return flowOf(emptyList())
-        if (session.activeRole != Role.OWNER) {
-            return flowOf(emptyList())
-        }
-        return auditLogDao.observeAuditLogsForBusiness(businessId)
-    }
-
-    fun observeCurrentBusiness(): Flow<BusinessEntity?> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(null)
-        return businessDao.observeBusinessById(businessId)
-    }
-
-    suspend fun updateSubscriptionPlan(newPlan: SubscriptionPlan): Result<Unit> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val myRole = getActiveRole(businessId, session.userId)
-
-            if (myRole != Role.OWNER) {
-                return Result.failure(SecurityException("Only business owners can manage billing/subscriptions"))
-            }
-
-            val business = businessDao.getBusinessById(businessId)
-                ?: return Result.failure(Exception("Business not found"))
-
-            val oldPlan = business.subscriptionPlan
-            businessDao.updateBusiness(business.copy(subscriptionPlan = newPlan))
-
-            logAudit(
-                businessId = businessId,
-                actionType = ActionType.ROLE_CHANGED,
-                beforeValue = "Plan: ${oldPlan.name}",
-                afterValue = "Upgraded to ${newPlan.name}"
-            )
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun getBusinessById(businessId: String): BusinessEntity? {
-        return businessDao.getBusinessById(businessId)
-    }
-
-    suspend fun getMemberCount(businessId: String): Int {
-        return businessMemberDao.getMemberCount(businessId)
-    }
-
-    suspend fun seedDemoData(type: com.example.businessos.data.model.BusinessType): Result<Unit> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-
-            if (type == com.example.businessos.data.model.BusinessType.GARAGE) {
-                // Seed realistic sample vehicles covering bodywork, paint, torn leather, tyres & engine
-                val plates = listOf("KDA 124X", "KCF 889Y", "KBL 552P")
-                val owners = listOf("Mwangi Maina", "Faith Achieng", "Brian Omondi")
-                val descriptions = listOf(
-                    "Front bumper dent removal, panel beating & metallic respray (Rangi)",
-                    "Torn driver leather seat stitching & sagging roof lining repair (Ndani & Viti)",
-                    "Tyre burst, rim bend straightening & radiator overheating flush (Matairi & Injini)"
-                )
-                val stages = listOf(JobStage.DIAGNOSIS, JobStage.IN_PROGRESS, JobStage.AWAITING_APPROVAL)
-                val sampleParts = listOf(
-                    listOf(
-                        PartItem(name = "Bumper Dent Removal & Plastic Welding", cost = 3500.0),
-                        PartItem(name = "Full Bumper Respray & Buffing", cost = 4500.0)
-                    ),
-                    listOf(
-                        PartItem(name = "Torn Leather Seat Stitching", cost = 3000.0),
-                        PartItem(name = "Roof Lining Sagging Repair (Dari)", cost = 4500.0)
-                    ),
-                    listOf(
-                        PartItem(name = "Rim Bend Straightening", cost = 2500.0),
-                        PartItem(name = "Wheel Alignment & Balancing", cost = 2000.0),
-                        PartItem(name = "Radiator Flush & Leak Sealant", cost = 3500.0)
-                    )
-                )
-
-                plates.forEachIndexed { i, plate ->
-                    val parts = sampleParts[i]
-                    jobCardDao.insertJobCard(
-                        JobCardEntity(
-                            id = UUID.randomUUID().toString(),
-                            businessId = businessId,
-                            vehiclePlate = plate,
-                            customerName = owners[i],
-                            customerPhone = "+25471200000$i",
-                            description = descriptions[i],
-                            stage = stages[i],
-                            estimateTotal = parts.sumOf { it.cost },
-                            partsList = parts
+            val existingParts = jobPartDao.getByJob(jobCardId)
+            // Restore stock for removed parts that had stock deducted
+            for (p in existingParts) {
+                if (p.stockDeducted && p.itemId != null && newParts.none { it.id == p.id }) {
+                    itemDao.adjustStock(p.itemId, bizId, p.qty.toLong())
+                    val cur = itemDao.getItemById(p.itemId, bizId)
+                    stockMovementDao.insertMovement(
+                        StockMovementEntity(
+                            businessId = bizId,
+                            itemId = p.itemId,
+                            movementType = StockMovementType.VOID_JOB,
+                            deltaQty = p.qty.toLong(),
+                            balanceAfter = cur?.stockQty ?: 0L,
+                            reference = "Removed from Job ${job.jobNumber}",
+                            recordedByUserId = userId
                         )
                     )
                 }
-            } else {
-                // Seed sample Kariakor items with categories and customers
-                val sampleItems = listOf(
-                    Triple("Safari Combat Boots (Size 42)", 3500.0, 2700.0),
-                    Triple("Handcrafted Leather Belt (Brown)", 800.0, 500.0),
-                    Triple("Men Leather Oxford Shoes (Black)", 2800.0, 2100.0),
-                    Triple("Engine Oil 20W-50 (4 Litre)", 3200.0, 2600.0),
-                    Triple("Front Disc Brake Pads Heavy Duty", 3500.0, 2400.0),
-                    Triple("Women Leather Handbag Black", 2200.0, 1600.0)
-                )
-                sampleItems.forEach { (name, ret, whl) ->
-                    itemDao.insertItem(
-                        ItemEntity(
-                            id = UUID.randomUUID().toString(),
-                            businessId = businessId,
-                            name = name,
-                            retailPrice = ret,
-                            wholesalePrice = whl,
-                            stockQty = 25
-                        )
-                    )
-                }
-
-                // Seed sample Deni customer
-                customerDao.insertCustomer(
-                    CustomerEntity(
-                        id = UUID.randomUUID().toString(),
-                        businessId = businessId,
-                        name = "Hassan Kariuki",
-                        phone = "+254722334455",
-                        balance = 3200.0,
-                        dueDate = System.currentTimeMillis() + (5L * 24 * 60 * 60 * 1000),
-                        notes = "Aliahidi kulipa Ijumaa baada ya kupokea mshahara"
-                    )
-                )
             }
 
-            // Seed enterprise accounting records
-            ensureDefaultAccounts(businessId)
+            jobPartDao.deleteByJob(jobCardId)
 
-            // Seed sample supplier
-            val supplierId = UUID.randomUUID().toString()
-            val supplierName = if (type == com.example.businessos.data.model.BusinessType.GARAGE) "AutoSpares Kenya Ltd" else "Kariakor Leather Tannery"
-            supplierDao.insertSupplier(
-                SupplierEntity(
-                    id = supplierId,
-                    businessId = businessId,
-                    name = supplierName,
-                    phone = "+254701234567",
-                    email = "sales@supplier.co.ke",
-                    totalPayable = 18500.0
+            val childParts = newParts.map { p ->
+                var stockDeducted = p.isStockDeducted
+                if (p.itemId != null && !stockDeducted) {
+                    itemDao.adjustStock(p.itemId, bizId, -p.quantity.toLong())
+                    val cur = itemDao.getItemById(p.itemId, bizId)
+                    stockMovementDao.insertMovement(
+                        StockMovementEntity(
+                            businessId = bizId,
+                            itemId = p.itemId,
+                            movementType = StockMovementType.JOB_PART,
+                            deltaQty = -p.quantity.toLong(),
+                            balanceAfter = cur?.stockQty ?: 0L,
+                            reference = "Assigned to Job ${job.jobNumber}",
+                            recordedByUserId = userId
+                        )
+                    )
+                    stockDeducted = true
+                }
+
+                JobPartEntity(
+                    id = p.id,
+                    jobCardId = jobCardId,
+                    itemId = p.itemId,
+                    name = p.name,
+                    unitPriceCents = p.unitPrice.cents,
+                    costPriceCents = p.costPrice.cents,
+                    qty = p.quantity,
+                    stockDeducted = stockDeducted
+                )
+            }
+            jobPartDao.insertJobParts(childParts)
+
+            val totalParts = newParts.fold(Money.ZERO) { acc, p -> acc + p.total }
+            jobCardDao.updateJobCard(
+                job.copy(
+                    partsCostCents = totalParts.cents,
+                    estimateTotalCents = job.laborCostCents + totalParts.cents
                 )
             )
-
-            // Seed sample supplier bill
-            billDao.insertBill(
-                BillEntity(
-                    id = UUID.randomUUID().toString(),
-                    businessId = businessId,
-                    billNumber = "BILL-0012",
-                    supplierId = supplierId,
-                    supplierName = supplierName,
-                    issueDate = System.currentTimeMillis() - (4L * 24 * 60 * 60 * 1000),
-                    dueDate = System.currentTimeMillis() + (10L * 24 * 60 * 60 * 1000),
-                    totalAmount = 18500.0,
-                    paidAmount = 0.0,
-                    balanceDue = 18500.0,
-                    status = BillStatus.UNPAID,
-                    category = "Mzigo / Stock",
-                    description = "Monthly stock inventory delivery",
-                    createdByUserId = session.userId
-                )
-            )
-
-            // Seed sample fixed asset
-            val assetName = if (type == com.example.businessos.data.model.BusinessType.GARAGE) "Hydraulic 2-Post Car Lift" else "Heavy Duty Shoe Stitching Machine"
-            assetDao.insertAsset(
-                AssetEntity(
-                    id = UUID.randomUUID().toString(),
-                    businessId = businessId,
-                    assetNumber = "AST-001",
-                    name = assetName,
-                    category = "Machinery & Equipment",
-                    acquisitionCost = 145000.0,
-                    purchaseDate = System.currentTimeMillis() - (180L * 24 * 60 * 60 * 1000),
-                    usefulLifeYears = 5,
-                    salvageValue = 15000.0,
-                    accumulatedDepreciation = 13000.0,
-                    currentValue = 132000.0,
-                    notes = "Installed and operational in main bay"
-                )
-            )
-
-            // Seed sample liability / loan
-            liabilityDao.insertLiability(
-                LiabilityEntity(
-                    id = UUID.randomUUID().toString(),
-                    businessId = businessId,
-                    lenderName = "Equity Bank Biashara Loan",
-                    principalAmount = 100000.0,
-                    interestRatePercent = 12.0,
-                    totalRepayable = 112000.0,
-                    totalPaid = 35000.0,
-                    balanceDue = 77000.0,
-                    startDate = System.currentTimeMillis() - (60L * 24 * 60 * 60 * 1000),
-                    dueDate = System.currentTimeMillis() + (300L * 24 * 60 * 60 * 1000),
-                    status = "ACTIVE",
-                    notes = "Monthly repayment via standing order"
-                )
-            )
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
-    // ==========================================
-    // ACCOUNTING: EXPENSES & CASH-OUT
-    // ==========================================
+    suspend fun advanceJobStage(jobCardId: String, note: String?): Result<JobStage?> = runCatching {
+        val bizId = getActiveBusinessId()
+        database.withTransaction {
+            val job = jobCardDao.getJobCardById(jobCardId, bizId)
+                ?: throw IllegalArgumentException("Job card not found")
+            val next = job.stage.next() ?: return@withTransaction job.stage
 
-    fun observeExpenses(): Flow<List<ExpenseEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return expenseDao.observeExpenses(businessId)
+            jobCardDao.updateStage(jobCardId, bizId, next)
+            jobStageTransitionDao.insertTransition(
+                JobStageTransitionEntity(
+                    jobCardId = jobCardId,
+                    toStage = next,
+                    note = note
+                )
+            )
+
+            // If entering INVOICED stage, create garage invoice
+            if (next == JobStage.INVOICED && job.invoiceId == null) {
+                val invRes = createInvoice(
+                    customerId = null,
+                    customerName = job.customerName,
+                    customerPhone = job.customerPhone,
+                    items = listOf(
+                        InvoiceLineItem(
+                            description = "Service/Labor for ${job.vehiclePlate} (${job.vehicleMake} ${job.vehicleModel})",
+                            unitPrice = Money(job.laborCostCents)
+                        )
+                    ),
+                    side = BusinessSide.GARAGE
+                )
+                invRes.onSuccess { inv ->
+                    jobCardDao.linkInvoice(jobCardId, bizId, inv.id)
+                }
+            }
+            next
+        }
     }
 
-    fun observeTotalExpenses(): Flow<Double> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(0.0)
-        return expenseDao.observeTotalExpenses(businessId)
+    suspend fun reopenJobStage(jobCardId: String, targetStage: JobStage, reason: String?): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        database.withTransaction {
+            jobCardDao.updateStage(jobCardId, bizId, targetStage)
+            jobStageTransitionDao.insertTransition(
+                JobStageTransitionEntity(
+                    jobCardId = jobCardId,
+                    toStage = targetStage,
+                    note = reason
+                )
+            )
+        }
     }
 
-    fun observeTotalSales(): Flow<Double?> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(0.0)
-        return saleDao.observeTotalSales(businessId)
-    }
+    // ── Expense Engine & Voids ───────────────────────────────────────────────
 
     suspend fun recordExpense(
         category: String,
         title: String,
-        amount: Double,
+        amount: Money,
         paymentMethod: PaymentMethod = PaymentMethod.CASH,
-        note: String = ""
-    ): Result<ExpenseEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
+        notes: String? = null,
+        side: BusinessSide = BusinessSide.SHOP
+    ): Result<ExpenseEntity> = runCatching {
+        val bizId = getActiveBusinessId()
+        val userId = getActiveUserId()
+
+        database.withTransaction {
+            val expNum = documentCounterDao.nextNumber(bizId, DocumentType.EXPENSE, "EXP-")
+            val expId = UUID.randomUUID().toString()
+
             val expense = ExpenseEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                category = category,
-                title = title,
-                amount = amount,
+                id = expId,
+                businessId = bizId,
+                expenseNumber = expNum,
+                category = category.trim(),
+                title = title.trim(),
+                amountCents = amount.cents,
                 paymentMethod = paymentMethod,
-                note = note,
-                createdAt = System.currentTimeMillis(),
-                createdByUserId = session.userId
+                notes = notes?.trim()?.ifBlank { null },
+                side = side,
+                userId = userId,
+                createdAt = System.currentTimeMillis()
             )
             expenseDao.insertExpense(expense)
 
-            // Post double-entry journal entry to General Ledger
-            ensureDefaultAccounts(businessId)
-            val expenseCode = when {
-                category.contains("Rent", ignoreCase = true) || category.contains("Kodi", ignoreCase = true) -> "6010"
-                category.contains("Tokeni", ignoreCase = true) || category.contains("Umeme", ignoreCase = true) -> "6020"
-                category.contains("Mishahara", ignoreCase = true) || category.contains("Wages", ignoreCase = true) -> "6030"
-                category.contains("Nauli", ignoreCase = true) || category.contains("Transport", ignoreCase = true) -> "6040"
-                category.contains("Chakula", ignoreCase = true) || category.contains("Lunch", ignoreCase = true) -> "6050"
-                category.contains("Mzigo", ignoreCase = true) || category.contains("Stock", ignoreCase = true) -> "5010"
+            val expAccCode = when (category.lowercase()) {
+                "rent" -> "6010"
+                "utilities", "electricity", "water" -> "6020"
+                "salary", "wage" -> "6030"
+                "transport", "delivery" -> "6040"
+                "food", "meals" -> "6050"
                 else -> "6070"
             }
-            val expAccount = accountDao.getAccountByCode(expenseCode, businessId)
-                ?: accountDao.getAccountByCode("6070", businessId)
-            val cashAccount = accountDao.getAccountByCode("1010", businessId)
-            val mpesaAccount = accountDao.getAccountByCode("1020", businessId)
-            val bankAccount = accountDao.getAccountByCode("1030", businessId)
+            val expAccount = accountDao.getAccountByCode(expAccCode, bizId)
+            val cashAccount = accountDao.getAccountByCode(if (paymentMethod == PaymentMethod.MPESA) "1020" else "1010", bizId)
 
-            val creditAccount = when (paymentMethod) {
-                PaymentMethod.MPESA -> mpesaAccount ?: cashAccount
-                PaymentMethod.BANK -> bankAccount ?: cashAccount
-                else -> cashAccount
-            }
-
-            if (expAccount != null && creditAccount != null) {
+            if (expAccount != null && cashAccount != null && amount > Money.ZERO) {
                 postJournalEntry(
+                    businessId = bizId,
                     date = expense.createdAt,
-                    description = "Expense: $title ($category)",
+                    description = "Expense $expNum: ${expense.title}",
                     sourceType = JournalSourceType.EXPENSE,
-                    sourceReferenceId = expense.id,
+                    sourceId = expId,
+                    side = side,
                     lines = listOf(
-                        JournalLineItem(expAccount.id, expAccount.code, expAccount.name, debit = amount, credit = 0.0),
-                        JournalLineItem(creditAccount.id, creditAccount.code, creditAccount.name, debit = 0.0, credit = amount)
+                        JournalLineItem(expAccount.id, expAccount.code, expAccount.name, debit = amount),
+                        JournalLineItem(cashAccount.id, cashAccount.code, cashAccount.name, credit = amount)
                     )
                 )
             }
 
-            Result.success(expense)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun deleteExpense(id: String): Result<Unit> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val role = getActiveRole(businessId, session.userId)
-            if (role != Role.OWNER) {
-                return Result.failure(SecurityException("Only business owners can delete expenses"))
-            }
-            expenseDao.deleteExpense(id, businessId)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun updateCustomerReminder(customerId: String, dueDate: Long?, notes: String): Result<Unit> {
-        return try {
-            val businessId = getActiveBusinessId()
-            val customer = customerDao.getCustomerById(customerId, businessId)
-                ?: return Result.failure(Exception("Customer not found"))
-            customerDao.updateCustomer(
-                customer.copy(
-                    dueDate = dueDate,
-                    notes = notes,
-                    lastReminderSent = System.currentTimeMillis()
-                )
-            )
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    // ==========================================
-    // ENTERPRISE ACCOUNTING: CHART OF ACCOUNTS & GENERAL LEDGER
-    // ==========================================
-
-    suspend fun ensureDefaultAccounts(businessId: String) {
-        val existing = accountDao.getAccounts(businessId)
-        if (existing.isNotEmpty()) return
-
-        val defaultAccounts = listOf(
-            // Assets (1000 - 1999)
-            AccountEntity(UUID.randomUUID().toString(), businessId, "1010", "Cash on Hand (Till / Sanduku)", AccountCategory.ASSET, AccountSubCategory.CURRENT_ASSET, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "1020", "M-Pesa Business Till / Paybill", AccountCategory.ASSET, AccountSubCategory.CURRENT_ASSET, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "1030", "Bank Account (Akaunti ya Benki)", AccountCategory.ASSET, AccountSubCategory.CURRENT_ASSET, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "1200", "Accounts Receivable (Wateja wa Deni)", AccountCategory.ASSET, AccountSubCategory.CURRENT_ASSET, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "1300", "Inventory / Stock Asset (Mzigo & Vipuri)", AccountCategory.ASSET, AccountSubCategory.CURRENT_ASSET, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "1500", "Equipment & Tools (Mitambo & Vifaa)", AccountCategory.ASSET, AccountSubCategory.FIXED_ASSET, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "1510", "Accumulated Depreciation - Equipment", AccountCategory.ASSET, AccountSubCategory.FIXED_ASSET, isSystemAccount = true),
-
-            // Liabilities (2000 - 2999)
-            AccountEntity(UUID.randomUUID().toString(), businessId, "2010", "Accounts Payable (Madeni ya Wasambazaji)", AccountCategory.LIABILITY, AccountSubCategory.CURRENT_LIABILITY, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "2020", "Short-Term Loans & Overdrafts (Mikopo)", AccountCategory.LIABILITY, AccountSubCategory.CURRENT_LIABILITY, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "2100", "Taxes & Levies Payable (Kodi ya KRA)", AccountCategory.LIABILITY, AccountSubCategory.CURRENT_LIABILITY, isSystemAccount = true),
-
-            // Equity (3000 - 3999)
-            AccountEntity(UUID.randomUUID().toString(), businessId, "3010", "Owner's Capital (Mtaji wa Mmiliki)", AccountCategory.EQUITY, AccountSubCategory.OWNERS_EQUITY, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "3020", "Retained Earnings (Faida Iliyobakishwa)", AccountCategory.EQUITY, AccountSubCategory.OWNERS_EQUITY, isSystemAccount = true),
-
-            // Income / Revenue (4000 - 4999)
-            AccountEntity(UUID.randomUUID().toString(), businessId, "4010", "Sales Revenue (Mauzo ya Bidhaa)", AccountCategory.INCOME, AccountSubCategory.OPERATING_REVENUE, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "4020", "Service & Repair Revenue (Ufundi & Ukarabati)", AccountCategory.INCOME, AccountSubCategory.OPERATING_REVENUE, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "4030", "Other Income (Mapato ya Ziada)", AccountCategory.INCOME, AccountSubCategory.OPERATING_REVENUE, isSystemAccount = true),
-
-            // Cost of Goods Sold (5000 - 5999)
-            AccountEntity(UUID.randomUUID().toString(), businessId, "5010", "Cost of Goods Sold (Gharama ya Mzigo)", AccountCategory.EXPENSE, AccountSubCategory.DIRECT_COST, isSystemAccount = true),
-
-            // Operating Expenses (6000 - 6999)
-            AccountEntity(UUID.randomUUID().toString(), businessId, "6010", "Rent Expense (Kodi ya Chumba/Kibanda)", AccountCategory.EXPENSE, AccountSubCategory.OPERATING_EXPENSE, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "6020", "Electricity & Water (Umeme/Tokeni & Maji)", AccountCategory.EXPENSE, AccountSubCategory.OPERATING_EXPENSE, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "6030", "Salaries & Wages (Mishahara & Vibaruwa)", AccountCategory.EXPENSE, AccountSubCategory.OPERATING_EXPENSE, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "6040", "Transport & Delivery (Nauli & Usafiri)", AccountCategory.EXPENSE, AccountSubCategory.OPERATING_EXPENSE, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "6050", "Meals & Staff Lunch (Chakula)", AccountCategory.EXPENSE, AccountSubCategory.OPERATING_EXPENSE, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "6060", "Depreciation Expense (Uchakavu wa Vifaa)", AccountCategory.EXPENSE, AccountSubCategory.OPERATING_EXPENSE, isSystemAccount = true),
-            AccountEntity(UUID.randomUUID().toString(), businessId, "6070", "General & Miscellaneous (Matumizi Mengineyo)", AccountCategory.EXPENSE, AccountSubCategory.OPERATING_EXPENSE, isSystemAccount = true)
-        )
-        accountDao.insertAccounts(defaultAccounts)
-    }
-
-    fun observeAccounts(): Flow<List<AccountEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return accountDao.observeAccounts(businessId)
-    }
-
-    suspend fun createAccount(
-        code: String,
-        name: String,
-        category: AccountCategory,
-        subCategory: AccountSubCategory
-    ): Result<AccountEntity> {
-        return try {
-            val businessId = getActiveBusinessId()
-            val existing = accountDao.getAccountByCode(code.trim(), businessId)
-            if (existing != null) {
-                return Result.failure(IllegalArgumentException("Account code $code already exists"))
-            }
-
-            val account = AccountEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                code = code.trim(),
-                name = name.trim(),
-                category = category,
-                subCategory = subCategory,
-                isSystemAccount = false,
-                balance = 0.0
-            )
-            accountDao.insertAccount(account)
-            Result.success(account)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    fun observeJournalEntries(): Flow<List<JournalEntryEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return journalEntryDao.observeJournalEntries(businessId)
-    }
-
-    suspend fun postJournalEntry(
-        date: Long,
-        description: String,
-        sourceType: JournalSourceType,
-        sourceReferenceId: String?,
-        lines: List<JournalLineItem>
-    ): Result<JournalEntryEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-
-            if (lines.isEmpty()) {
-                return Result.failure(IllegalArgumentException("Journal entry must contain lines"))
-            }
-
-            val totalDebit = lines.sumOf { it.debit }
-            val totalCredit = lines.sumOf { it.credit }
-
-            if (Math.abs(totalDebit - totalCredit) > 0.001) {
-                return Result.failure(IllegalArgumentException("Unbalanced journal entry! Total Debit: KSh $totalDebit != Total Credit: KSh $totalCredit"))
-            }
-
-            val count = journalEntryDao.countEntries(businessId)
-            val entryNumber = "JE-${String.format("%04d", count + 1)}"
-
-            val entry = JournalEntryEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                entryNumber = entryNumber,
-                date = date,
-                description = description,
-                sourceType = sourceType,
-                sourceReferenceId = sourceReferenceId,
-                totalDebit = totalDebit,
-                totalCredit = totalCredit,
-                createdByUserId = session.userId,
-                lines = lines
-            )
-            journalEntryDao.insertEntry(entry)
-
-            // Update account balances based on fundamental double-entry accounting rules
-            for (line in lines) {
-                val account = accountDao.getAccountById(line.accountId, businessId)
-                    ?: accountDao.getAccountByCode(line.accountCode, businessId)
-                if (account != null) {
-                    val delta = when (account.category) {
-                        AccountCategory.ASSET, AccountCategory.EXPENSE -> line.debit - line.credit
-                        AccountCategory.LIABILITY, AccountCategory.EQUITY, AccountCategory.INCOME -> line.credit - line.debit
-                    }
-                    accountDao.adjustBalance(account.id, businessId, delta)
-                }
-            }
-
-            Result.success(entry)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    // ==========================================
-    // INVOICES & ACCOUNTS RECEIVABLE (SALES CREDIT)
-    // ==========================================
-
-    fun observeInvoices(): Flow<List<InvoiceEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return invoiceDao.observeInvoices(businessId)
-    }
-
-    fun observeTotalReceivables(): Flow<Double?> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(0.0)
-        return invoiceDao.observeTotalReceivables(businessId)
-    }
-
-    suspend fun createInvoice(
-        customerId: String,
-        customerName: String,
-        customerPhone: String,
-        items: List<InvoiceLineItem>,
-        discountAmount: Double = 0.0,
-        taxAmount: Double = 0.0,
-        dueDate: Long = System.currentTimeMillis() + (7L * 24 * 60 * 60 * 1000),
-        notes: String = "",
-        paymentMethod: PaymentMethod = PaymentMethod.CREDIT
-    ): Result<InvoiceEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            ensureDefaultAccounts(businessId)
-
-            val subtotal = items.sumOf { it.total }
-            val total = subtotal - discountAmount + taxAmount
-            val count = invoiceDao.countInvoices(businessId)
-            val invoiceNumber = "INV-${String.format("%04d", count + 1)}"
-
-            val isFullyPaidNow = (paymentMethod == PaymentMethod.CASH || paymentMethod == PaymentMethod.MPESA || paymentMethod == PaymentMethod.BANK)
-            val initialPaid = if (isFullyPaidNow) total else 0.0
-            val initialBalance = total - initialPaid
-            val initialStatus = if (isFullyPaidNow) InvoiceStatus.PAID else InvoiceStatus.UNPAID
-
-            val invoice = InvoiceEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                invoiceNumber = invoiceNumber,
-                customerId = customerId,
-                customerName = customerName,
-                customerPhone = customerPhone,
-                issueDate = System.currentTimeMillis(),
-                dueDate = dueDate,
-                subtotal = subtotal,
-                discountAmount = discountAmount,
-                taxAmount = taxAmount,
-                totalAmount = total,
-                paidAmount = initialPaid,
-                balanceDue = initialBalance,
-                status = initialStatus,
-                paymentMethod = paymentMethod,
-                items = items,
-                notes = notes,
-                createdByUserId = session.userId
-            )
-            invoiceDao.insertInvoice(invoice)
-
-            // Update customer debt if credit
-            if (!isFullyPaidNow) {
-                customerDao.updateBalance(customerId, businessId, total)
-            }
-
-            // Post General Ledger Double-Entry
-            val arAccount = accountDao.getAccountByCode("1200", businessId)
-            val revenueAccount = accountDao.getAccountByCode("4010", businessId)
-            val cashAccount = accountDao.getAccountByCode("1010", businessId)
-            val mpesaAccount = accountDao.getAccountByCode("1020", businessId)
-            val bankAccount = accountDao.getAccountByCode("1030", businessId)
-
-            val debitAccount = when {
-                !isFullyPaidNow -> arAccount
-                paymentMethod == PaymentMethod.MPESA -> mpesaAccount
-                paymentMethod == PaymentMethod.BANK -> bankAccount
-                else -> cashAccount
-            }
-
-            if (debitAccount != null && revenueAccount != null) {
-                postJournalEntry(
-                    date = invoice.issueDate,
-                    description = "Invoice $invoiceNumber for $customerName",
-                    sourceType = JournalSourceType.SALE,
-                    sourceReferenceId = invoice.id,
-                    lines = listOf(
-                        JournalLineItem(debitAccount.id, debitAccount.code, debitAccount.name, debit = total, credit = 0.0),
-                        JournalLineItem(revenueAccount.id, revenueAccount.code, revenueAccount.name, debit = 0.0, credit = total)
-                    )
-                )
-            }
-
-            Result.success(invoice)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun recordInvoicePayment(
-        invoiceId: String,
-        amountPaid: Double,
-        paymentMethod: PaymentMethod,
-        reference: String = "",
-        description: String = ""
-    ): Result<PaymentEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val invoice = invoiceDao.getInvoiceById(invoiceId, businessId)
-                ?: return Result.failure(Exception("Invoice not found"))
-
-            if (amountPaid <= 0 || amountPaid > invoice.balanceDue + 0.01) {
-                return Result.failure(IllegalArgumentException("Invalid payment amount. Balance due is KSh ${invoice.balanceDue}"))
-            }
-
-            val newPaid = invoice.paidAmount + amountPaid
-            val newBalance = invoice.totalAmount - newPaid
-            val newStatus = if (newBalance <= 0.01) InvoiceStatus.PAID else InvoiceStatus.PARTIALLY_PAID
-
-            invoiceDao.recordInvoicePayment(invoiceId, businessId, amountPaid, newStatus)
-            customerDao.updateBalance(invoice.customerId, businessId, -amountPaid)
-
-            // Post double entry: Dr Cash/M-Pesa/Bank, Cr Accounts Receivable (1200)
-            val arAccount = accountDao.getAccountByCode("1200", businessId)
-            val cashAccount = accountDao.getAccountByCode("1010", businessId)
-            val mpesaAccount = accountDao.getAccountByCode("1020", businessId)
-            val bankAccount = accountDao.getAccountByCode("1030", businessId)
-
-            val debitAccount = when (paymentMethod) {
-                PaymentMethod.MPESA -> mpesaAccount ?: cashAccount
-                PaymentMethod.BANK -> bankAccount ?: cashAccount
-                else -> cashAccount
-            }
-
-            val payCount = paymentDao.countPayments(businessId)
-            val paymentNumber = "REC-${String.format("%04d", payCount + 1)}"
-
-            val payment = PaymentEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                paymentNumber = paymentNumber,
-                type = PaymentType.CUSTOMER_RECEIPT,
-                fromAccountId = arAccount?.id ?: "1200",
-                toAccountId = debitAccount?.id ?: "1010",
-                amount = amountPaid,
-                paymentMethod = paymentMethod,
-                reference = reference,
-                targetInvoiceId = invoiceId,
-                description = description.ifBlank { "Receipt for Invoice ${invoice.invoiceNumber}" },
-                date = System.currentTimeMillis(),
-                createdByUserId = session.userId
-            )
-            paymentDao.insertPayment(payment)
-
-            if (debitAccount != null && arAccount != null) {
-                postJournalEntry(
-                    date = payment.date,
-                    description = "Customer Payment: ${invoice.customerName} on Invoice ${invoice.invoiceNumber}",
-                    sourceType = JournalSourceType.CUSTOMER_PAYMENT,
-                    sourceReferenceId = payment.id,
-                    lines = listOf(
-                        JournalLineItem(debitAccount.id, debitAccount.code, debitAccount.name, debit = amountPaid, credit = 0.0),
-                        JournalLineItem(arAccount.id, arAccount.code, arAccount.name, debit = 0.0, credit = amountPaid)
-                    )
-                )
-            }
-
-            Result.success(payment)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    // ==========================================
-    // SUPPLIERS & ACCOUNTS PAYABLE (BILLS)
-    // ==========================================
-
-    fun observeSuppliers(): Flow<List<SupplierEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return supplierDao.observeSuppliers(businessId)
-    }
-
-    suspend fun createSupplier(name: String, phone: String, email: String = ""): Result<SupplierEntity> {
-        return try {
-            val businessId = getActiveBusinessId()
-            val supplier = SupplierEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                name = name.trim(),
-                phone = phone.trim(),
-                email = email.trim()
-            )
-            supplierDao.insertSupplier(supplier)
-            Result.success(supplier)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    fun observeBills(): Flow<List<BillEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return billDao.observeBills(businessId)
-    }
-
-    fun observeTotalPayables(): Flow<Double?> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(0.0)
-        return billDao.observeTotalPayables(businessId)
-    }
-
-    suspend fun createBill(
-        supplierId: String,
-        supplierName: String,
-        billNumber: String,
-        totalAmount: Double,
-        dueDate: Long = System.currentTimeMillis() + (14L * 24 * 60 * 60 * 1000),
-        category: String = "Mzigo / Stock",
-        description: String = ""
-    ): Result<BillEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            ensureDefaultAccounts(businessId)
-
-            val count = billDao.countBills(businessId)
-            val generatedBillNum = if (billNumber.isNotBlank()) billNumber else "BILL-${String.format("%04d", count + 1)}"
-
-            val bill = BillEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                billNumber = generatedBillNum,
-                supplierId = supplierId,
-                supplierName = supplierName,
-                issueDate = System.currentTimeMillis(),
-                dueDate = dueDate,
-                totalAmount = totalAmount,
-                paidAmount = 0.0,
-                balanceDue = totalAmount,
-                status = BillStatus.UNPAID,
-                category = category,
-                description = description,
-                createdByUserId = session.userId
-            )
-            billDao.insertBill(bill)
-            supplierDao.adjustPayable(supplierId, businessId, totalAmount)
-
-            // Post double-entry: Dr Inventory/Expense (1300 / 5010), Cr Accounts Payable (2010)
-            val apAccount = accountDao.getAccountByCode("2010", businessId)
-            val costAccount = accountDao.getAccountByCode("1300", businessId) ?: accountDao.getAccountByCode("5010", businessId)
-
-            if (costAccount != null && apAccount != null) {
-                postJournalEntry(
-                    date = bill.issueDate,
-                    description = "Supplier Bill $generatedBillNum from $supplierName",
-                    sourceType = JournalSourceType.PURCHASE_BILL,
-                    sourceReferenceId = bill.id,
-                    lines = listOf(
-                        JournalLineItem(costAccount.id, costAccount.code, costAccount.name, debit = totalAmount, credit = 0.0),
-                        JournalLineItem(apAccount.id, apAccount.code, apAccount.name, debit = 0.0, credit = totalAmount)
-                    )
-                )
-            }
-
-            Result.success(bill)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun recordBillPayment(
-        billId: String,
-        amountPaid: Double,
-        paymentMethod: PaymentMethod,
-        reference: String = "",
-        description: String = ""
-    ): Result<PaymentEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val bill = billDao.getBillById(billId, businessId)
-                ?: return Result.failure(Exception("Bill not found"))
-
-            if (amountPaid <= 0 || amountPaid > bill.balanceDue + 0.01) {
-                return Result.failure(IllegalArgumentException("Invalid payment amount. Balance due is KSh ${bill.balanceDue}"))
-            }
-
-            val newPaid = bill.paidAmount + amountPaid
-            val newBalance = bill.totalAmount - newPaid
-            val newStatus = if (newBalance <= 0.01) BillStatus.PAID else BillStatus.PARTIALLY_PAID
-
-            billDao.recordBillPayment(billId, businessId, amountPaid, newStatus)
-            supplierDao.adjustPayable(bill.supplierId, businessId, -amountPaid)
-
-            // Post double-entry: Dr Accounts Payable (2010), Cr Cash/M-Pesa/Bank
-            val apAccount = accountDao.getAccountByCode("2010", businessId)
-            val cashAccount = accountDao.getAccountByCode("1010", businessId)
-            val mpesaAccount = accountDao.getAccountByCode("1020", businessId)
-            val bankAccount = accountDao.getAccountByCode("1030", businessId)
-
-            val creditAccount = when (paymentMethod) {
-                PaymentMethod.MPESA -> mpesaAccount ?: cashAccount
-                PaymentMethod.BANK -> bankAccount ?: cashAccount
-                else -> cashAccount
-            }
-
-            val payCount = paymentDao.countPayments(businessId)
-            val paymentNumber = "PAY-${String.format("%04d", payCount + 1)}"
-
-            val payment = PaymentEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                paymentNumber = paymentNumber,
-                type = PaymentType.SUPPLIER_PAYMENT,
-                fromAccountId = creditAccount?.id ?: "1010",
-                toAccountId = apAccount?.id ?: "2010",
-                amount = amountPaid,
-                paymentMethod = paymentMethod,
-                reference = reference,
-                targetBillId = billId,
-                description = description.ifBlank { "Payment for Bill ${bill.billNumber} to ${bill.supplierName}" },
-                date = System.currentTimeMillis(),
-                createdByUserId = session.userId
-            )
-            paymentDao.insertPayment(payment)
-
-            if (apAccount != null && creditAccount != null) {
-                postJournalEntry(
-                    date = payment.date,
-                    description = "Payment to Supplier ${bill.supplierName} on Bill ${bill.billNumber}",
-                    sourceType = JournalSourceType.SUPPLIER_PAYMENT,
-                    sourceReferenceId = payment.id,
-                    lines = listOf(
-                        JournalLineItem(apAccount.id, apAccount.code, apAccount.name, debit = amountPaid, credit = 0.0),
-                        JournalLineItem(creditAccount.id, creditAccount.code, creditAccount.name, debit = 0.0, credit = amountPaid)
-                    )
-                )
-            }
-
-            Result.success(payment)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    // ==========================================
-    // CASH & BANK TRANSFERS
-    // ==========================================
-
-    fun observePayments(): Flow<List<PaymentEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return paymentDao.observePayments(businessId)
-    }
-
-    suspend fun recordAccountTransfer(
-        fromAccountCode: String,
-        toAccountCode: String,
-        amount: Double,
-        reference: String = "",
-        description: String = ""
-    ): Result<PaymentEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            ensureDefaultAccounts(businessId)
-
-            val fromAccount = accountDao.getAccountByCode(fromAccountCode, businessId)
-                ?: return Result.failure(Exception("Source account not found"))
-            val toAccount = accountDao.getAccountByCode(toAccountCode, businessId)
-                ?: return Result.failure(Exception("Destination account not found"))
-
-            if (amount <= 0) {
-                return Result.failure(IllegalArgumentException("Transfer amount must be greater than zero"))
-            }
-
-            val payCount = paymentDao.countPayments(businessId)
-            val paymentNumber = "TRF-${String.format("%04d", payCount + 1)}"
-
-            val payment = PaymentEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                paymentNumber = paymentNumber,
-                type = PaymentType.ACCOUNT_TRANSFER,
-                fromAccountId = fromAccount.id,
-                toAccountId = toAccount.id,
-                amount = amount,
-                paymentMethod = PaymentMethod.BANK,
-                reference = reference,
-                description = description.ifBlank { "Transfer from ${fromAccount.name} to ${toAccount.name}" },
-                date = System.currentTimeMillis(),
-                createdByUserId = session.userId
-            )
-            paymentDao.insertPayment(payment)
-
-            // Post double-entry: Dr Destination, Cr Source
-            postJournalEntry(
-                date = payment.date,
-                description = "Transfer from ${fromAccount.name} to ${toAccount.name} ($reference)",
-                sourceType = JournalSourceType.TRANSFER,
-                sourceReferenceId = payment.id,
-                lines = listOf(
-                    JournalLineItem(toAccount.id, toAccount.code, toAccount.name, debit = amount, credit = 0.0),
-                    JournalLineItem(fromAccount.id, fromAccount.code, fromAccount.name, debit = 0.0, credit = amount)
+            auditLogDao.insertAuditLog(
+                AuditLogEntity(
+                    id = UUID.randomUUID().toString(),
+                    businessId = bizId,
+                    userId = userId,
+                    userName = getSession().name,
+                    actionType = ActionType.PRICE_OVERRIDE,
+                    entityId = expId,
+                    details = "Recorded expense $expNum for ${amount.formatted}"
                 )
             )
 
-            Result.success(payment)
-        } catch (e: Exception) {
-            Result.failure(e)
+            expense
         }
     }
 
-    // ==========================================
-    // ASSET REGISTER & DEPRECIATION
-    // ==========================================
+    suspend fun deleteExpense(expenseId: String): Result<Unit> = voidExpense(expenseId, "User deleted expense")
 
-    fun observeAssets(): Flow<List<AssetEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return assetDao.observeAssets(businessId)
-    }
+    suspend fun voidExpense(expenseId: String, reason: String): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        val userId = getActiveUserId()
 
-    fun observeTotalAssetValue(): Flow<Double?> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(0.0)
-        return assetDao.observeTotalAssetValue(businessId)
-    }
+        database.withTransaction {
+            val expense = expenseDao.observeExpenses(bizId) // check existence
+            expenseDao.markVoided(expenseId, bizId, reason.trim(), userId)
 
-    suspend fun recordAssetPurchase(
-        name: String,
-        category: String,
-        cost: Double,
-        usefulLifeYears: Int = 5,
-        salvageValue: Double = 0.0,
-        paymentMethod: PaymentMethod = PaymentMethod.CASH,
-        notes: String = ""
-    ): Result<AssetEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            ensureDefaultAccounts(businessId)
-
-            val count = assetDao.countAssets(businessId)
-            val assetNumber = "AST-${String.format("%03d", count + 1)}"
-
-            val asset = AssetEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                assetNumber = assetNumber,
-                name = name.trim(),
-                category = category.trim(),
-                acquisitionCost = cost,
-                purchaseDate = System.currentTimeMillis(),
-                usefulLifeYears = usefulLifeYears,
-                salvageValue = salvageValue,
-                accumulatedDepreciation = 0.0,
-                currentValue = cost,
-                notes = notes
-            )
-            assetDao.insertAsset(asset)
-
-            // Post double entry: Dr 1500 Equipment, Cr Cash/M-Pesa/Bank
-            val equipmentAccount = accountDao.getAccountByCode("1500", businessId)
-            val cashAccount = accountDao.getAccountByCode("1010", businessId)
-            val mpesaAccount = accountDao.getAccountByCode("1020", businessId)
-            val bankAccount = accountDao.getAccountByCode("1030", businessId)
-
-            val creditAccount = when (paymentMethod) {
-                PaymentMethod.MPESA -> mpesaAccount ?: cashAccount
-                PaymentMethod.BANK -> bankAccount ?: cashAccount
-                else -> cashAccount
-            }
-
-            if (equipmentAccount != null && creditAccount != null) {
-                postJournalEntry(
-                    date = asset.purchaseDate,
-                    description = "Asset Purchase: $name ($assetNumber)",
-                    sourceType = JournalSourceType.ASSET_PURCHASE,
-                    sourceReferenceId = asset.id,
-                    lines = listOf(
-                        JournalLineItem(equipmentAccount.id, equipmentAccount.code, equipmentAccount.name, debit = cost, credit = 0.0),
-                        JournalLineItem(creditAccount.id, creditAccount.code, creditAccount.name, debit = 0.0, credit = cost)
-                    )
-                )
-            }
-
-            Result.success(asset)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun postAssetDepreciation(assetId: String): Result<Unit> {
-        return try {
-            val businessId = getActiveBusinessId()
-            ensureDefaultAccounts(businessId)
-            val asset = assetDao.getAssetById(assetId, businessId)
-                ?: return Result.failure(Exception("Asset not found"))
-
-            // Annual straight-line depreciation
-            val annualDepreciation = (asset.acquisitionCost - asset.salvageValue) / asset.usefulLifeYears.coerceAtLeast(1)
-            val remaining = asset.currentValue - asset.salvageValue
-            val deprAmount = Math.min(annualDepreciation, Math.max(0.0, remaining))
-
-            if (deprAmount <= 0) {
-                return Result.failure(IllegalStateException("Asset is already fully depreciated"))
-            }
-
-            val newAccum = asset.accumulatedDepreciation + deprAmount
-            val newCurrent = asset.acquisitionCost - newAccum
-
-            assetDao.updateAsset(
-                asset.copy(
-                    accumulatedDepreciation = newAccum,
-                    currentValue = newCurrent
+            auditLogDao.insertAuditLog(
+                AuditLogEntity(
+                    id = UUID.randomUUID().toString(),
+                    businessId = bizId,
+                    userId = userId,
+                    userName = getSession().name,
+                    actionType = ActionType.EXPENSE_VOIDED,
+                    entityId = expenseId,
+                    details = "Voided expense $expenseId. Reason: $reason"
                 )
             )
-
-            // Post double-entry: Dr 6060 Depreciation Expense, Cr 1510 Accumulated Depreciation
-            val deprExpenseAccount = accountDao.getAccountByCode("6060", businessId)
-            val accumDeprAccount = accountDao.getAccountByCode("1510", businessId)
-
-            if (deprExpenseAccount != null && accumDeprAccount != null) {
-                postJournalEntry(
-                    date = System.currentTimeMillis(),
-                    description = "Annual Depreciation for ${asset.name} (${asset.assetNumber})",
-                    sourceType = JournalSourceType.DEPRECIATION,
-                    sourceReferenceId = asset.id,
-                    lines = listOf(
-                        JournalLineItem(deprExpenseAccount.id, deprExpenseAccount.code, deprExpenseAccount.name, debit = deprAmount, credit = 0.0),
-                        JournalLineItem(accumDeprAccount.id, accumDeprAccount.code, accumDeprAccount.name, debit = 0.0, credit = deprAmount)
-                    )
-                )
-            }
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
-    // ==========================================
-    // LIABILITIES & LOANS
-    // ==========================================
-
-    fun observeLiabilities(): Flow<List<LiabilityEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return liabilityDao.observeLiabilities(businessId)
-    }
-
-    fun observeTotalLiabilities(): Flow<Double?> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(0.0)
-        return liabilityDao.observeTotalLiabilities(businessId)
-    }
-
-    suspend fun recordLoanDisbursement(
-        lenderName: String,
-        principalAmount: Double,
-        interestRatePercent: Double = 0.0,
-        dueDate: Long = System.currentTimeMillis() + (180L * 24 * 60 * 60 * 1000),
-        depositAccountCode: String = "1030",
-        notes: String = ""
-    ): Result<LiabilityEntity> {
-        return try {
-            val businessId = getActiveBusinessId()
-            ensureDefaultAccounts(businessId)
-
-            val totalRepayable = principalAmount + (principalAmount * (interestRatePercent / 100.0))
-
-            val liability = LiabilityEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                lenderName = lenderName.trim(),
-                principalAmount = principalAmount,
-                interestRatePercent = interestRatePercent,
-                totalRepayable = totalRepayable,
-                totalPaid = 0.0,
-                balanceDue = totalRepayable,
-                startDate = System.currentTimeMillis(),
-                dueDate = dueDate,
-                notes = notes
-            )
-            liabilityDao.insertLiability(liability)
-
-            // Post double-entry: Dr Cash/Bank, Cr 2020 Short-Term Loans
-            val depositAccount = accountDao.getAccountByCode(depositAccountCode, businessId)
-                ?: accountDao.getAccountByCode("1010", businessId)
-            val loanAccount = accountDao.getAccountByCode("2020", businessId)
-
-            if (depositAccount != null && loanAccount != null) {
-                postJournalEntry(
-                    date = liability.startDate,
-                    description = "Loan Disbursement from $lenderName",
-                    sourceType = JournalSourceType.LOAN_DISBURSEMENT,
-                    sourceReferenceId = liability.id,
-                    lines = listOf(
-                        JournalLineItem(depositAccount.id, depositAccount.code, depositAccount.name, debit = principalAmount, credit = 0.0),
-                        JournalLineItem(loanAccount.id, loanAccount.code, loanAccount.name, debit = 0.0, credit = principalAmount)
-                    )
-                )
-            }
-
-            Result.success(liability)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun recordLoanRepayment(
-        liabilityId: String,
-        amountPaid: Double,
-        paymentMethod: PaymentMethod = PaymentMethod.BANK,
-        notes: String = ""
-    ): Result<PaymentEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val liability = liabilityDao.getLiabilityById(liabilityId, businessId)
-                ?: return Result.failure(Exception("Loan record not found"))
-
-            if (amountPaid <= 0 || amountPaid > liability.balanceDue + 0.01) {
-                return Result.failure(IllegalArgumentException("Invalid repayment amount. Balance due is KSh ${liability.balanceDue}"))
-            }
-
-            val newPaid = liability.totalPaid + amountPaid
-            val newBalance = liability.totalRepayable - newPaid
-            val newStatus = if (newBalance <= 0.01) "PAID" else "ACTIVE"
-
-            liabilityDao.recordRepayment(liabilityId, businessId, amountPaid, newStatus)
-
-            // Post double-entry: Dr 2020 Short-Term Loans, Cr Bank/Cash/M-Pesa
-            val loanAccount = accountDao.getAccountByCode("2020", businessId)
-            val cashAccount = accountDao.getAccountByCode("1010", businessId)
-            val mpesaAccount = accountDao.getAccountByCode("1020", businessId)
-            val bankAccount = accountDao.getAccountByCode("1030", businessId)
-
-            val creditAccount = when (paymentMethod) {
-                PaymentMethod.MPESA -> mpesaAccount ?: cashAccount
-                PaymentMethod.BANK -> bankAccount ?: cashAccount
-                else -> cashAccount
-            }
-
-            val payCount = paymentDao.countPayments(businessId)
-            val paymentNumber = "LOAN-${String.format("%04d", payCount + 1)}"
-
-            val payment = PaymentEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
-                paymentNumber = paymentNumber,
-                type = PaymentType.LOAN_REPAYMENT,
-                fromAccountId = creditAccount?.id ?: "1030",
-                toAccountId = loanAccount?.id ?: "2020",
-                amount = amountPaid,
-                paymentMethod = paymentMethod,
-                reference = notes,
-                description = "Loan Repayment to ${liability.lenderName}",
-                date = System.currentTimeMillis(),
-                createdByUserId = session.userId
-            )
-            paymentDao.insertPayment(payment)
-
-            if (loanAccount != null && creditAccount != null) {
-                postJournalEntry(
-                    date = payment.date,
-                    description = "Loan Repayment to ${liability.lenderName}",
-                    sourceType = JournalSourceType.LOAN_REPAYMENT,
-                    sourceReferenceId = payment.id,
-                    lines = listOf(
-                        JournalLineItem(loanAccount.id, loanAccount.code, loanAccount.name, debit = amountPaid, credit = 0.0),
-                        JournalLineItem(creditAccount.id, creditAccount.code, creditAccount.name, debit = 0.0, credit = amountPaid)
-                    )
-                )
-            }
-
-            Result.success(payment)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    // ==========================================
-    // FINANCIAL STATEMENTS & REPORTING ENGINE
-    // ==========================================
-
-    suspend fun generateTrialBalance(): Result<TrialBalanceReport> {
-        return try {
-            val businessId = getActiveBusinessId()
-            ensureDefaultAccounts(businessId)
-            val accounts = accountDao.getAccounts(businessId)
-
-            val items = accounts.map { acc ->
-                val (debit, credit) = when (acc.category) {
-                    AccountCategory.ASSET, AccountCategory.EXPENSE -> {
-                        if (acc.balance >= 0) Pair(acc.balance, 0.0) else Pair(0.0, -acc.balance)
-                    }
-                    AccountCategory.LIABILITY, AccountCategory.EQUITY, AccountCategory.INCOME -> {
-                        if (acc.balance >= 0) Pair(0.0, acc.balance) else Pair(-acc.balance, 0.0)
-                    }
-                }
-                TrialBalanceItem(
-                    accountCode = acc.code,
-                    accountName = acc.name,
-                    category = acc.category,
-                    debit = debit,
-                    credit = credit
-                )
-            }
-
-            val totalDebit = items.sumOf { it.debit }
-            val totalCredit = items.sumOf { it.credit }
-
-            Result.success(TrialBalanceReport(items, totalDebit, totalCredit))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun generateProfitAndLoss(startDate: Long = 0L, endDate: Long = System.currentTimeMillis()): Result<ProfitAndLossReport> {
-        return try {
-            val businessId = getActiveBusinessId()
-            ensureDefaultAccounts(businessId)
-            val accounts = accountDao.getAccounts(businessId)
-
-            val revenueItems = accounts
-                .filter { it.category == AccountCategory.INCOME }
-                .map { AccountAmountItem(it.code, it.name, it.balance) }
-
-            val totalRevenue = revenueItems.sumOf { it.amount }
-
-            val cogsItems = accounts
-                .filter { it.subCategory == AccountSubCategory.DIRECT_COST }
-                .map { AccountAmountItem(it.code, it.name, it.balance) }
-
-            val totalCogs = cogsItems.sumOf { it.amount }
-            val grossProfit = totalRevenue - totalCogs
-
-            val expenseItems = accounts
-                .filter { it.category == AccountCategory.EXPENSE && it.subCategory != AccountSubCategory.DIRECT_COST }
-                .map { AccountAmountItem(it.code, it.name, it.balance) }
-
-            val totalExpenses = expenseItems.sumOf { it.amount }
-            val netProfit = grossProfit - totalExpenses
-
-            Result.success(
-                ProfitAndLossReport(
-                    revenueItems = revenueItems,
-                    totalRevenue = totalRevenue,
-                    costOfSalesItems = cogsItems,
-                    totalCostOfSales = totalCogs,
-                    grossProfit = grossProfit,
-                    operatingExpenses = expenseItems,
-                    totalOperatingExpenses = totalExpenses,
-                    netProfit = netProfit
-                )
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun generateBalanceSheet(): Result<BalanceSheetReport> {
-        return try {
-            val businessId = getActiveBusinessId()
-            ensureDefaultAccounts(businessId)
-            val accounts = accountDao.getAccounts(businessId)
-
-            val currentAssets = accounts
-                .filter { it.category == AccountCategory.ASSET && it.subCategory == AccountSubCategory.CURRENT_ASSET }
-                .map { AccountAmountItem(it.code, it.name, it.balance) }
-            val totalCurrentAssets = currentAssets.sumOf { it.amount }
-
-            val fixedAssets = accounts
-                .filter { it.category == AccountCategory.ASSET && it.subCategory == AccountSubCategory.FIXED_ASSET }
-                .map { AccountAmountItem(it.code, it.name, it.balance) }
-            val totalFixedAssets = fixedAssets.sumOf { it.amount }
-
-            val currentLiabilities = accounts
-                .filter { it.category == AccountCategory.LIABILITY && it.subCategory == AccountSubCategory.CURRENT_LIABILITY }
-                .map { AccountAmountItem(it.code, it.name, it.balance) }
-            val totalCurrentLiabilities = currentLiabilities.sumOf { it.amount }
-
-            val longTermLiabilities = accounts
-                .filter { it.category == AccountCategory.LIABILITY && it.subCategory == AccountSubCategory.LONG_TERM_LIABILITY }
-                .map { AccountAmountItem(it.code, it.name, it.balance) }
-            val totalLongTermLiabilities = longTermLiabilities.sumOf { it.amount }
-
-            // Current Net Profit flows into Equity
-            val pnlResult = generateProfitAndLoss()
-            val netProfit = pnlResult.getOrNull()?.netProfit ?: 0.0
-
-            val equityItems = accounts
-                .filter { it.category == AccountCategory.EQUITY }
-                .map { AccountAmountItem(it.code, it.name, it.balance) }
-            val totalEquity = equityItems.sumOf { it.amount } + netProfit
-
-            Result.success(
-                BalanceSheetReport(
-                    currentAssets = currentAssets,
-                    totalCurrentAssets = totalCurrentAssets,
-                    fixedAssets = fixedAssets,
-                    totalFixedAssets = totalFixedAssets,
-                    currentLiabilities = currentLiabilities,
-                    totalCurrentLiabilities = totalCurrentLiabilities,
-                    longTermLiabilities = longTermLiabilities,
-                    totalLongTermLiabilities = totalLongTermLiabilities,
-                    equityItems = equityItems,
-                    currentPeriodNetProfit = netProfit,
-                    totalEquity = totalEquity
-                )
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun generateAccountsReceivableAgeing(): Result<AccountsReceivableAgeingReport> {
-        return try {
-            val businessId = getActiveBusinessId()
-            val customers = customerDao.getCustomers(businessId)
-            val now = System.currentTimeMillis()
-            val dayMs = 24L * 60 * 60 * 1000
-
-            var totalCurrent = 0.0
-            var total1to30 = 0.0
-            var total31to60 = 0.0
-            var total61to90 = 0.0
-            var total90Plus = 0.0
-
-            val customerItems = customers.filter { it.balance > 0 }.map { cust ->
-                val due = cust.dueDate ?: cust.updatedAt
-                val overdueDays = ((now - due) / dayMs).toInt()
-
-                var c = 0.0
-                var d1 = 0.0
-                var d31 = 0.0
-                var d61 = 0.0
-                var d90 = 0.0
-
-                when {
-                    overdueDays <= 0 -> { c = cust.balance; totalCurrent += cust.balance }
-                    overdueDays in 1..30 -> { d1 = cust.balance; total1to30 += cust.balance }
-                    overdueDays in 31..60 -> { d31 = cust.balance; total31to60 += cust.balance }
-                    overdueDays in 61..90 -> { d61 = cust.balance; total61to90 += cust.balance }
-                    else -> { d90 = cust.balance; total90Plus += cust.balance }
-                }
-
-                EntityAgeingItem(
-                    entityId = cust.id,
-                    entityName = cust.name,
-                    phone = cust.phone,
-                    bucket = AgeingBucket(c, d1, d31, d61, d90)
-                )
-            }
-
-            Result.success(
-                AccountsReceivableAgeingReport(
-                    overall = AgeingBucket(totalCurrent, total1to30, total31to60, total61to90, total90Plus),
-                    customers = customerItems
-                )
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun generateAccountsPayableAgeing(): Result<AccountsPayableAgeingReport> {
-        return try {
-            val businessId = getActiveBusinessId()
-            val bills = billDao.getBills(businessId).filter { it.balanceDue > 0 && it.status != BillStatus.CANCELLED }
-            val now = System.currentTimeMillis()
-            val dayMs = 24L * 60 * 60 * 1000
-
-            var totalCurrent = 0.0
-            var total1to30 = 0.0
-            var total31to60 = 0.0
-            var total61to90 = 0.0
-            var total90Plus = 0.0
-
-            val supplierMap = mutableMapOf<String, Triple<String, String, AgeingBucket>>()
-
-            for (bill in bills) {
-                val overdueDays = ((now - bill.dueDate) / dayMs).toInt()
-                val currentBucket = supplierMap[bill.supplierId]?.third ?: AgeingBucket()
-
-                var c = currentBucket.current
-                var d1 = currentBucket.days1to30
-                var d31 = currentBucket.days31to60
-                var d61 = currentBucket.days61to90
-                var d90 = currentBucket.days90Plus
-
-                when {
-                    overdueDays <= 0 -> { c += bill.balanceDue; totalCurrent += bill.balanceDue }
-                    overdueDays in 1..30 -> { d1 += bill.balanceDue; total1to30 += bill.balanceDue }
-                    overdueDays in 31..60 -> { d31 += bill.balanceDue; total31to60 += bill.balanceDue }
-                    overdueDays in 61..90 -> { d61 += bill.balanceDue; total61to90 += bill.balanceDue }
-                    else -> { d90 += bill.balanceDue; total90Plus += bill.balanceDue }
-                }
-
-                supplierMap[bill.supplierId] = Triple(
-                    bill.supplierName,
-                    "",
-                    AgeingBucket(c, d1, d31, d61, d90)
-                )
-            }
-
-            val supplierItems = supplierMap.map { (id, triple) ->
-                EntityAgeingItem(
-                    entityId = id,
-                    entityName = triple.first,
-                    phone = triple.second,
-                    bucket = triple.third
-                )
-            }
-
-            Result.success(
-                AccountsPayableAgeingReport(
-                    overall = AgeingBucket(totalCurrent, total1to30, total31to60, total61to90, total90Plus),
-                    suppliers = supplierItems
-                )
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    // ==========================================
-    // WAGES & SALARY MANAGEMENT
-    // ==========================================
-
-    fun observeWagePayments(): Flow<List<WagePaymentEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return wagePaymentDao.observeWagePayments(businessId)
-    }
+    // ── Wages & Layaways ─────────────────────────────────────────────────────
 
     suspend fun recordWagePayment(
         staffUserId: String,
         staffName: String,
-        amount: Double,
-        period: String,
-        paymentMethod: String,
-        mpesaCode: String? = null,
-        notes: String = ""
-    ): Result<WagePaymentEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
-            val payment = WagePaymentEntity(
-                id = UUID.randomUUID().toString(),
-                businessId = businessId,
+        amount: Money,
+        paymentMethod: PaymentMethod = PaymentMethod.CASH,
+        notes: String? = null
+    ): Result<WagePaymentEntity> = runCatching {
+        val bizId = getActiveBusinessId()
+        val userId = getActiveUserId()
+
+        database.withTransaction {
+            val wageNum = documentCounterDao.nextNumber(bizId, DocumentType.WAGE, "WAG-")
+            val wageId = UUID.randomUUID().toString()
+
+            val wage = WagePaymentEntity(
+                id = wageId,
+                businessId = bizId,
+                paymentNumber = wageNum,
                 staffUserId = staffUserId,
-                staffName = staffName,
-                amount = amount,
-                period = period,
+                staffName = staffName.trim(),
+                amountCents = amount.cents,
                 paymentMethod = paymentMethod,
-                mpesaCode = mpesaCode,
-                notes = notes,
-                createdByUserId = session.userId,
+                notes = notes?.trim()?.ifBlank { null },
+                paidByUserId = userId,
                 createdAt = System.currentTimeMillis()
             )
-            wagePaymentDao.insertWagePayment(payment)
+            wagePaymentDao.insertWagePayment(wage)
 
-            // Auto-post double-entry: DR Wages Expense (5030), CR Cash/M-Pesa/Bank
-            val wagesAccount = accountDao.getAccountByCode("5030", businessId)
-            val cashAccount = when (paymentMethod) {
-                "MPESA" -> accountDao.getAccountByCode("1020", businessId)
-                "BANK" -> accountDao.getAccountByCode("1030", businessId)
-                else -> accountDao.getAccountByCode("1010", businessId)
-            }
-            if (wagesAccount != null && cashAccount != null) {
+            val wageAccount = accountDao.getAccountByCode("6030", bizId)
+            val cashAccount = accountDao.getAccountByCode(if (paymentMethod == PaymentMethod.MPESA) "1020" else "1010", bizId)
+
+            if (wageAccount != null && cashAccount != null && amount > Money.ZERO) {
                 postJournalEntry(
-                    date = payment.createdAt,
-                    description = "Mshahara kwa $staffName ($period)",
-                    sourceType = JournalSourceType.EXPENSE,
-                    sourceReferenceId = payment.id,
+                    businessId = bizId,
+                    date = wage.createdAt,
+                    description = "Wage payment $wageNum to $staffName",
+                    sourceType = JournalSourceType.WAGE,
+                    sourceId = wageId,
+                    side = BusinessSide.SHOP,
                     lines = listOf(
-                        JournalLineItem(wagesAccount.id, wagesAccount.code, wagesAccount.name, debit = amount, credit = 0.0),
-                        JournalLineItem(cashAccount.id, cashAccount.code, cashAccount.name, debit = 0.0, credit = amount)
+                        JournalLineItem(wageAccount.id, wageAccount.code, wageAccount.name, debit = amount),
+                        JournalLineItem(cashAccount.id, cashAccount.code, cashAccount.name, credit = amount)
                     )
                 )
             }
 
-            logAudit(
-                businessId = businessId,
-                actionType = ActionType.ROLE_CHANGED,
-                beforeValue = "Wage Payment: $period",
-                afterValue = "Paid KSh $amount to $staffName ($paymentMethod)"
-            )
-
-            Result.success(payment)
-        } catch (e: Exception) {
-            Result.failure(e)
+            wage
         }
-    }
-
-    // ==========================================
-    // LAYAWAY / AWALI (INSTALLMENT SALES)
-    // ==========================================
-
-    fun observeLayaways(): Flow<List<LayawayEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return layawayDao.observeLayaways(businessId)
-    }
-
-    fun observeActiveLayaways(): Flow<List<LayawayEntity>> {
-        val businessId = getSession().activeBusinessId ?: return flowOf(emptyList())
-        return layawayDao.observeActiveLayaways(businessId)
     }
 
     suspend fun createLayaway(
         customerName: String,
         customerPhone: String,
-        description: String,
-        totalAmount: Double,
-        depositPaid: Double,
+        itemDescription: String,
+        totalAmount: Money,
+        depositAmount: Money,
         dueDate: Long
-    ): Result<LayawayEntity> {
-        return try {
-            val session = getSession()
-            val businessId = getActiveBusinessId()
+    ): Result<LayawayEntity> = runCatching {
+        val bizId = getActiveBusinessId()
+        val balanceDue = (totalAmount - depositAmount).coerceAtLeast(Money.ZERO)
+
+        database.withTransaction {
+            val layNum = documentCounterDao.nextNumber(bizId, DocumentType.LAYAWAY, "LAY-")
             val layaway = LayawayEntity(
                 id = UUID.randomUUID().toString(),
-                businessId = businessId,
+                businessId = bizId,
+                layawayNumber = layNum,
                 customerName = customerName.trim(),
                 customerPhone = customerPhone.trim(),
-                description = description.trim(),
-                totalAmount = totalAmount,
-                depositPaid = depositPaid,
-                totalPaid = depositPaid,
-                balanceDue = totalAmount - depositPaid,
+                itemDescription = itemDescription.trim(),
+                totalAmountCents = totalAmount.cents,
+                depositAmountCents = depositAmount.cents,
+                balanceDueCents = balanceDue.cents,
                 dueDate = dueDate,
-                status = if (totalAmount - depositPaid <= 0.0) "COMPLETED" else "ACTIVE",
-                createdByUserId = session.userId,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis()
+                status = if (balanceDue == Money.ZERO) "COMPLETED" else "ACTIVE"
             )
             layawayDao.insertLayaway(layaway)
-
-            // If deposit > 0, post journal entry: DR Cash (1010), CR Customer Deposits / Layaway Liability (2040)
-            if (depositPaid > 0) {
-                val cashAccount = accountDao.getAccountByCode("1010", businessId)
-                val depositAccount = accountDao.getAccountByCode("2040", businessId) ?: accountDao.getAccountByCode("2010", businessId)
-                if (cashAccount != null && depositAccount != null) {
-                    postJournalEntry(
-                        date = layaway.createdAt,
-                        description = "Layaway Deposit: $customerName ($description)",
-                        sourceType = JournalSourceType.CUSTOMER_PAYMENT,
-                        sourceReferenceId = layaway.id,
-                        lines = listOf(
-                            JournalLineItem(cashAccount.id, cashAccount.code, cashAccount.name, debit = depositPaid, credit = 0.0),
-                            JournalLineItem(depositAccount.id, depositAccount.code, depositAccount.name, debit = 0.0, credit = depositPaid)
-                        )
-                    )
-                }
-            }
-
-            Result.success(layaway)
-        } catch (e: Exception) {
-            Result.failure(e)
+            layaway
         }
     }
 
     suspend fun recordLayawayPayment(
         layawayId: String,
-        amount: Double,
+        paymentAmount: Money,
         paymentMethod: PaymentMethod = PaymentMethod.CASH
-    ): Result<LayawayEntity> {
-        return try {
+    ): Result<Unit> = runCatching {
+        database.withTransaction {
             val layaway = layawayDao.getLayawayById(layawayId)
-                ?: return Result.failure(Exception("Layaway not found"))
-
-            val newTotalPaid = layaway.totalPaid + amount
-            val newBalance = layaway.totalAmount - newTotalPaid
-            val newStatus = if (newBalance <= 0.01) "COMPLETED" else "ACTIVE"
-
+                ?: throw IllegalArgumentException("Layaway not found")
+            val newDeposit = Money(layaway.depositAmountCents) + paymentAmount
+            val newBalance = (Money(layaway.totalAmountCents) - newDeposit).coerceAtLeast(Money.ZERO)
             val updated = layaway.copy(
-                totalPaid = newTotalPaid,
-                balanceDue = if (newBalance > 0) newBalance else 0.0,
-                status = newStatus,
-                updatedAt = System.currentTimeMillis()
+                depositAmountCents = newDeposit.cents,
+                balanceDueCents = newBalance.cents,
+                status = if (newBalance == Money.ZERO) "COMPLETED" else "ACTIVE"
             )
             layawayDao.updateLayaway(updated)
+        }
+    }
 
-            // Post double-entry
-            val businessId = layaway.businessId
-            val cashAccount = when (paymentMethod) {
-                PaymentMethod.MPESA -> accountDao.getAccountByCode("1020", businessId)
-                PaymentMethod.BANK -> accountDao.getAccountByCode("1030", businessId)
-                else -> accountDao.getAccountByCode("1010", businessId)
+    // ── Invoicing & Accounts Receivable ──────────────────────────────────────
+
+    suspend fun createInvoice(
+        customerId: String?,
+        customerName: String,
+        customerPhone: String,
+        items: List<InvoiceLineItem>,
+        side: BusinessSide = BusinessSide.SHOP
+    ): Result<InvoiceEntity> = runCatching {
+        val bizId = getActiveBusinessId()
+        val total = items.fold(Money.ZERO) { acc, i -> acc + i.total }
+
+        database.withTransaction {
+            val invNum = documentCounterDao.nextNumber(bizId, DocumentType.INVOICE, "INV-")
+            val invId = UUID.randomUUID().toString()
+
+            val invoice = InvoiceEntity(
+                id = invId,
+                businessId = bizId,
+                invoiceNumber = invNum,
+                customerId = customerId,
+                customerName = customerName.trim(),
+                customerPhone = customerPhone.trim(),
+                issueDate = System.currentTimeMillis(),
+                dueDate = System.currentTimeMillis() + (30L * 24 * 3600 * 1000),
+                totalAmountCents = total.cents,
+                paidAmountCents = 0L,
+                balanceDueCents = total.cents,
+                status = InvoiceStatus.UNPAID,
+                side = side
+            )
+            invoiceDao.insertInvoice(invoice)
+
+            val childItems = items.map { i ->
+                InvoiceItemEntity(
+                    invoiceId = invId,
+                    itemId = i.itemId,
+                    description = i.description,
+                    qty = i.qty,
+                    unitPriceCents = i.unitPrice.cents,
+                    costPriceCents = i.costPrice.cents,
+                    totalCents = i.total.cents
+                )
             }
-            val depositAccount = accountDao.getAccountByCode("2040", businessId) ?: accountDao.getAccountByCode("2010", businessId)
-            if (cashAccount != null && depositAccount != null) {
+            invoiceItemDao.insertInvoiceItems(childItems)
+
+            if (customerId != null) {
+                customerDao.updateBalanceCents(customerId, bizId, total.cents)
+            }
+
+            val arAccount = accountDao.getAccountByCode("1200", bizId)
+            val revAccount = accountDao.getAccountByCode(if (side == BusinessSide.GARAGE) "4020" else "4010", bizId)
+
+            if (arAccount != null && revAccount != null && total > Money.ZERO) {
                 postJournalEntry(
-                    date = System.currentTimeMillis(),
-                    description = "Layaway Payment: ${layaway.customerName} - KSh ${amount.toInt()}",
-                    sourceType = JournalSourceType.CUSTOMER_PAYMENT,
-                    sourceReferenceId = layaway.id,
+                    businessId = bizId,
+                    date = invoice.issueDate,
+                    description = "Invoice $invNum for $customerName",
+                    sourceType = JournalSourceType.INVOICE,
+                    sourceId = invId,
+                    side = side,
                     lines = listOf(
-                        JournalLineItem(cashAccount.id, cashAccount.code, cashAccount.name, debit = amount, credit = 0.0),
-                        JournalLineItem(depositAccount.id, depositAccount.code, depositAccount.name, debit = 0.0, credit = amount)
+                        JournalLineItem(arAccount.id, arAccount.code, arAccount.name, debit = total),
+                        JournalLineItem(revAccount.id, revAccount.code, revAccount.name, credit = total)
                     )
                 )
             }
 
-            Result.success(updated)
-        } catch (e: Exception) {
-            Result.failure(e)
+            invoice
         }
     }
 
-    // ==========================================
-    // STOCK AUDIT & RECONCILIATION
-    // ==========================================
+    suspend fun recordInvoicePayment(
+        invoiceId: String,
+        amount: Money,
+        paymentMethod: PaymentMethod = PaymentMethod.CASH,
+        reference: String? = null,
+        description: String? = null
+    ): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        database.withTransaction {
+            val inv = invoiceDao.getInvoiceById(invoiceId, bizId)
+                ?: throw IllegalArgumentException("Invoice not found")
 
-    suspend fun updateStockItemCount(
-        itemId: String,
-        physicalCount: Int,
-        varianceNote: String = ""
-    ): Result<ItemEntity> {
-        return try {
-            val businessId = getActiveBusinessId()
-            val item = itemDao.getItemById(itemId, businessId)
-                ?: return Result.failure(Exception("Item not found"))
+            val newPaid = Money(inv.paidAmountCents) + amount
+            val newBalance = (Money(inv.totalAmountCents) - newPaid).coerceAtLeast(Money.ZERO)
+            val newStatus = if (newBalance == Money.ZERO) InvoiceStatus.PAID else InvoiceStatus.PARTIALLY_PAID
 
-            val oldQty = item.stockQty
-            val variance = physicalCount - oldQty
+            invoiceDao.recordInvoicePayment(invoiceId, bizId, amount.cents, newStatus)
 
-            val updated = item.copy(
-                stockQty = physicalCount,
-                updatedAt = System.currentTimeMillis(),
-                syncStatus = SyncStatus.PENDING
-            )
-            itemDao.updateItem(updated)
+            if (inv.customerId != null) {
+                customerDao.updateBalanceCents(inv.customerId, bizId, -amount.cents)
+            }
 
-            logAudit(
-                businessId = businessId,
-                actionType = ActionType.STOCK_EDITED,
-                beforeValue = "${item.name}: Qty was $oldQty",
-                afterValue = "Counted $physicalCount (Variance: $variance). $varianceNote"
-            )
+            val cashAccount = accountDao.getAccountByCode(if (paymentMethod == PaymentMethod.MPESA) "1020" else "1010", bizId)
+            val arAccount = accountDao.getAccountByCode("1200", bizId)
 
-            Result.success(updated)
-        } catch (e: Exception) {
-            Result.failure(e)
+            if (cashAccount != null && arAccount != null && amount > Money.ZERO) {
+                postJournalEntry(
+                    businessId = bizId,
+                    date = System.currentTimeMillis(),
+                    description = "Payment on ${inv.invoiceNumber} (${reference ?: paymentMethod.name})",
+                    sourceType = JournalSourceType.CUSTOMER_PAYMENT,
+                    sourceId = invoiceId,
+                    side = inv.side,
+                    lines = listOf(
+                        JournalLineItem(cashAccount.id, cashAccount.code, cashAccount.name, debit = amount),
+                        JournalLineItem(arAccount.id, arAccount.code, arAccount.name, credit = amount)
+                    )
+                )
+            }
         }
+    }
+
+    // ── Supplier Management ──────────────────────────────────────────────────
+
+    suspend fun createSupplier(name: String, phone: String, email: String?): Result<SupplierEntity> = runCatching {
+        val bizId = getActiveBusinessId()
+        val supplier = SupplierEntity(
+            id = UUID.randomUUID().toString(),
+            businessId = bizId,
+            name = name.trim(),
+            phone = phone.trim(),
+            balanceCents = 0L
+        )
+        supplierDao.insertSupplier(supplier)
+        supplier
+    }
+
+    // ── Staff Management & Security ──────────────────────────────────────────
+
+    suspend fun inviteOrAddStaff(name: String, email: String, phone: String, role: Role): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        val cleanPhone = phone.trim()
+
+        var user = userDao.getUserByPhone(cleanPhone)
+        if (user == null) {
+            val newUserId = UUID.randomUUID().toString()
+            user = UserEntity(
+                id = newUserId,
+                name = name.trim(),
+                phone = cleanPhone,
+                pinSalt = "",
+                pinHash = ""
+            )
+            userDao.insertUser(user)
+        }
+
+        val existingMember = businessMemberDao.getMember(bizId, user.id)
+        if (existingMember != null) {
+            throw IllegalStateException("User is already a member of this business")
+        }
+
+        val member = BusinessMemberEntity(
+            businessId = bizId,
+            userId = user.id,
+            role = role,
+            canSellNegativeStock = (role == Role.OWNER || role == Role.MANAGER)
+        )
+        businessMemberDao.insertMember(member)
+    }
+
+    suspend fun updateStaffRole(userId: String, newRole: Role): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        val member = businessMemberDao.getMember(bizId, userId)
+            ?: throw IllegalArgumentException("Staff member not found")
+        businessMemberDao.updateMember(member.copy(role = newRole))
+    }
+
+    suspend fun removeStaff(userId: String): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        businessMemberDao.deleteMember(bizId, userId)
+    }
+
+    // ── Financial Reports Engine (Computed via Money) ─────────────────────────
+
+    suspend fun generateTrialBalance(): Result<TrialBalanceReport> = runCatching {
+        val bizId = getActiveBusinessId()
+        val accounts = accountDao.getAccounts(bizId)
+
+        var totalDebit = Money.ZERO
+        var totalCredit = Money.ZERO
+        val items = accounts.map { acc ->
+            val moneyBalance = Money(acc.balanceCents)
+            val debit: Money
+            val credit: Money
+            when (acc.category) {
+                AccountCategory.ASSET, AccountCategory.EXPENSE -> {
+                    debit = moneyBalance
+                    credit = Money.ZERO
+                    totalDebit += debit
+                }
+                AccountCategory.LIABILITY, AccountCategory.EQUITY, AccountCategory.INCOME -> {
+                    debit = Money.ZERO
+                    credit = moneyBalance
+                    totalCredit += credit
+                }
+            }
+            TrialBalanceItem(acc.code, acc.name, acc.category, debit, credit)
+        }
+
+        TrialBalanceReport(
+            items = items,
+            totalDebit = totalDebit,
+            totalCredit = totalCredit,
+            isBalanced = totalDebit == totalCredit
+        )
+    }
+
+    suspend fun generateProfitAndLoss(): Result<ProfitAndLossReport> = runCatching {
+        val bizId = getActiveBusinessId()
+        val accounts = accountDao.getAccounts(bizId)
+
+        val revenues = accounts.filter { it.category == AccountCategory.INCOME }
+            .map { AccountAmountItem(it.code, it.name, Money(it.balanceCents)) }
+        val totalRevenue = revenues.fold(Money.ZERO) { acc, i -> acc + i.amount }
+
+        val cogs = accounts.filter { it.category == AccountCategory.EXPENSE && it.subCategory == AccountSubCategory.DIRECT_COST }
+            .map { AccountAmountItem(it.code, it.name, Money(it.balanceCents)) }
+        val totalCogs = cogs.fold(Money.ZERO) { acc, i -> acc + i.amount }
+
+        val opEx = accounts.filter { it.category == AccountCategory.EXPENSE && it.subCategory != AccountSubCategory.DIRECT_COST }
+            .map { AccountAmountItem(it.code, it.name, Money(it.balanceCents)) }
+        val totalOpEx = opEx.fold(Money.ZERO) { acc, i -> acc + i.amount }
+
+        val gross = totalRevenue - totalCogs
+        val net = gross - totalOpEx
+
+        ProfitAndLossReport(
+            revenueItems = revenues,
+            totalRevenue = totalRevenue,
+            costOfSalesItems = cogs,
+            totalCostOfSales = totalCogs,
+            grossProfit = gross,
+            operatingExpenses = opEx,
+            totalOperatingExpenses = totalOpEx,
+            netProfit = net
+        )
+    }
+
+    suspend fun generateBalanceSheet(): Result<BalanceSheetReport> = runCatching {
+        val bizId = getActiveBusinessId()
+        val accounts = accountDao.getAccounts(bizId)
+
+        val curAssets = accounts.filter { it.category == AccountCategory.ASSET && it.subCategory == AccountSubCategory.CURRENT_ASSET }
+            .map { AccountAmountItem(it.code, it.name, Money(it.balanceCents)) }
+        val totCurAssets = curAssets.fold(Money.ZERO) { acc, i -> acc + i.amount }
+
+        val fixAssets = accounts.filter { it.category == AccountCategory.ASSET && it.subCategory == AccountSubCategory.FIXED_ASSET }
+            .map { AccountAmountItem(it.code, it.name, Money(it.balanceCents)) }
+        val totFixAssets = fixAssets.fold(Money.ZERO) { acc, i -> acc + i.amount }
+
+        val curLiab = accounts.filter { it.category == AccountCategory.LIABILITY && it.subCategory == AccountSubCategory.CURRENT_LIABILITY }
+            .map { AccountAmountItem(it.code, it.name, Money(it.balanceCents)) }
+        val totCurLiab = curLiab.fold(Money.ZERO) { acc, i -> acc + i.amount }
+
+        val ltLiab = accounts.filter { it.category == AccountCategory.LIABILITY && it.subCategory == AccountSubCategory.LONG_TERM_LIABILITY }
+            .map { AccountAmountItem(it.code, it.name, Money(it.balanceCents)) }
+        val totLtLiab = ltLiab.fold(Money.ZERO) { acc, i -> acc + i.amount }
+
+        val equity = accounts.filter { it.category == AccountCategory.EQUITY }
+            .map { AccountAmountItem(it.code, it.name, Money(it.balanceCents)) }
+        val totEquity = equity.fold(Money.ZERO) { acc, i -> acc + i.amount }
+
+        val pnl = generateProfitAndLoss().getOrNull()
+        val currentNetProfit = pnl?.netProfit ?: Money.ZERO
+
+        BalanceSheetReport(
+            currentAssets = curAssets,
+            totalCurrentAssets = totCurAssets,
+            fixedAssets = fixAssets,
+            totalFixedAssets = totFixAssets,
+            currentLiabilities = curLiab,
+            totalCurrentLiabilities = totCurLiab,
+            longTermLiabilities = ltLiab,
+            totalLongTermLiabilities = totLtLiab,
+            equityItems = equity,
+            currentPeriodNetProfit = currentNetProfit,
+            totalEquity = totEquity + currentNetProfit
+        )
+    }
+
+    suspend fun generateAccountsReceivableAgeing(): Result<AccountsReceivableAgeingReport> = runCatching {
+        val bizId = getActiveBusinessId()
+        val customers = customerDao.getCustomers(bizId).filter { it.balanceCents > 0 }
+        val items = customers.map { c ->
+            val b = AgeingBucket(current = Money(c.balanceCents))
+            EntityAgeingItem(c.id, c.name, c.phone, b)
+        }
+        val total = items.fold(Money.ZERO) { acc, i -> acc + i.bucket.total }
+        AccountsReceivableAgeingReport(
+            overall = AgeingBucket(current = total),
+            customers = items
+        )
+    }
+
+    suspend fun generateAccountsPayableAgeing(): Result<AccountsPayableAgeingReport> = runCatching {
+        val bizId = getActiveBusinessId()
+        val suppliers = supplierDao.getSuppliers(bizId).filter { it.balanceCents > 0 }
+        val items = suppliers.map { s ->
+            val b = AgeingBucket(current = Money(s.balanceCents))
+            EntityAgeingItem(s.id, s.name, s.phone, b)
+        }
+        val total = items.fold(Money.ZERO) { acc, i -> acc + i.bucket.total }
+        AccountsPayableAgeingReport(
+            overall = AgeingBucket(current = total),
+            suppliers = items
+        )
+    }
+
+    suspend fun recordAccountTransfer(
+        fromAccountCode: String,
+        toAccountCode: String,
+        amount: Money,
+        reference: String?,
+        description: String?
+    ): Result<Unit> = runCatching {
+        val bizId = getActiveBusinessId()
+        val from = accountDao.getAccountByCode(fromAccountCode, bizId)
+            ?: throw IllegalArgumentException("Source account $fromAccountCode not found")
+        val to = accountDao.getAccountByCode(toAccountCode, bizId)
+            ?: throw IllegalArgumentException("Destination account $toAccountCode not found")
+
+        postJournalEntry(
+            businessId = bizId,
+            date = System.currentTimeMillis(),
+            description = description ?: "Transfer from ${from.name} to ${to.name}",
+            sourceType = JournalSourceType.TRANSFER,
+            sourceId = reference,
+            side = BusinessSide.SHOP,
+            lines = listOf(
+                JournalLineItem(to.id, to.code, to.name, debit = amount),
+                JournalLineItem(from.id, from.code, from.name, credit = amount)
+            )
+        )
+    }
+
+    // ── Backwards-compatibility and No-op Stubs ──────────────────────────────
+
+    suspend fun ensureDefaultAccounts(businessId: String) {
+        val existing = accountDao.getAccounts(businessId)
+        if (existing.isEmpty()) {
+            val defs = com.example.businessos.data.local.DefaultAccounts.createDefaultAccounts(businessId)
+            accountDao.insertAccounts(defs)
+        }
+    }
+
+    suspend fun seedDemoData(type: BusinessType? = null) {
+        // Safe no-op in production baseline; Demo data is isolated to DEMO workspace
     }
 }
-

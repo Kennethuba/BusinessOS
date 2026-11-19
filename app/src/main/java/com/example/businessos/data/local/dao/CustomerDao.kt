@@ -10,13 +10,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CustomerDao {
-    @Query("SELECT * FROM customers WHERE businessId = :businessId ORDER BY balance DESC, name ASC")
+    @Query("SELECT * FROM customers WHERE businessId = :businessId ORDER BY balanceCents DESC, name ASC")
     fun observeCustomersForBusiness(businessId: String): Flow<List<CustomerEntity>>
 
-    @Query("SELECT * FROM customers WHERE businessId = :businessId ORDER BY balance DESC, name ASC")
+    @Query("SELECT * FROM customers WHERE businessId = :businessId ORDER BY balanceCents DESC, name ASC")
     suspend fun getCustomers(businessId: String): List<CustomerEntity>
 
-    @Query("SELECT * FROM customers WHERE businessId = :businessId AND balance > 0 ORDER BY balance DESC")
+    @Query("SELECT * FROM customers WHERE businessId = :businessId AND balanceCents > 0 ORDER BY balanceCents DESC")
     fun observeDeniLedger(businessId: String): Flow<List<CustomerEntity>>
 
     @Query("SELECT * FROM customers WHERE id = :id AND businessId = :businessId LIMIT 1")
@@ -25,8 +25,8 @@ interface CustomerDao {
     @Query("SELECT * FROM customers WHERE id = :id AND businessId = :businessId LIMIT 1")
     fun observeCustomerById(id: String, businessId: String): Flow<CustomerEntity?>
 
-    @Query("SELECT SUM(balance) FROM customers WHERE businessId = :businessId AND balance > 0")
-    fun observeTotalDeni(businessId: String): Flow<Double?>
+    @Query("SELECT COALESCE(SUM(balanceCents), 0) FROM customers WHERE businessId = :businessId AND balanceCents > 0")
+    fun observeTotalDeni(businessId: String): Flow<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCustomer(customer: CustomerEntity)
@@ -34,12 +34,10 @@ interface CustomerDao {
     @Update
     suspend fun updateCustomer(customer: CustomerEntity)
 
-    @Query("UPDATE customers SET balance = balance + :delta WHERE id = :id AND businessId = :businessId")
-    suspend fun updateBalance(id: String, businessId: String, delta: Double)
+    /** Adjust outstanding deni balance — deltaCents positive = owe more, negative = paid down. */
+    @Query("UPDATE customers SET balanceCents = balanceCents + :deltaCents WHERE id = :id AND businessId = :businessId")
+    suspend fun updateBalanceCents(id: String, businessId: String, deltaCents: Long)
 
     @Query("DELETE FROM customers WHERE id = :id AND businessId = :businessId")
     suspend fun deleteCustomer(id: String, businessId: String)
-
-    @Query("SELECT * FROM customers WHERE syncStatus = 'PENDING'")
-    suspend fun getPendingCustomers(): List<CustomerEntity>
 }

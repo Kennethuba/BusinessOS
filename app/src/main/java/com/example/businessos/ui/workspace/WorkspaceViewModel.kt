@@ -5,9 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.businessos.data.local.entity.BusinessEntity
 import com.example.businessos.data.model.BusinessType
 import com.example.businessos.data.model.CurrentUserSession
-import com.example.businessos.data.model.SubscriptionPlan
 import com.example.businessos.data.repository.AuthRepository
-import com.example.businessos.sync.SyncManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,8 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class WorkspaceViewModel(
-    private val authRepository: AuthRepository,
-    val syncManager: SyncManager
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     val session: StateFlow<CurrentUserSession?> = authRepository.session
@@ -50,7 +47,13 @@ class WorkspaceViewModel(
         }
     }
 
-    fun createBusiness(name: String, type: BusinessType, onSuccess: () -> Unit) {
+    fun createBusiness(
+        name: String,
+        type: BusinessType = BusinessType.STALL,
+        isShopEnabled: Boolean = (type == BusinessType.STALL),
+        isGarageEnabled: Boolean = (type == BusinessType.GARAGE),
+        onSuccess: () -> Unit
+    ) {
         if (name.isBlank()) {
             _errorMessage.value = "Business name cannot be empty"
             return
@@ -58,7 +61,11 @@ class WorkspaceViewModel(
         viewModelScope.launch {
             _isCreating.value = true
             _errorMessage.value = null
-            val result = authRepository.createBusiness(name.trim(), type)
+            val result = authRepository.createBusiness(
+                name = name.trim(),
+                isShopEnabled = isShopEnabled,
+                isGarageEnabled = isGarageEnabled
+            )
             _isCreating.value = false
             result.onSuccess {
                 onSuccess()

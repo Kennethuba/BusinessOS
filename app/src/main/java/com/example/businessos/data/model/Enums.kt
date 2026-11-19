@@ -5,13 +5,28 @@ enum class BusinessType {
     STALL
 }
 
+enum class BusinessSide {
+    SHOP,
+    GARAGE
+}
+
 enum class Role {
     OWNER,
     MANAGER,
-    ACCOUNTANT,
     CASHIER,
-    STAFF,
-    VIEWER
+    VIEWER;
+
+    companion object {
+        fun fromLegacy(roleStr: String?): Role {
+            return when (roleStr?.uppercase()) {
+                "OWNER" -> OWNER
+                "MANAGER" -> MANAGER
+                "CASHIER", "STAFF", "ACCOUNTANT" -> CASHIER
+                "VIEWER" -> VIEWER
+                else -> CASHIER
+            }
+        }
+    }
 }
 
 enum class JobStage(val title: String, val order: Int) {
@@ -21,9 +36,10 @@ enum class JobStage(val title: String, val order: Int) {
     AWAITING_APPROVAL("Awaiting Approval", 4),
     IN_PROGRESS("In Progress", 5),
     COMPLETED("Completed", 6),
-    INVOICED("Invoiced", 7);
+    INVOICED("Invoiced", 7),
+    CANCELLED("Cancelled", 8);
 
-    fun next(): JobStage? = entries.firstOrNull { it.order == this.order + 1 }
+    fun next(): JobStage? = entries.firstOrNull { it.order == this.order + 1 && it != CANCELLED }
     fun prev(): JobStage? = entries.firstOrNull { it.order == this.order - 1 }
 }
 
@@ -60,7 +76,7 @@ enum class InvoiceStatus {
     UNPAID,
     PARTIALLY_PAID,
     PAID,
-    CANCELLED,
+    VOIDED,
     OVERDUE
 }
 
@@ -69,7 +85,7 @@ enum class BillStatus {
     UNPAID,
     PARTIALLY_PAID,
     PAID,
-    CANCELLED,
+    VOIDED,
     OVERDUE
 }
 
@@ -89,10 +105,15 @@ enum class DepreciationMethod {
 
 enum class JournalSourceType {
     SALE,
+    INVOICE,
     PURCHASE_BILL,
     CUSTOMER_PAYMENT,
     SUPPLIER_PAYMENT,
     EXPENSE,
+    WAGE,
+    STOCK_ADJUSTMENT,
+    OPENING_BALANCE,
+    VOID_REVERSAL,
     ASSET_PURCHASE,
     DEPRECIATION,
     LOAN_DISBURSEMENT,
@@ -108,20 +129,52 @@ enum class PriceType {
 
 enum class ActionType {
     PRICE_OVERRIDE,
-    SALE_DELETED,
+    SALE_VOIDED,
+    EXPENSE_VOIDED,
     JOB_CANCELLED,
     STOCK_EDITED,
+    STOCK_ADJUSTED,
+    WAGE_PAID,
     ROLE_CHANGED
 }
 
-enum class SyncStatus {
-    PENDING,
-    SYNCED,
-    FAILED
+enum class StockMovementType {
+    OPENING,
+    SALE,
+    PURCHASE,
+    JOB_PART,
+    ADJUSTMENT,
+    VOID_SALE,
+    VOID_JOB
 }
 
-enum class SubscriptionPlan(val maxUsers: Int, val maxBusinesses: Int) {
-    STARTER(maxUsers = 2, maxBusinesses = 1),
-    GROWTH(maxUsers = 5, maxBusinesses = 3),
-    ENTERPRISE(maxUsers = Int.MAX_VALUE, maxBusinesses = 10)
+enum class DocumentType {
+    SALE,
+    INVOICE,
+    PAYMENT,
+    JOURNAL,
+    BILL,
+    EXPENSE,
+    WAGE,
+    LAYAWAY
+}
+
+enum class Permission {
+    MAKE_SALE,
+    SELL_NEGATIVE_STOCK,
+    TAKE_PAYMENT,
+    CREATE_CUSTOMER,
+    INTAKE_JOB,
+    UPDATE_JOB_STAGE,
+    EDIT_STOCK,
+    STOCK_TAKE_ADJUST,
+    RECORD_EXPENSE,
+    VOID_RECORD,
+    PAY_WAGES,
+    MANAGE_STAFF,
+    EDIT_BUSINESS_SETTINGS,
+    VIEW_FINANCIAL_REPORTS,
+    VIEW_NEGATIVE_STOCK_REPORT,
+    BACKUP_RESTORE,
+    DELETE_BUSINESS
 }

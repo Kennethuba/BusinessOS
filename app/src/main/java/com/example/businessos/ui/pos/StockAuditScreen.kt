@@ -24,7 +24,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.businessos.data.local.entity.ItemEntity
-import com.example.businessos.sync.SyncUiState
 import com.example.businessos.ui.components.BusinessOsTopBar
 import com.example.businessos.ui.components.StockItemThumbnail
 import com.example.businessos.ui.components.WhatsAppHelper
@@ -37,10 +36,9 @@ import java.util.*
 fun StockAuditScreen(
     items: List<ItemEntity>,
     businessName: String?,
-    syncState: SyncUiState,
     onSwitchWorkspace: () -> Unit,
     onNavigateBack: () -> Unit,
-    onConfirmAudit: suspend (List<Pair<ItemEntity, Int>>) -> Unit
+    onConfirmAudit: suspend (List<Pair<ItemEntity, Long>>) -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -60,15 +58,15 @@ fun StockAuditScreen(
 
     // Compute stats
     val variances = items.map { item ->
-        val physical = countsMap[item.id]?.toIntOrNull() ?: item.stockQty
+        val physical = countsMap[item.id]?.toLongOrNull() ?: item.stockQty
         val diff = physical - item.stockQty
         Triple(item, physical, diff)
     }
 
     val totalItems = items.size
-    val shortageCount = variances.count { it.third < 0 }
-    val surplusCount = variances.count { it.third > 0 }
-    val balancedCount = variances.count { it.third == 0 }
+    val shortageCount = variances.count { it.third < 0L }
+    val surplusCount = variances.count { it.third > 0L }
+    val balancedCount = variances.count { it.third == 0L }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -86,7 +84,6 @@ fun StockAuditScreen(
                         title = "Ukaguzi wa Akiba (Stock Take)",
                         businessName = businessName,
                         role = null,
-                        syncState = syncState,
                         onSwitchWorkspace = onSwitchWorkspace,
                         modifier = Modifier.weight(1f)
                     )
@@ -154,7 +151,7 @@ fun StockAuditScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                if (variances.any { it.third != 0 }) {
+                if (variances.any { it.third != 0L }) {
                     Surface(
                         color = StatusAmber.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(6.dp)
@@ -178,8 +175,8 @@ fun StockAuditScreen(
             ) {
                 items(items, key = { it.id }) { item ->
                     val currentInput = countsMap[item.id] ?: item.stockQty.toString()
-                    val physicalInt = currentInput.toIntOrNull() ?: item.stockQty
-                    val variance = physicalInt - item.stockQty
+                    val physicalLong = currentInput.toLongOrNull() ?: item.stockQty
+                    val variance = physicalLong - item.stockQty
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -188,8 +185,8 @@ fun StockAuditScreen(
                         border = BorderStroke(
                             1.dp,
                             when {
-                                variance < 0 -> StatusRed.copy(alpha = 0.6f)
-                                variance > 0 -> StatusAmber.copy(alpha = 0.6f)
+                                variance < 0L -> StatusRed.copy(alpha = 0.6f)
+                                variance > 0L -> StatusAmber.copy(alpha = 0.6f)
                                 else -> CardBorder
                             }
                         )
@@ -223,13 +220,13 @@ fun StockAuditScreen(
                                     Spacer(Modifier.width(8.dp))
                                     Text(
                                         text = when {
-                                            variance < 0 -> "Tofauti: $variance (Pungufu)"
-                                            variance > 0 -> "Tofauti: +$variance (Ziada)"
-                                            else -> "✓ Sawa"
+                                            variance < 0L -> "Tofauti: $variance (Pungufu)"
+                                            variance > 0L -> "Tofauti: +$variance (Ziada)"
+                                            else -> "Sawa"
                                         },
                                         color = when {
-                                            variance < 0 -> StatusRed
-                                            variance > 0 -> StatusAmber
+                                            variance < 0L -> StatusRed
+                                            variance > 0L -> StatusAmber
                                             else -> StatusGreen
                                         },
                                         fontWeight = FontWeight.Bold,
@@ -275,26 +272,26 @@ fun StockAuditScreen(
                             val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                             val dateStr = sdf.format(Date())
                             val message = buildString {
-                                appendLine("📋 *RIPOTI YA UKAGUZI WA AKIBA (STOCK TAKE)*")
-                                appendLine("🏢 *Biashara:* ${businessName ?: "My Business"}")
-                                appendLine("📅 *Tarehe:* $dateStr")
-                                appendLine("─────────────────")
-                                appendLine("📦 *Jumla ya Bidhaa:* $totalItems")
-                                appendLine("✅ *Zilizolingana:* $balancedCount")
-                                appendLine("⚠️ *Zenye Pungufu:* $shortageCount")
-                                appendLine("➕ *Zenye Ziada:* $surplusCount")
-                                appendLine("─────────────────")
-                                val varied = variances.filter { it.third != 0 }
+                                appendLine("*RIPOTI YA UKAGUZI WA AKIBA (STOCK TAKE)*")
+                                appendLine("*Biashara:* ${businessName ?: "My Business"}")
+                                appendLine("*Tarehe:* $dateStr")
+                                appendLine("----------------------------------------")
+                                appendLine("*Jumla ya Bidhaa:* $totalItems")
+                                appendLine("*Zilizolingana:* $balancedCount")
+                                appendLine("*Zenye Pungufu:* $shortageCount")
+                                appendLine("*Zenye Ziada:* $surplusCount")
+                                appendLine("----------------------------------------")
+                                val varied = variances.filter { it.third != 0L }
                                 if (varied.isNotEmpty()) {
                                     appendLine("*MICHANGANUO YA TOFAUTI:*")
                                     varied.forEach { (item, physical, diff) ->
-                                        val mark = if (diff < 0) "⚠️ Pungufu: $diff" else "➕ Ziada: +$diff"
+                                        val mark = if (diff < 0L) "Pungufu: $diff" else "Ziada: +$diff"
                                         appendLine("• ${item.name}: Mfumo=${item.stockQty}, Hesabu=$physical ($mark)")
                                     }
                                 } else {
-                                    appendLine("✅ *Hakuna tofauti yoyote. Akiba iko sawa 100%!*")
+                                    appendLine("*Hakuna tofauti yoyote. Akiba iko sawa 100%!*")
                                 }
-                                appendLine("─────────────────")
+                                appendLine("----------------------------------------")
                                 appendLine("_Imetolewa na BusinessOS_")
                             }
                             WhatsAppHelper.shareGeneralText(context, message)
@@ -313,7 +310,7 @@ fun StockAuditScreen(
                             coroutineScope.launch {
                                 isSubmitting = true
                                 val updates = items.map { item ->
-                                    val physical = countsMap[item.id]?.toIntOrNull() ?: item.stockQty
+                                    val physical = countsMap[item.id]?.toLongOrNull() ?: item.stockQty
                                     Pair(item, physical)
                                 }
                                 onConfirmAudit(updates)

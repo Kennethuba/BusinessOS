@@ -1,29 +1,46 @@
 package com.example.businessos.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.businessos.data.model.BusinessSide
+import com.example.businessos.data.model.Money
 import com.example.businessos.data.model.PaymentMethod
-import com.example.businessos.data.model.SyncStatus
 
 @Entity(
     tableName = "expenses",
+    foreignKeys = [
+        ForeignKey(
+            entity = BusinessEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["businessId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
     indices = [
         Index(value = ["businessId"]),
         Index(value = ["businessId", "createdAt"]),
-        Index(value = ["businessId", "category"])
+        Index(value = ["isVoided"])
     ]
 )
 data class ExpenseEntity(
-    @PrimaryKey val id: String = java.util.UUID.randomUUID().toString(),
+    @PrimaryKey val id: String,
     val businessId: String,
-    val category: String, // Rent, Stock/Supplies, Tokens/Electricity, Transport/Fare, Wages, Lunch/Food, Spares, Other
-    val title: String,
-    val amount: Double,
+    val expenseNumber: String,
+    val category: String,
+    val title: String = "",
+    val amountCents: Long,
     val paymentMethod: PaymentMethod = PaymentMethod.CASH,
-    val note: String = "",
-    val createdAt: Long = System.currentTimeMillis(),
-    val createdByUserId: String,
-    val syncStatus: SyncStatus = SyncStatus.PENDING,
-    val updatedAt: Long = System.currentTimeMillis()
-)
+    val notes: String? = null,
+    val side: BusinessSide = BusinessSide.SHOP,
+    val isVoided: Boolean = false,
+    val voidReason: String? = null,
+    val voidedByUserId: String? = null,
+    val voidedAt: Long? = null,
+    val userId: String = "",
+    val createdAt: Long = System.currentTimeMillis()
+) {
+    val amount: Double get() = amountCents / 100.0
+    val amountMoney: Money get() = Money(amountCents)
+}

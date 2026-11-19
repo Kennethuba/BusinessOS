@@ -6,10 +6,11 @@ import com.example.businessos.data.local.dao.MemberWithUser
 import com.example.businessos.data.local.entity.BusinessEntity
 import com.example.businessos.data.local.entity.WagePaymentEntity
 import com.example.businessos.data.model.CurrentUserSession
+import com.example.businessos.data.model.Money
+import com.example.businessos.data.model.PaymentMethod
 import com.example.businessos.data.model.Role
 import com.example.businessos.data.repository.AuthRepository
 import com.example.businessos.data.repository.BusinessOsRepository
-import com.example.businessos.sync.SyncManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,8 +20,7 @@ import kotlinx.coroutines.launch
 
 class StaffViewModel(
     private val authRepository: AuthRepository,
-    private val repository: BusinessOsRepository,
-    val syncManager: SyncManager
+    private val repository: BusinessOsRepository
 ) : ViewModel() {
 
     val session: StateFlow<CurrentUserSession?> = authRepository.session
@@ -40,8 +40,8 @@ class StaffViewModel(
     val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
 
     fun inviteStaff(name: String, email: String, phone: String, role: Role) {
-        if (name.isBlank() || email.isBlank()) {
-            _errorMessage.value = "Name and Email are required"
+        if (name.isBlank() || phone.isBlank()) {
+            _errorMessage.value = "Name and Phone are required"
             return
         }
         viewModelScope.launch {
@@ -82,19 +82,21 @@ class StaffViewModel(
     fun recordWagePayment(
         staffUserId: String,
         staffName: String,
-        amount: Double,
-        period: String,
-        paymentMethod: String,
-        mpesaCode: String? = null,
+        amount: Money,
+        paymentMethod: PaymentMethod = PaymentMethod.CASH,
         notes: String = ""
     ) {
         viewModelScope.launch {
             _errorMessage.value = null
             val result = repository.recordWagePayment(
-                staffUserId, staffName, amount, period, paymentMethod, mpesaCode, notes
+                staffUserId = staffUserId,
+                staffName = staffName,
+                amount = amount,
+                paymentMethod = paymentMethod,
+                notes = notes
             )
             result.onSuccess {
-                _successMessage.value = "Mshahara wa KSh ${amount.toInt()} kwa $staffName umerekodiwa"
+                _successMessage.value = "Mshahara wa ${amount.formatted} kwa $staffName umerekodiwa"
             }.onFailure {
                 _errorMessage.value = it.message
             }

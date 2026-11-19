@@ -34,7 +34,6 @@ import com.example.businessos.data.model.ActionType
 import com.example.businessos.data.model.Role
 import com.example.businessos.ui.components.BusinessOsTopBar
 import com.example.businessos.ui.components.RoleBadge
-import com.example.businessos.ui.components.SyncBadge
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.*
@@ -100,7 +99,6 @@ private fun AuditShieldBanner(modifier: Modifier = Modifier) {
 @Composable
 fun AuditLogScreen(
     viewModel: AuditLogViewModel,
-    syncState: com.example.businessos.sync.SyncUiState,
     businessName: String?,
     userRole: Role?,
     onSwitchWorkspace: () -> Unit,
@@ -129,7 +127,6 @@ fun AuditLogScreen(
                     title = "Audit Log",
                     businessName = businessName,
                     role = userRole,
-                    syncState = syncState,
                     onSwitchWorkspace = onSwitchWorkspace,
                     modifier = Modifier.weight(1f)
                 )

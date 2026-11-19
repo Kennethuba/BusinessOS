@@ -41,6 +41,6 @@ interface BusinessDao {
     @Update
     suspend fun updateBusiness(business: BusinessEntity)
 
-    @Query("SELECT * FROM businesses WHERE syncStatus = 'PENDING'")
-    suspend fun getPendingBusinesses(): List<BusinessEntity>
+    @Query("DELETE FROM businesses WHERE id = :businessId")
+    suspend fun deleteBusiness(businessId: String)
 }

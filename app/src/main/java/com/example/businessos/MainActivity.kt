@@ -36,8 +36,7 @@ class MainActivity : ComponentActivity() {
                     NavGraph(
                         navController = navController,
                         viewModelFactory = app.viewModelFactory,
-                        authRepository = app.authRepository,
-                        syncManager = app.syncManager
+                        authRepository = app.authRepository
                     )
                 }
             }

@@ -7,7 +7,6 @@ import com.example.businessos.data.model.ActionType
 import com.example.businessos.data.model.CurrentUserSession
 import com.example.businessos.data.repository.AuthRepository
 import com.example.businessos.data.repository.BusinessOsRepository
-import com.example.businessos.sync.SyncManager
 import kotlinx.coroutines.flow.*
 
 data class AuditLogUiState(
@@ -19,8 +18,7 @@ data class AuditLogUiState(
 
 class AuditLogViewModel(
     private val authRepository: AuthRepository,
-    private val repository: BusinessOsRepository,
-    val syncManager: SyncManager
+    private val repository: BusinessOsRepository
 ) : ViewModel() {
 
     val session: StateFlow<CurrentUserSession?> = authRepository.session

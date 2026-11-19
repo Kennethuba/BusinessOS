@@ -137,19 +137,18 @@ fun HomeScreen(
     var showDemoSuccessBanner by remember { mutableStateOf(false) }
 
     val session by viewModel.session.collectAsState()
-    val syncState by viewModel.syncManager.syncState.collectAsState()
     val jobCards by viewModel.jobCards.collectAsState()
     val sales by viewModel.sales.collectAsState()
     val deniCustomers by viewModel.deniCustomers.collectAsState()
     val expenses by viewModel.expenses.collectAsState()
 
-    val totalSales = sales.sumOf { it.total }
-    val totalExpenses = expenses.sumOf { it.amount }
+    val totalSales = Money(sales.sumOf { it.totalCents })
+    val totalExpenses = Money(expenses.sumOf { it.amountCents })
     val netProfit = totalSales - totalExpenses
-    val totalDeni = deniCustomers.sumOf { it.balance }
+    val totalDeni = Money(deniCustomers.sumOf { it.balanceCents })
 
-    val businessType = session?.activeBusinessType ?: BusinessType.GARAGE
-    val role = session?.activeRole ?: Role.STAFF
+    val businessType = if (session?.isGarageEnabled == true) BusinessType.GARAGE else BusinessType.STALL
+    val role = session?.activeRole ?: Role.CASHIER
 
     Scaffold(
         containerColor = DarkBackground,
@@ -163,7 +162,6 @@ fun HomeScreen(
                 },
                 businessName = session?.activeBusinessName,
                 role = role,
-                syncState = syncState,
                 onSwitchWorkspace = onSwitchWorkspace
             )
         },
@@ -294,10 +292,10 @@ fun HomeScreen(
  */
 @Composable
 private fun DashboardView(
-    netProfit: Double,
-    totalSales: Double,
-    totalExpenses: Double,
-    totalDeni: Double,
+    netProfit: Money,
+    totalSales: Money,
+    totalExpenses: Money,
+    totalDeni: Money,
     debtorCount: Int,
     businessType: BusinessType,
     activeJobCount: Int,
@@ -334,7 +332,7 @@ private fun DashboardView(
                     Text(
                         text = AppLanguageManager.tr("NET PROFIT", "FAIDA SAFI"),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (netProfit >= 0) StatusGreen else StatusRed,
+                        color = if (netProfit >= Money.ZERO) StatusGreen else StatusRed,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.1.sp
                     )
@@ -348,7 +346,7 @@ private fun DashboardView(
 
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = "KSh ${String.format("%,.2f", netProfit)}",
+                    text = netProfit.formatted,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
@@ -371,7 +369,7 @@ private fun DashboardView(
                             fontSize = 11.sp
                         )
                         Text(
-                            text = "KSh ${String.format("%,.0f", totalSales)}",
+                            text = totalSales.formatted,
                             color = StatusGreen,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
@@ -385,7 +383,7 @@ private fun DashboardView(
                             fontSize = 11.sp
                         )
                         Text(
-                            text = "KSh ${String.format("%,.0f", totalExpenses)}",
+                            text = totalExpenses.formatted,
                             color = StatusRed,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
@@ -419,7 +417,7 @@ private fun DashboardView(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "KSh ${String.format("%,.0f", (totalSales - totalExpenses).coerceAtLeast(0.0))}",
+                        text = (totalSales - totalExpenses).coerceAtLeast(Money.ZERO).formatted,
                         color = TextPrimary,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
@@ -450,7 +448,7 @@ private fun DashboardView(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "KSh ${String.format("%,.0f", totalDeni)}",
+                        text = totalDeni.formatted,
                         color = StatusAmber,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold

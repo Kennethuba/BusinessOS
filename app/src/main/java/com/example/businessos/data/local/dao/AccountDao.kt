@@ -31,8 +31,12 @@ interface AccountDao {
     @Update
     suspend fun updateAccount(account: AccountEntity)
 
-    @Query("UPDATE accounts SET balance = balance + :delta, updatedAt = :updatedAt WHERE id = :id AND businessId = :businessId")
-    suspend fun adjustBalance(id: String, businessId: String, delta: Double, updatedAt: Long = System.currentTimeMillis())
+    /**
+     * Atomically adjusts balanceCents. deltaCents can be positive or negative.
+     * Must be called from within a withTransaction block.
+     */
+    @Query("UPDATE accounts SET balanceCents = balanceCents + :deltaCents, updatedAt = :updatedAt WHERE id = :id AND businessId = :businessId")
+    suspend fun adjustBalance(id: String, businessId: String, deltaCents: Long, updatedAt: Long = System.currentTimeMillis())
 
     @Query("DELETE FROM accounts WHERE id = :id AND businessId = :businessId AND isSystemAccount = 0")
     suspend fun deleteAccount(id: String, businessId: String)

@@ -6,21 +6,17 @@ import com.example.businessos.data.local.entity.*
 import com.example.businessos.data.model.*
 import com.example.businessos.data.repository.AuthRepository
 import com.example.businessos.data.repository.BusinessOsRepository
-import com.example.businessos.sync.SyncManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class AccountingUiState(
-    val totalSales: Double = 0.0,
-    val totalExpenses: Double = 0.0,
-    val netProfit: Double = 0.0,
-    val totalDeniOwed: Double = 0.0,
-    val totalPayables: Double = 0.0,
-    val totalAssetValue: Double = 0.0,
-    val totalLiabilities: Double = 0.0,
-    val mpesaSales: Double = 0.0,
-    val cashSales: Double = 0.0,
-    val bankBalance: Double = 0.0,
+    val totalSales: Money = Money.ZERO,
+    val totalExpenses: Money = Money.ZERO,
+    val netProfit: Money = Money.ZERO,
+    val totalDeniOwed: Money = Money.ZERO,
+    val totalPayables: Money = Money.ZERO,
+    val mpesaSales: Money = Money.ZERO,
+    val cashSales: Money = Money.ZERO,
     val recentExpenses: List<ExpenseEntity> = emptyList(),
     val userRole: Role? = null,
     val businessName: String = "",
@@ -31,8 +27,7 @@ data class AccountingUiState(
 
 class AccountingViewModel(
     private val authRepository: AuthRepository,
-    private val repository: BusinessOsRepository,
-    val syncManager: SyncManager
+    private val repository: BusinessOsRepository
 ) : ViewModel() {
 
     val session: StateFlow<CurrentUserSession?> = authRepository.session
@@ -52,16 +47,7 @@ class AccountingViewModel(
     val invoices: StateFlow<List<InvoiceEntity>> = repository.observeInvoices()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val bills: StateFlow<List<BillEntity>> = repository.observeBills()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
     val suppliers: StateFlow<List<SupplierEntity>> = repository.observeSuppliers()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val assets: StateFlow<List<AssetEntity>> = repository.observeAssets()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val liabilities: StateFlow<List<LiabilityEntity>> = repository.observeLiabilities()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val payments: StateFlow<List<PaymentEntity>> = repository.observePayments()
@@ -103,32 +89,28 @@ class AccountingViewModel(
         sales,
         expenses,
         deniCustomers,
-        bills,
         session
-    ) { salesList, expensesList, deniList, billList, sess ->
-        val totSales = salesList.sumOf { it.total }
-        val totExp = expensesList.sumOf { it.amount }
+    ) { salesList, expensesList, deniList, sess ->
+        val totSales = salesList.fold(Money.ZERO) { acc, s -> acc + Money(s.totalCents) }
+        val totExp = expensesList.fold(Money.ZERO) { acc, e -> acc + Money(e.amountCents) }
         val net = totSales - totExp
-        val deniTot = deniList.sumOf { it.balance }
-        val payablesTot = billList.filter { it.status != BillStatus.PAID && it.status != BillStatus.CANCELLED }.sumOf { it.balanceDue }
-
-        val mpesaTot = salesList.filter { it.paymentMethod == PaymentMethod.MPESA }.sumOf { it.total }
-        val cashTot = salesList.filter { it.paymentMethod == PaymentMethod.CASH }.sumOf { it.total }
+        val deni = deniList.fold(Money.ZERO) { acc, c -> acc + Money(c.balanceCents) }
+        val mpesa = salesList.filter { it.paymentMethod == PaymentMethod.MPESA }.fold(Money.ZERO) { acc, s -> acc + Money(s.totalCents) }
+        val cash = salesList.filter { it.paymentMethod == PaymentMethod.CASH }.fold(Money.ZERO) { acc, s -> acc + Money(s.totalCents) }
 
         AccountingUiState(
             totalSales = totSales,
             totalExpenses = totExp,
             netProfit = net,
-            totalDeniOwed = deniTot,
-            totalPayables = payablesTot,
-            mpesaSales = mpesaTot,
-            cashSales = cashTot,
-            recentExpenses = expensesList,
+            totalDeniOwed = deni,
+            totalPayables = Money.ZERO,
+            mpesaSales = mpesa,
+            cashSales = cash,
+            recentExpenses = expensesList.take(5),
             userRole = sess?.activeRole,
-            businessName = sess?.activeBusinessName ?: "My Business",
-            isLoading = false
+            businessName = sess?.activeBusinessName ?: "BusinessOS"
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AccountingUiState(isLoading = true))
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AccountingUiState())
 
     fun refreshReports() {
         viewModelScope.launch {
@@ -140,11 +122,17 @@ class AccountingViewModel(
         }
     }
 
-    fun addExpense(category: String, title: String, amount: Double, method: PaymentMethod, note: String) {
+    fun recordExpense(
+        category: String,
+        title: String,
+        amount: Money,
+        method: PaymentMethod,
+        note: String
+    ) {
         viewModelScope.launch {
             val res = repository.recordExpense(category, title, amount, method, note)
             res.onSuccess {
-                _userMessage.value = "Matumizi yamerekodiwa kikamilifu"
+                _userMessage.value = "Matumizi yamehifadhiwa: ${it.expenseNumber}"
                 refreshReports()
             }.onFailure {
                 _userMessage.value = "Hitilafu: ${it.localizedMessage}"
@@ -165,30 +153,20 @@ class AccountingViewModel(
     }
 
     fun createInvoice(
-        customerId: String,
+        customerId: String?,
         customerName: String,
         customerPhone: String,
-        items: List<InvoiceLineItem>,
-        discountAmount: Double,
-        taxAmount: Double,
-        dueDate: Long,
-        notes: String,
-        paymentMethod: PaymentMethod
+        items: List<InvoiceLineItem>
     ) {
         viewModelScope.launch {
             val res = repository.createInvoice(
                 customerId = customerId,
                 customerName = customerName,
                 customerPhone = customerPhone,
-                items = items,
-                discountAmount = discountAmount,
-                taxAmount = taxAmount,
-                dueDate = dueDate,
-                notes = notes,
-                paymentMethod = paymentMethod
+                items = items
             )
             res.onSuccess {
-                _userMessage.value = "Ankara ${it.invoiceNumber} imetengenezwa kikamilifu"
+                _userMessage.value = "Ankara ${it.invoiceNumber} imetolewa"
                 refreshReports()
             }.onFailure {
                 _userMessage.value = "Hitilafu: ${it.localizedMessage}"
@@ -198,15 +176,15 @@ class AccountingViewModel(
 
     fun recordInvoicePayment(
         invoiceId: String,
-        amount: Double,
+        amount: Money,
         paymentMethod: PaymentMethod,
-        reference: String,
-        description: String
+        reference: String?,
+        description: String?
     ) {
         viewModelScope.launch {
             val res = repository.recordInvoicePayment(invoiceId, amount, paymentMethod, reference, description)
             res.onSuccess {
-                _userMessage.value = "Malipo ya ankara yamerekodiwa: KSh ${amount.toInt()}"
+                _userMessage.value = "Malipo ya ${amount.formatted} yamerekodiwa"
                 refreshReports()
             }.onFailure {
                 _userMessage.value = "Hitilafu: ${it.localizedMessage}"
@@ -225,123 +203,17 @@ class AccountingViewModel(
         }
     }
 
-    fun createBill(
-        supplierId: String,
-        supplierName: String,
-        billNumber: String,
-        totalAmount: Double,
-        dueDate: Long,
-        category: String,
-        description: String
-    ) {
-        viewModelScope.launch {
-            val res = repository.createBill(supplierId, supplierName, billNumber, totalAmount, dueDate, category, description)
-            res.onSuccess {
-                _userMessage.value = "Bili ya msambazaji ${it.billNumber} imehifadhiwa"
-                refreshReports()
-            }.onFailure {
-                _userMessage.value = "Hitilafu: ${it.localizedMessage}"
-            }
-        }
-    }
-
-    fun recordBillPayment(
-        billId: String,
-        amount: Double,
-        paymentMethod: PaymentMethod,
-        reference: String,
-        description: String
-    ) {
-        viewModelScope.launch {
-            val res = repository.recordBillPayment(billId, amount, paymentMethod, reference, description)
-            res.onSuccess {
-                _userMessage.value = "Malipo ya bili yamerekodiwa: KSh ${amount.toInt()}"
-                refreshReports()
-            }.onFailure {
-                _userMessage.value = "Hitilafu: ${it.localizedMessage}"
-            }
-        }
-    }
-
     fun recordAccountTransfer(
         fromAccountCode: String,
         toAccountCode: String,
-        amount: Double,
-        reference: String,
-        description: String
+        amount: Money,
+        reference: String?,
+        description: String?
     ) {
         viewModelScope.launch {
             val res = repository.recordAccountTransfer(fromAccountCode, toAccountCode, amount, reference, description)
             res.onSuccess {
-                _userMessage.value = "Uhamisho wa KSh ${amount.toInt()} umekamilika"
-                refreshReports()
-            }.onFailure {
-                _userMessage.value = "Hitilafu: ${it.localizedMessage}"
-            }
-        }
-    }
-
-    fun recordAssetPurchase(
-        name: String,
-        category: String,
-        cost: Double,
-        usefulLifeYears: Int,
-        salvageValue: Double,
-        paymentMethod: PaymentMethod,
-        notes: String
-    ) {
-        viewModelScope.launch {
-            val res = repository.recordAssetPurchase(name, category, cost, usefulLifeYears, salvageValue, paymentMethod, notes)
-            res.onSuccess {
-                _userMessage.value = "Kifaa ${it.name} kimerekodiwa kwenye sajili ya rasilimali"
-                refreshReports()
-            }.onFailure {
-                _userMessage.value = "Hitilafu: ${it.localizedMessage}"
-            }
-        }
-    }
-
-    fun postAssetDepreciation(assetId: String) {
-        viewModelScope.launch {
-            val res = repository.postAssetDepreciation(assetId)
-            res.onSuccess {
-                _userMessage.value = "Uchakavu wa kifaa umerekodiwa kwenye daftari kuu"
-                refreshReports()
-            }.onFailure {
-                _userMessage.value = "Hitilafu: ${it.localizedMessage}"
-            }
-        }
-    }
-
-    fun recordLoanDisbursement(
-        lenderName: String,
-        principalAmount: Double,
-        interestRate: Double,
-        dueDate: Long,
-        depositAccountCode: String,
-        notes: String
-    ) {
-        viewModelScope.launch {
-            val res = repository.recordLoanDisbursement(lenderName, principalAmount, interestRate, dueDate, depositAccountCode, notes)
-            res.onSuccess {
-                _userMessage.value = "Mkopo wa KSh ${principalAmount.toInt()} umewekwa kwenye hesabu"
-                refreshReports()
-            }.onFailure {
-                _userMessage.value = "Hitilafu: ${it.localizedMessage}"
-            }
-        }
-    }
-
-    fun recordLoanRepayment(
-        liabilityId: String,
-        amount: Double,
-        paymentMethod: PaymentMethod,
-        notes: String
-    ) {
-        viewModelScope.launch {
-            val res = repository.recordLoanRepayment(liabilityId, amount, paymentMethod, notes)
-            res.onSuccess {
-                _userMessage.value = "Malipo ya mkopo yamerekodiwa: KSh ${amount.toInt()}"
+                _userMessage.value = "Uhamisho wa ${amount.formatted} umekamilika"
                 refreshReports()
             }.onFailure {
                 _userMessage.value = "Hitilafu: ${it.localizedMessage}"

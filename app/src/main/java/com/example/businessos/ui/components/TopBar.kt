@@ -15,10 +15,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.CloudDone
-import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -28,35 +28,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.businessos.data.model.Role
-import com.example.businessos.sync.SyncUiState
 import com.example.businessos.ui.theme.AmberAccent
 import com.example.businessos.ui.theme.DarkBorder
 import com.example.businessos.ui.theme.DarkSurface
 import com.example.businessos.ui.theme.DarkSurfaceElevated
-import com.example.businessos.ui.theme.StatusAmber
 import com.example.businessos.ui.theme.StatusGreen
 import com.example.businessos.ui.theme.TealAccent
-import com.example.businessos.ui.theme.TextMuted
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Translate
-import com.example.businessos.ui.theme.ThemeManager
-import com.example.businessos.ui.util.AppLanguageManager
 import com.example.businessos.ui.theme.TextPrimary
 import com.example.businessos.ui.theme.TextSecondary
+import com.example.businessos.ui.theme.ThemeManager
+import com.example.businessos.ui.util.AppLanguageManager
 
 @Composable
 fun BusinessOsTopBar(
     title: String,
     businessName: String?,
     role: Role?,
-    syncState: SyncUiState,
     onSwitchWorkspace: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -151,10 +144,6 @@ fun BusinessOsTopBar(
                             modifier = Modifier.size(15.dp)
                         )
                     }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    SyncBadge(syncState = syncState)
                 }
             }
 
@@ -180,44 +169,11 @@ fun BusinessOsTopBar(
 }
 
 @Composable
-fun SyncBadge(syncState: SyncUiState) {
-    val (color, _, text) = when (syncState) {
-        SyncUiState.OFFLINE -> Triple(StatusAmber, Icons.Default.CloudOff, "Offline")
-        SyncUiState.SYNCING -> Triple(TealAccent, Icons.Default.Sync, "Syncing…")
-        SyncUiState.SYNCED -> Triple(StatusGreen, Icons.Default.CloudDone, "All synced")
-    }
-
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(DarkSurfaceElevated)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(6.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-            text = text,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium,
-            color = color
-        )
-    }
-}
-
-@Composable
 fun RoleBadge(role: Role) {
     val (bgColor, textColor) = when (role) {
         Role.OWNER -> Pair(Color(0xFF3B2800), AmberAccent)
         Role.MANAGER -> Pair(Color(0xFF0C2E24), TealAccent)
-        Role.ACCOUNTANT -> Pair(Color(0xFF14243B), Color(0xFF60A5FA))
         Role.CASHIER -> Pair(Color(0xFF1F2B1A), StatusGreen)
-        Role.STAFF -> Pair(Color(0xFF1E2638), Color(0xFF93C5FD))
         Role.VIEWER -> Pair(Color(0xFF282828), Color(0xFF9CA3AF))
     }
 

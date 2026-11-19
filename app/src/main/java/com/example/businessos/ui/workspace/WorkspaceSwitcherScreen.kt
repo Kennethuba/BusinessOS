@@ -55,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.businessos.data.local.entity.BusinessEntity
 import com.example.businessos.data.model.BusinessType
-import com.example.businessos.ui.components.SyncBadge
 import com.example.businessos.ui.theme.AmberAccent
 import com.example.businessos.ui.theme.CardBackground
 import com.example.businessos.ui.theme.CardBorder
@@ -78,7 +77,6 @@ fun WorkspaceSwitcherScreen(
 ) {
     val session by viewModel.session.collectAsState()
     val businesses by viewModel.businesses.collectAsState()
-    val syncState by viewModel.syncManager.syncState.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     var showCreateDialog by remember { mutableStateOf(false) }
@@ -113,8 +111,6 @@ fun WorkspaceSwitcherScreen(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    SyncBadge(syncState = syncState)
-                    Spacer(modifier = Modifier.width(8.dp))
                     IconButton(onClick = { viewModel.logout(onLogout) }) {
                         Icon(Icons.Default.Logout, contentDescription = "Logout", tint = TextMuted)
                     }
@@ -298,16 +294,9 @@ fun BusinessCard(
                 Spacer(modifier = Modifier.height(2.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = if (business.type == BusinessType.GARAGE) "Auto Garage Pipeline" else "Kariakor Stall (POS & Deni)",
+                        text = if (business.isGarageEnabled && !business.isShopEnabled) "Auto Garage Pipeline" else if (business.isGarageEnabled && business.isShopEnabled) "Shop & Garage" else "Kariakor Stall (POS & Deni)",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "• ${business.subscriptionPlan.name}",
-                        fontSize = 11.sp,
-                        color = AmberAccent,
-                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }

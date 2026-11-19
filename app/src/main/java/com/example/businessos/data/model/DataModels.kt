@@ -1,10 +1,18 @@
 package com.example.businessos.data.model
 
+import java.util.UUID
+
 data class PartItem(
-    val id: String = java.util.UUID.randomUUID().toString(),
+    val id: String = UUID.randomUUID().toString(),
+    val itemId: String? = null,
     val name: String,
-    val cost: Double
-)
+    val unitPrice: Money,
+    val costPrice: Money = Money.ZERO,
+    val quantity: Int = 1,
+    val isStockDeducted: Boolean = false
+) {
+    val total: Money get() = unitPrice * quantity
+}
 
 data class StageTransition(
     val stage: JobStage,
@@ -16,36 +24,41 @@ data class SaleLineItem(
     val itemId: String,
     val itemName: String,
     val qty: Int,
-    val priceUsed: Double,
-    val priceType: PriceType
+    val unitPrice: Money,
+    val costPrice: Money = Money.ZERO,
+    val priceType: PriceType = PriceType.RETAIL
 ) {
-    val subtotal: Double get() = qty * priceUsed
+    val subtotal: Money get() = unitPrice * qty
 }
 
 data class CurrentUserSession(
     val userId: String,
     val name: String,
-    val email: String,
     val phone: String,
     val activeBusinessId: String? = null,
     val activeRole: Role? = null,
     val activeBusinessName: String? = null,
-    val activeBusinessType: BusinessType? = null
+    val isShopEnabled: Boolean = true,
+    val isGarageEnabled: Boolean = false,
+    val isDemo: Boolean = false
 )
 
 data class JournalLineItem(
     val accountId: String,
     val accountCode: String,
     val accountName: String,
-    val debit: Double = 0.0,
-    val credit: Double = 0.0,
+    val debit: Money = Money.ZERO,
+    val credit: Money = Money.ZERO,
     val narration: String? = null
 )
 
 data class InvoiceLineItem(
-    val id: String = java.util.UUID.randomUUID().toString(),
+    val id: String = UUID.randomUUID().toString(),
+    val itemId: String? = null,
     val description: String,
     val qty: Int = 1,
-    val unitPrice: Double,
-    val total: Double = qty * unitPrice
-)
+    val unitPrice: Money,
+    val costPrice: Money = Money.ZERO
+) {
+    val total: Money get() = unitPrice * qty
+}

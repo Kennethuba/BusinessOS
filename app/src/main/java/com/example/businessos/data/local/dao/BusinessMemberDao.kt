@@ -9,15 +9,6 @@ import com.example.businessos.data.local.entity.BusinessMemberEntity
 import com.example.businessos.data.model.Role
 import kotlinx.coroutines.flow.Flow
 
-data class MemberWithUser(
-    val businessId: String,
-    val userId: String,
-    val role: Role,
-    val name: String,
-    val email: String,
-    val phone: String
-)
-
 @Dao
 interface BusinessMemberDao {
     @Query("SELECT * FROM business_members WHERE businessId = :businessId AND userId = :userId LIMIT 1")
@@ -26,14 +17,11 @@ interface BusinessMemberDao {
     @Query("SELECT * FROM business_members WHERE businessId = :businessId AND userId = :userId LIMIT 1")
     fun observeMember(businessId: String, userId: String): Flow<BusinessMemberEntity?>
 
-    @Query("""
-        SELECT bm.businessId, bm.userId, bm.role, u.name, u.email, u.phone
-        FROM business_members bm
-        INNER JOIN users u ON bm.userId = u.id
-        WHERE bm.businessId = :businessId
-        ORDER BY bm.role ASC, u.name ASC
-    """)
-    fun observeMembersWithUser(businessId: String): Flow<List<MemberWithUser>>
+    @Query("SELECT * FROM business_members WHERE businessId = :businessId ORDER BY role ASC")
+    fun observeMembers(businessId: String): Flow<List<BusinessMemberEntity>>
+
+    @Query("SELECT * FROM business_members WHERE businessId = :businessId ORDER BY role ASC")
+    suspend fun getMembers(businessId: String): List<BusinessMemberEntity>
 
     @Query("SELECT COUNT(*) FROM business_members WHERE businessId = :businessId")
     suspend fun getMemberCount(businessId: String): Int
@@ -47,6 +35,6 @@ interface BusinessMemberDao {
     @Query("DELETE FROM business_members WHERE businessId = :businessId AND userId = :userId")
     suspend fun deleteMember(businessId: String, userId: String)
 
-    @Query("SELECT * FROM business_members WHERE syncStatus = 'PENDING'")
-    suspend fun getPendingMembers(): List<BusinessMemberEntity>
+    @Query("UPDATE business_members SET canSellNegativeStock = :canSell WHERE businessId = :businessId AND userId = :userId")
+    suspend fun setCanSellNegativeStock(businessId: String, userId: String, canSell: Boolean)
 }

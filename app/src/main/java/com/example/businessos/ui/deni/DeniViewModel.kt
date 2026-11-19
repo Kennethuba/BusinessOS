@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.businessos.data.local.entity.CustomerEntity
 import com.example.businessos.data.model.CurrentUserSession
+import com.example.businessos.data.model.Money
 import com.example.businessos.data.model.PaymentMethod
 import com.example.businessos.data.repository.AuthRepository
 import com.example.businessos.data.repository.BusinessOsRepository
-import com.example.businessos.sync.SyncManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,8 +17,7 @@ import kotlinx.coroutines.launch
 
 class DeniViewModel(
     private val authRepository: AuthRepository,
-    private val repository: BusinessOsRepository,
-    val syncManager: SyncManager
+    private val repository: BusinessOsRepository
 ) : ViewModel() {
 
     val session: StateFlow<CurrentUserSession?> = authRepository.session
@@ -38,7 +37,7 @@ class DeniViewModel(
     fun addCustomer(
         name: String,
         phone: String,
-        initialCredit: Double = 0.0,
+        initialCredit: Money = Money.ZERO,
         dueDate: Long? = null,
         notes: String = ""
     ) {
@@ -73,11 +72,11 @@ class DeniViewModel(
 
     fun recordPayment(
         customerId: String,
-        amountPaid: Double,
+        amountPaid: Money,
         paymentMethod: PaymentMethod = PaymentMethod.CASH,
         mpesaCode: String? = null
     ) {
-        if (amountPaid <= 0) {
+        if (amountPaid <= Money.ZERO) {
             _errorMessage.value = "Amount paid must be greater than 0"
             return
         }
@@ -85,7 +84,7 @@ class DeniViewModel(
             _errorMessage.value = null
             val result = repository.recordDeniPayment(customerId, amountPaid, paymentMethod, mpesaCode)
             result.onSuccess {
-                _successMessage.value = "Malipo ya KSh ${amountPaid.toInt()} yamehifadhiwa"
+                _successMessage.value = "Malipo ya ${amountPaid.formatted} yamehifadhiwa"
             }.onFailure {
                 _errorMessage.value = it.message
             }
