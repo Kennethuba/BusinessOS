@@ -35,7 +35,7 @@ import com.example.businessos.data.local.entity.*
         WagePaymentEntity::class,
         LayawayEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -75,7 +75,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "business_os.db"
                 )
-                    // No fallbackToDestructiveMigration — explicit migrations required from v1 onward.
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

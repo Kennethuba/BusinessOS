@@ -2,6 +2,7 @@ package com.example.businessos.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -35,4 +36,7 @@ data class SaleItemEntity(
     val unitPriceCents: Long,
     val costPriceCents: Long = 0L,
     val subtotalCents: Long
-)
+) {
+    @get:Ignore
+    val qty: Int get() = quantity
+}

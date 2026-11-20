@@ -2,6 +2,7 @@ package com.example.businessos.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -30,9 +31,19 @@ data class JobPartEntity(
     @PrimaryKey val id: String,
     val jobCardId: String,
     val itemId: String? = null,
-    val partName: String,
-    val quantity: Int = 1,
+    val name: String,
+    val qty: Int = 1,
     val unitPriceCents: Long = 0L,
     val costPriceCents: Long = 0L,
-    val isStockDeducted: Boolean = false
-)
+    val stockDeducted: Boolean = false,
+    val addedAt: Long = System.currentTimeMillis()
+) {
+    @get:Ignore
+    val partName: String get() = name
+
+    @get:Ignore
+    val quantity: Int get() = qty
+
+    @get:Ignore
+    val isStockDeducted: Boolean get() = stockDeducted
+}

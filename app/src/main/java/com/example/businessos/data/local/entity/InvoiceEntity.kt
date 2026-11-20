@@ -28,6 +28,7 @@ import com.example.businessos.data.model.PaymentMethod
     indices = [
         Index(value = ["businessId"]),
         Index(value = ["businessId", "invoiceNumber"], unique = true),
+        Index(value = ["customerId"]),
         Index(value = ["businessId", "customerId"]),
         Index(value = ["businessId", "status"])
     ]

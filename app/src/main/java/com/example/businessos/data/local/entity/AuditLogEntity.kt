@@ -2,6 +2,7 @@ package com.example.businessos.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.businessos.data.model.ActionType
@@ -30,4 +31,7 @@ data class AuditLogEntity(
     val afterValue: String? = null,
     val performedByUserId: String,
     val createdAt: Long = System.currentTimeMillis()
-)
+) {
+    @get:Ignore
+    val timestamp: Long get() = createdAt
+}

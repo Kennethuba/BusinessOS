@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AuditLogDao {
-    @Query("SELECT * FROM audit_logs WHERE businessId = :businessId ORDER BY timestamp DESC")
+    @Query("SELECT * FROM audit_logs WHERE businessId = :businessId ORDER BY createdAt DESC")
     fun observeAuditLogsForBusiness(businessId: String): Flow<List<AuditLogEntity>>
 
-    @Query("SELECT * FROM audit_logs WHERE businessId = :businessId AND actionType = :actionType ORDER BY timestamp DESC")
+    @Query("SELECT * FROM audit_logs WHERE businessId = :businessId AND actionType = :actionType ORDER BY createdAt DESC")
     fun observeByAction(businessId: String, actionType: ActionType): Flow<List<AuditLogEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
