@@ -1,5 +1,6 @@
 package com.example.businessos.ui.accounting
 
+import com.example.businessos.ui.components.FullScreenForm
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -1081,7 +1082,7 @@ private fun AddExpenseDialog(
 
     val categories = listOf("Rent", "Utilities", "Salaries", "Transport", "Meals", "General")
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         title = { Text("Rekodi Matumizi (Add Expense)", fontWeight = FontWeight.Bold) },
         text = {
@@ -1128,7 +1129,7 @@ private fun CreateInvoiceDialog(
     var description by remember { mutableStateOf("") }
     var amountStr by remember { mutableStateOf("") }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         title = { Text("Ankara Mpya (New Invoice)", fontWeight = FontWeight.Bold) },
         text = {
@@ -1164,7 +1165,7 @@ private fun AddSupplierDialog(
     var phone by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         title = { Text("Msambazaji Mpya (New Supplier)", fontWeight = FontWeight.Bold) },
         text = {
@@ -1199,7 +1200,7 @@ private fun AccountTransferDialog(
     var amountStr by remember { mutableStateOf("") }
     var reference by remember { mutableStateOf("") }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         title = { Text("Uhamisho wa Pesa (Inter-Account Transfer)", fontWeight = FontWeight.Bold) },
         text = {
@@ -1253,7 +1254,7 @@ private fun RecordInvoicePaymentDialog(
     var paymentMethod by remember { mutableStateOf(PaymentMethod.MPESA) }
     var reference by remember { mutableStateOf("") }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         title = { Text("Pokea Malipo ya Ankara: ${invoice.invoiceNumber}", fontWeight = FontWeight.Bold) },
         text = {

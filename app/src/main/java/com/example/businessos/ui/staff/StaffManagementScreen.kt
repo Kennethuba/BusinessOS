@@ -1,5 +1,6 @@
 package com.example.businessos.ui.staff
 
+import com.example.businessos.ui.components.FullScreenForm
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -395,7 +396,7 @@ fun InviteStaffDialog(
     var pin by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf(Role.CASHIER) }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = { Text("Add staff member", color = TextPrimary, fontWeight = FontWeight.Bold) },
@@ -497,7 +498,7 @@ fun EditRoleDialog(
 ) {
     var selectedRole by remember { mutableStateOf(member.role) }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = { Text("Change role: ${member.name}", color = TextPrimary, fontWeight = FontWeight.Bold) },
@@ -629,7 +630,7 @@ fun RecordWagePaymentDialog(
     var mpesaCode by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = {
@@ -804,7 +805,7 @@ fun ResetPinDialog(
     onReset: (pin: String) -> Unit
 ) {
     var pin by remember { mutableStateOf("") }
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = { Text("New PIN for $name", color = TextPrimary, fontWeight = FontWeight.Bold) },

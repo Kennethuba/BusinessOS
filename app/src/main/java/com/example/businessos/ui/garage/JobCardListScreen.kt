@@ -1,5 +1,6 @@
 package com.example.businessos.ui.garage
 
+import com.example.businessos.ui.components.FullScreenForm
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -393,7 +394,7 @@ fun CreateJobCardDialog(
         unfocusedTextColor = TextPrimary
     )
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = { Text(AppLanguageManager.tr("New job order", "Kazi mpya"), color = TextPrimary, fontWeight = FontWeight.Bold) },

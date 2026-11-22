@@ -1,5 +1,6 @@
 package com.example.businessos.ui.garage
 
+import com.example.businessos.ui.components.FullScreenForm
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -534,7 +535,7 @@ fun AddPartDialog(
         )
     }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = {
@@ -641,7 +642,7 @@ fun ReopenStageDialog(
     var selectedTarget by remember { mutableStateOf(eligibleStages.lastOrNull() ?: JobStage.INTAKE) }
     var reason by remember { mutableStateOf("") }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = { Text("Roll Back / Reopen Stage", color = TextPrimary, fontWeight = FontWeight.Bold) },

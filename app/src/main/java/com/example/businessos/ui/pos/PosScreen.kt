@@ -1,5 +1,6 @@
 package com.example.businessos.ui.pos
 
+import com.example.businessos.ui.components.FullScreenForm
 import com.example.businessos.data.model.Money
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -222,7 +223,7 @@ fun PosScreen(
                             .padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("⚠️", fontSize = 18.sp)
+                        Text("!", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
@@ -576,7 +577,7 @@ fun PosItemGridCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Stock: ${item.stockQty}" + if (item.stockQty <= item.minStockLevel) " ⚠️" else "",
+                    text = "${AppLanguageManager.tr("Stock", "Akiba")}: ${item.stockQty}" + if (item.stockQty <= item.minStockLevel) " (${AppLanguageManager.tr("low", "chini")})" else "",
                     color = if (item.stockQty <= item.minStockLevel) StatusRed else TextMuted,
                     fontSize = 11.sp,
                     fontWeight = if (item.stockQty <= item.minStockLevel) FontWeight.Bold else FontWeight.Normal
@@ -648,7 +649,7 @@ fun PosItemRow(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Stock: ${item.stockQty}" + if (item.stockQty <= item.minStockLevel) " ⚠️ Low" else "",
+                        text = "${AppLanguageManager.tr("Stock", "Akiba")}: ${item.stockQty}" + if (item.stockQty <= item.minStockLevel) " (${AppLanguageManager.tr("low", "chini")})" else "",
                         color = if (item.stockQty <= item.minStockLevel) StatusRed else TextMuted,
                         fontSize = 11.sp,
                         fontWeight = if (item.stockQty <= item.minStockLevel) FontWeight.Bold else FontWeight.Normal
@@ -811,7 +812,7 @@ fun CartSheetContent(
     }
 
     if (overrideTargetId != null) {
-        AlertDialog(
+        FullScreenForm(
             onDismissRequest = { overrideTargetId = null },
             containerColor = DarkSurface,
             title = { Text("Manager Price Override", color = TextPrimary) },
@@ -871,7 +872,7 @@ fun CheckoutDialog(
     var selectedCustomer by remember { mutableStateOf<CustomerEntity?>(null) }
     var customerDropdownExpanded by remember { mutableStateOf(false) }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = {
@@ -1133,7 +1134,7 @@ fun AddItemDialog(
         )
     }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = {
@@ -1172,7 +1173,7 @@ fun AddItemDialog(
                             )
                             Spacer(Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Picha Imepigwa ✓", color = StatusGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                Text(AppLanguageManager.tr("Photo taken", "Picha imepigwa"), color = StatusGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 Text("Gusa hapa kubadilisha picha", color = TextSecondary, fontSize = 11.sp)
                             }
                         } else {

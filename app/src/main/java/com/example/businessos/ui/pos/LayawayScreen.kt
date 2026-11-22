@@ -1,5 +1,7 @@
 package com.example.businessos.ui.pos
 
+import com.example.businessos.ui.util.AppLanguageManager
+import com.example.businessos.ui.components.FullScreenForm
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -259,8 +261,8 @@ fun LayawayCard(
                     shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
-                        text = if (layaway.status == "COMPLETED") "✓ ILIYOKAMILIKA"
-                        else if (isOverdue) "⚠️ IMEPITILIZA" else "INAENDELEA",
+                        text = if (layaway.status == "COMPLETED") AppLanguageManager.tr("Completed", "Imekamilika")
+                        else if (isOverdue) AppLanguageManager.tr("Overdue", "Imepitiliza") else AppLanguageManager.tr("In progress", "Inaendelea"),
                         color = if (layaway.status == "COMPLETED") StatusGreen
                         else if (isOverdue) StatusRed else AmberAccent,
                         fontSize = 11.sp,
@@ -348,7 +350,7 @@ fun CreateLayawayDialog(
     var depositPaidText by remember { mutableStateOf("") }
     var daysCount by remember { mutableStateOf("30") }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = {
@@ -442,7 +444,7 @@ fun RecordLayawayPaymentDialog(
     var amountText by remember { mutableStateOf("") }
     var selectedMethod by remember { mutableStateOf(PaymentMethod.CASH) }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = {

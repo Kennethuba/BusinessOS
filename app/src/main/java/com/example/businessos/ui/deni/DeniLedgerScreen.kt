@@ -1,5 +1,7 @@
 package com.example.businessos.ui.deni
 
+import com.example.businessos.ui.util.AppLanguageManager
+import com.example.businessos.ui.components.FullScreenForm
 import com.example.businessos.data.model.Money
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -187,7 +189,7 @@ fun DeniLedgerScreen(
                                 if (overdueCount > 0) {
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
-                                        text = "⚠️ $overdueCount zimepitiliza muda (Overdue)",
+                                        text = AppLanguageManager.tr("$overdueCount overdue", "$overdueCount zimepitiliza muda"),
                                         color = StatusRed,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold
@@ -328,7 +330,7 @@ fun DeniLedgerScreen(
         }
 
         if (paymentTargetCustomer != null) {
-            AlertDialog(
+            FullScreenForm(
                 onDismissRequest = {
                     paymentTargetCustomer = null
                     showMpesaPasteBox = false
@@ -449,7 +451,7 @@ fun DeniLedgerScreen(
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Text(
-                                                text = "✓ Code: ${parsedMpesaInfo?.code} • KSh ${parsedMpesaInfo?.amount?.toInt()} • ${parsedMpesaInfo?.senderName}",
+                                                text = "Code: ${parsedMpesaInfo?.code} • KSh ${parsedMpesaInfo?.amount?.toInt()} • ${parsedMpesaInfo?.senderName}",
                                                 color = StatusGreen,
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
@@ -533,7 +535,7 @@ fun DeniLedgerScreen(
 
         if (showBulkReminderDialog) {
             val debtors = deniCustomers.filter { it.balance > 0 }
-            AlertDialog(
+            FullScreenForm(
                 onDismissRequest = { showBulkReminderDialog = false },
                 containerColor = DarkSurface,
                 title = {
@@ -691,9 +693,9 @@ fun DeniCustomerCard(
                     ) {
                         Text(
                             text = when {
-                                isOverdue -> "⚠️ IMEPITILIZA (${Math.max(1, -diffDays)} siku) • ${dateFormat.format(Date(dueDate))}"
+                                isOverdue -> "${AppLanguageManager.tr("Overdue", "Imepitiliza")} (${Math.max(1, -diffDays)}) • ${dateFormat.format(Date(dueDate))}"
                                 diffDays <= 1 -> "⏳ INALIPWA SASA • ${dateFormat.format(Date(dueDate))}"
-                                else -> "📅 Tarehe ya Mwisho: ${dateFormat.format(Date(dueDate))}"
+                                else -> "${AppLanguageManager.tr("Due", "Tarehe ya mwisho")}: ${dateFormat.format(Date(dueDate))}"
                             },
                             color = if (isOverdue) StatusRed else if (diffDays <= 1) AmberAccent else TealAccent,
                             fontSize = 11.sp,
@@ -742,7 +744,7 @@ fun DeniCustomerCard(
             if (customer.lastReminderSent > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "✓ Kikumbusho kilitumwa: ${dateFormat.format(Date(customer.lastReminderSent))}",
+                    text = "${AppLanguageManager.tr("Reminder sent", "Kikumbusho kimetumwa")}: ${dateFormat.format(Date(customer.lastReminderSent))}",
                     color = TextMuted,
                     fontSize = 10.sp
                 )
@@ -799,7 +801,7 @@ fun SetDueDateDialog(
     var notesInput by remember { mutableStateOf(customer.notes) }
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = {
@@ -918,7 +920,7 @@ fun AddCustomerDialog(
     var selectedDueDate by remember { mutableStateOf<Long?>(null) }
     var notes by remember { mutableStateOf("") }
 
-    AlertDialog(
+    FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = { Text("Ongeza Mteja Mpya / Deni", color = TextPrimary, fontWeight = FontWeight.Bold) },

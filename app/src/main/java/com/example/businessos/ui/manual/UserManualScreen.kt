@@ -74,7 +74,7 @@ fun UserManualScreen(
                     accentColor = Color(0xFFF59E0B),
                     content = listOf(
                         "• Ukaguzi wa Sehemu za Gari: Bodi (bonye na bumper), Rangi (respray & buffing), Viti vya Ngozi (kushona & dari), Matairi (burst, rims, alignment) na Injini/Breki.",
-                        "• Kadi za Kazi (Job Pipeline): Hatua 7 kutoka Intake ➔ Diagnosis ➔ Makadirio ➔ Idhini ya Mteja ➔ Kazi Inaendelea ➔ Imekamilika ➔ Ankara.",
+                        "• Kadi za Kazi (Job Pipeline): Hatua 7 kutoka Intake to Diagnosis to Makadirio to Idhini ya Mteja to Kazi Inaendelea to Imekamilika to Ankara.",
                         "• Idhini Kupitia WhatsApp: Tuma makadirio kamili yenye bei ya vipuri na ufundi moja kwa moja kwa WhatsApp ya mteja ili apitishe kabla ya kuanza kazi.",
                         "• Historia ya Gari kwa Namba ya Usajili: Tafuta namba yoyote (mfano KDA 123X) kuona marekebisho yaliyopita na fedha alizotumia."
                     )
