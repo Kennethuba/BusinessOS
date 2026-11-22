@@ -2,87 +2,126 @@ package com.example.businessos.ui.components
 
 import android.content.Context
 import android.content.Intent
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
-import android.widget.Toast
+import android.os.Process
 import androidx.core.content.FileProvider
+import com.example.businessos.data.local.AppDatabase
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
+/**
+ * Backup and restore of the whole database file.
+ *
+ * Backup first flushes the write-ahead log into the main file, so the copy is complete.
+ * Restore never trusts the chosen file: it is checked first, the current data is kept as
+ * a rollback copy, and if anything fails the current data is put back.
+ */
 object BackupRestoreHelper {
 
-    private const val DB_NAME = "business_os_v4.db"
+    sealed class RestoreResult {
+        object Success : RestoreResult()
+        data class Failure(val reason: String) : RestoreResult()
+    }
 
-    /**
-     * Creates a standalone copy of the local Room database and opens the system Share/Drive intent
-     * so the owner can save it to Google Drive, WhatsApp, or File Manager with 1 tap.
-     */
-    fun exportDatabaseBackup(context: Context) {
-        try {
-            val dbFile = context.getDatabasePath(DB_NAME)
-            if (!dbFile.exists()) {
-                Toast.makeText(context, "Hati ya daftari bado haijatengenezwa", Toast.LENGTH_SHORT).show()
-                return
-            }
+    private val REQUIRED_TABLES = listOf("businesses", "users", "accounts", "journal_entries", "journal_lines")
 
-            val sdf = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault())
-            val dateStr = sdf.format(Date())
-            val backupFileName = "BusinessOS_Backup_${dateStr}.db"
+    /** Writes a complete copy of the database and opens the share sheet. Returns an error message or null. */
+    fun exportDatabaseBackup(context: Context, database: AppDatabase): String? {
+        return try {
+            database.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(FULL)").use { it.moveToFirst() }
+            val dbFile = context.getDatabasePath(AppDatabase.DB_NAME)
+            if (!dbFile.exists()) return "There is no data to back up yet"
 
-            val backupDir = File(context.cacheDir, "backups")
-            if (!backupDir.exists()) backupDir.mkdirs()
-            val backupFile = File(backupDir, backupFileName)
+            val stamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date())
+            val dir = File(context.cacheDir, "backups").apply { mkdirs() }
+            dir.listFiles()?.forEach { it.delete() }
+            val out = File(dir, "BusinessOS_Backup_$stamp.db")
+            dbFile.copyTo(out, overwrite = true)
 
-            // Copy db file
-            FileInputStream(dbFile).use { input ->
-                FileOutputStream(backupFile).use { output ->
-                    input.copyTo(output)
-                }
-            }
-
-            // Share via FileProvider or system send intent
-            val authority = "${context.packageName}.fileprovider"
-            val uri: Uri = try {
-                FileProvider.getUriForFile(context, authority, backupFile)
-            } catch (e: Exception) {
-                Uri.fromFile(backupFile)
-            }
-
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", out)
+            val send = Intent(Intent.ACTION_SEND).apply {
                 type = "application/octet-stream"
                 putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_SUBJECT, "BusinessOS Backup - $dateStr")
-                putExtra(Intent.EXTRA_TEXT, "Hifadhi ya Daftari la BusinessOS iliyochukuliwa tarehe $dateStr. Unaweza kuihifadhi kwenye Google Drive yako.")
+                putExtra(Intent.EXTRA_SUBJECT, "BusinessOS backup $stamp")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
-
-            val chooser = Intent.createChooser(shareIntent, "Hifadhi Nakala (Save to Drive / WhatsApp / Files)")
-            chooser.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            context.startActivity(chooser)
-
+            context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            null
         } catch (e: Exception) {
-            Toast.makeText(context, "Hitilafu wakati wa kutoa nakala: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+            e.localizedMessage ?: "Backup failed"
         }
     }
 
-    /**
-     * Restores database from a selected URI
-     */
-    fun restoreDatabaseFromUri(context: Context, sourceUri: Uri): Boolean {
+    /** Checks that [file] is a healthy BusinessOS database that this app version can open. */
+    fun validate(file: File): String? {
+        var db: SQLiteDatabase? = null
         return try {
-            val targetDb = context.getDatabasePath(DB_NAME)
-            context.contentResolver.openInputStream(sourceUri)?.use { input ->
-                FileOutputStream(targetDb).use { output ->
-                    input.copyTo(output)
-                }
+            db = SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY)
+            val integrity = db.rawQuery("PRAGMA integrity_check", null).use { if (it.moveToFirst()) it.getString(0) else "" }
+            if (integrity != "ok") return "The file is damaged"
+            if (db.version > AppDatabase.SCHEMA_VERSION) return "This backup is from a newer version of the app"
+            if (db.version < 1) return "This is not a BusinessOS backup"
+            val tables = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null).use { c ->
+                buildSet { while (c.moveToNext()) add(c.getString(0)) }
             }
-            true
+            val missing = REQUIRED_TABLES.filter { it !in tables }
+            if (missing.isNotEmpty()) "This is not a BusinessOS backup" else null
         } catch (e: Exception) {
-            e.printStackTrace()
-            false
+            "This is not a BusinessOS backup"
+        } finally {
+            db?.close()
         }
+    }
+
+    /** Replaces the current data with the backup at [source]. The caller must then restart the app. */
+    fun restoreDatabaseFromUri(context: Context, source: Uri): RestoreResult {
+        val live = context.getDatabasePath(AppDatabase.DB_NAME)
+        val dir = live.parentFile ?: return RestoreResult.Failure("Cannot find the data folder")
+        val incoming = File(dir, "incoming_restore.db")
+        val rollbackDir = File(context.cacheDir, "rollback").apply { deleteRecursively(); mkdirs() }
+        val parts = listOf("", "-wal", "-shm")
+        try {
+            context.contentResolver.openInputStream(source)?.use { input ->
+                incoming.outputStream().use { input.copyTo(it) }
+            } ?: return RestoreResult.Failure("Cannot read the chosen file")
+
+            validate(incoming)?.let { incoming.delete(); return RestoreResult.Failure(it) }
+
+            AppDatabase.closeInstance()
+            // Keep what we have now, so a failure puts everything back.
+            parts.forEach { suffix ->
+                val f = File(dir, AppDatabase.DB_NAME + suffix)
+                if (f.exists()) f.copyTo(File(rollbackDir, f.name), overwrite = true)
+            }
+            try {
+                parts.drop(1).forEach { File(dir, AppDatabase.DB_NAME + it).delete() }
+                incoming.copyTo(live, overwrite = true)
+                if (validate(live) != null) throw IllegalStateException("Restored file failed the check")
+            } catch (e: Exception) {
+                parts.forEach { suffix ->
+                    val saved = File(rollbackDir, AppDatabase.DB_NAME + suffix)
+                    val target = File(dir, AppDatabase.DB_NAME + suffix)
+                    if (saved.exists()) saved.copyTo(target, overwrite = true) else target.delete()
+                }
+                return RestoreResult.Failure("Restore failed. Your current data was kept.")
+            } finally {
+                incoming.delete()
+            }
+            return RestoreResult.Success
+        } catch (e: Exception) {
+            incoming.delete()
+            return RestoreResult.Failure(e.localizedMessage ?: "Restore failed")
+        }
+    }
+
+    /** Starts the app fresh and ends this process, so nothing keeps using the old database. */
+    fun restartApp(context: Context) {
+        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        if (intent != null) context.startActivity(intent)
+        Process.killProcess(Process.myPid())
     }
 }

@@ -30,8 +30,21 @@ android {
         }
     }
 
+    signingConfigs {
+        val keystorePath = System.getenv("BUSINESSOS_KEYSTORE")
+        if (keystorePath != null) {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("BUSINESSOS_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("BUSINESSOS_KEY_ALIAS")
+                keyPassword = System.getenv("BUSINESSOS_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfigs.findByName("release")?.let { signingConfig = it }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

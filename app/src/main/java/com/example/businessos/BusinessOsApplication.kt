@@ -10,6 +10,25 @@ import com.example.businessos.ui.ViewModelFactory
 
 class BusinessOsApplication : Application() {
 
+    override fun onCreate() {
+        super.onCreate()
+        installCrashLogger()
+    }
+
+    /** Saves the last crash to a file so it can be read later, then lets Android handle it as usual. */
+    private fun installCrashLogger() {
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, error ->
+            try {
+                java.io.File(filesDir, "last_crash.txt").writeText(
+                    "${java.util.Date()}\nThread: ${thread.name}\n${android.util.Log.getStackTraceString(error)}"
+                )
+            } catch (_: Throwable) {
+            }
+            previous?.uncaughtException(thread, error)
+        }
+    }
+
     val database: AppDatabase by lazy {
         AppDatabase.getInstance(this)
     }

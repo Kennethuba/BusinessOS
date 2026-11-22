@@ -1,5 +1,6 @@
 package com.example.businessos.ui.shell
 
+import com.example.businessos.ui.components.FullScreenForm
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -72,6 +73,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
@@ -149,6 +151,44 @@ fun AppShell(
     onNavigateToSecurity: () -> Unit
 ) {
     val context = LocalContext.current
+    var backupMessage by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    var pendingRestore by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<android.net.Uri?>(null) }
+    val restorePicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri -> if (uri != null) pendingRestore = uri }
+    pendingRestore?.let { uri ->
+        FullScreenForm(
+            onDismissRequest = { pendingRestore = null },
+            title = { Text(AppLanguageManager.tr("Restore a backup", "Rudisha nakala"), fontWeight = FontWeight.Bold) },
+            text = {
+                Text(AppLanguageManager.tr(
+                    "This replaces all data on this phone with the backup. The file is checked first, and your current data is kept if anything goes wrong. The app will restart.",
+                    "Hii inabadilisha data yote kwenye simu hii na nakala. Faili hukaguliwa kwanza, na data yako ya sasa hubaki ikiwa kuna tatizo. Programu itaanza upya."
+                ))
+            },
+            dismissButton = { TextButton(onClick = { pendingRestore = null }) { Text(AppLanguageManager.tr("Cancel", "Ghairi")) } },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingRestore = null
+                    when (val r = BackupRestoreHelper.restoreDatabaseFromUri(context, uri)) {
+                        is BackupRestoreHelper.RestoreResult.Success -> {
+                            (context.applicationContext as com.example.businessos.BusinessOsApplication).authRepository.logout()
+                            BackupRestoreHelper.restartApp(context)
+                        }
+                        is BackupRestoreHelper.RestoreResult.Failure -> backupMessage = r.reason
+                    }
+                }) { Text(AppLanguageManager.tr("Restore", "Rudisha")) }
+            }
+        )
+    }
+    backupMessage?.let { msg ->
+        FullScreenForm(
+            onDismissRequest = { backupMessage = null },
+            title = { Text(AppLanguageManager.tr("Backup", "Nakala"), fontWeight = FontWeight.Bold) },
+            text = { Text(msg) },
+            confirmButton = { TextButton(onClick = { backupMessage = null }) { Text("OK") } }
+        )
+    }
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val snackbarHostState = remember { SnackbarHostState() }
@@ -434,7 +474,11 @@ fun AppShell(
                             }
                             if (can(Permission.BACKUP_RESTORE)) {
                                 add(Entry(AppLanguageManager.tr("Backup", "Hifadhi nakala"), AppLanguageManager.tr("Save a copy of your data", "Hifadhi nakala ya data"), Icons.Default.CloudUpload) {
-                                    BackupRestoreHelper.exportDatabaseBackup(context)
+                                    val app = context.applicationContext as com.example.businessos.BusinessOsApplication
+                                    BackupRestoreHelper.exportDatabaseBackup(context, app.database)?.let { backupMessage = it }
+                                })
+                                add(Entry(AppLanguageManager.tr("Restore", "Rudisha nakala"), AppLanguageManager.tr("Replace data with a backup file", "Badilisha data na nakala"), Icons.Default.CloudUpload) {
+                                    restorePicker.launch(arrayOf("*/*"))
                                 })
                             }
                             add(Entry(AppLanguageManager.tr("Security", "Usalama"), AppLanguageManager.tr("PIN and auto-lock", "PIN na kufunga"), Icons.Default.Lock, onNavigateToSecurity))

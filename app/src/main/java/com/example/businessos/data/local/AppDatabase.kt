@@ -35,7 +35,7 @@ import com.example.businessos.data.local.entity.*
         WagePaymentEntity::class,
         LayawayEntity::class
     ],
-    version = 1,
+    version = AppDatabase.SCHEMA_VERSION,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -65,6 +65,17 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun layawayDao(): LayawayDao
 
     companion object {
+        const val DB_NAME = "business_os.db"
+        const val SCHEMA_VERSION = 1
+
+        /** Closes the open database so its file can be replaced (restore). */
+        fun closeInstance() {
+            synchronized(this) {
+                INSTANCE?.close()
+                INSTANCE = null
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -73,7 +84,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "business_os.db"
+                    DB_NAME
                 )
                     // No fallbackToDestructiveMigration — explicit migrations required from v1 onward.
                     .build()
