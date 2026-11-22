@@ -27,7 +27,7 @@ sealed class Screen(val route: String) {
     // Operations & Sales Extensions
     object StockAudit : Screen("stock_audit")
     object Layaway : Screen("layaway")
-    object PinLock : Screen("pin_lock")
+    object Security : Screen("security")
 
     // Knowledge & Help
     object UserManual : Screen("user_manual")

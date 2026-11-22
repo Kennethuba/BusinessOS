@@ -5,6 +5,8 @@ import com.example.businessos.data.local.AppDatabase
 import com.example.businessos.data.local.dao.*
 import com.example.businessos.data.local.entity.*
 import com.example.businessos.data.model.*
+import com.example.businessos.data.security.PinSecurity
+import com.example.businessos.util.KenyanPhone
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -1252,21 +1254,26 @@ class BusinessOsRepository(
 
     // ── Staff Management & Security ──────────────────────────────────────────
 
-    suspend fun inviteOrAddStaff(name: String, email: String, phone: String, role: Role): Result<Unit> = runCatching {
+    suspend fun inviteOrAddStaff(name: String, phone: String, role: Role, pin: String): Result<Unit> = runCatching {
         checkPermission(Permission.MANAGE_STAFF)
         if (role == Role.OWNER) throw IllegalArgumentException("A business can only have one owner")
         val bizId = getActiveBusinessId()
-        val cleanPhone = phone.trim()
+        val cleanPhone = KenyanPhone.normalize(phone)
+            ?: throw IllegalArgumentException("Enter a valid phone number, for example 0712345678")
 
         var user = userDao.getUserByPhone(cleanPhone)
         if (user == null) {
-            val newUserId = UUID.randomUUID().toString()
+            if (name.isBlank()) throw IllegalArgumentException("Please enter the person's name")
+            if (!PinSecurity.isValidPin(pin)) {
+                throw IllegalArgumentException("Set a ${PinSecurity.PIN_LENGTH}-digit PIN for this person")
+            }
+            val salt = PinSecurity.generateSalt()
             user = UserEntity(
-                id = newUserId,
+                id = UUID.randomUUID().toString(),
                 name = name.trim(),
                 phone = cleanPhone,
-                pinSalt = "",
-                pinHash = ""
+                pinSalt = salt,
+                pinHash = PinSecurity.hashPin(pin, salt)
             )
             userDao.insertUser(user)
         }
@@ -1283,6 +1290,23 @@ class BusinessOsRepository(
             canSellNegativeStock = (role == Role.OWNER || role == Role.MANAGER)
         )
         businessMemberDao.insertMember(member)
+    }
+
+    /** Owner sets a new PIN for a staff member who forgot theirs. Own PIN goes through changePin. */
+    suspend fun resetStaffPin(userId: String, newPin: String): Result<Unit> = runCatching {
+        checkPermission(Permission.MANAGE_STAFF)
+        if (userId == getActiveUserId()) throw IllegalArgumentException("Use Change PIN to change your own PIN")
+        if (!PinSecurity.isValidPin(newPin)) {
+            throw IllegalArgumentException("The PIN must be exactly ${PinSecurity.PIN_LENGTH} digits")
+        }
+        val bizId = getActiveBusinessId()
+        businessMemberDao.getMember(bizId, userId)
+            ?: throw IllegalStateException("This person is not in your business")
+        val user = userDao.getUserById(userId) ?: throw IllegalStateException("User not found")
+        val salt = PinSecurity.generateSalt()
+        userDao.updateUser(
+            user.copy(pinSalt = salt, pinHash = PinSecurity.hashPin(newPin, salt), failedAttempts = 0, lockoutUntil = 0L)
+        )
     }
 
     suspend fun updateStaffRole(userId: String, newRole: Role): Result<Unit> = runCatching {

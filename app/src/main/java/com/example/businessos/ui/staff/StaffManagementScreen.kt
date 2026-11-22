@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -41,6 +42,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import com.example.businessos.data.security.PinSecurity
+import com.example.businessos.ui.auth.PinField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -103,6 +106,7 @@ fun StaffManagementScreen(
     var showInviteDialog by remember { mutableStateOf(false) }
     var showRecordWageDialog by remember { mutableStateOf(false) }
     var editRoleTarget by remember { mutableStateOf<MemberWithUser?>(null) }
+    var resetPinTarget by remember { mutableStateOf<MemberWithUser?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -202,6 +206,7 @@ fun StaffManagementScreen(
                             isOwnerViewing = userRole == Role.OWNER,
                             isSelf = member.userId == session?.userId,
                             onChangeRole = { editRoleTarget = member },
+                            onResetPin = { resetPinTarget = member },
                             onRemove = { viewModel.removeStaff(member.userId) }
                         )
                     }
@@ -287,9 +292,20 @@ fun StaffManagementScreen(
         if (showInviteDialog) {
             InviteStaffDialog(
                 onDismiss = { showInviteDialog = false },
-                onInvite = { name, phone, role ->
-                    viewModel.inviteStaff(name, "", phone, role)
+                onInvite = { name, phone, role, pin ->
+                    viewModel.inviteStaff(name, phone, role, pin)
                     showInviteDialog = false
+                }
+            )
+        }
+
+        resetPinTarget?.let { target ->
+            ResetPinDialog(
+                name = target.name,
+                onDismiss = { resetPinTarget = null },
+                onReset = { pin ->
+                    viewModel.resetPin(target.userId, pin)
+                    resetPinTarget = null
                 }
             )
         }
@@ -313,6 +329,7 @@ fun StaffMemberCard(
     isOwnerViewing: Boolean,
     isSelf: Boolean,
     onChangeRole: () -> Unit,
+    onResetPin: () -> Unit,
     onRemove: () -> Unit
 ) {
     Card(
@@ -347,6 +364,9 @@ fun StaffMemberCard(
 
             if (isOwnerViewing && !isSelf && member.role != Role.OWNER) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onResetPin) {
+                        Icon(Icons.Default.Lock, contentDescription = "Reset PIN", tint = AmberAccent)
+                    }
                     IconButton(onClick = onChangeRole) {
                         Icon(Icons.Default.Edit, contentDescription = "Change Role", tint = AmberAccent)
                     }
@@ -368,10 +388,11 @@ private val assignableRoles = listOf(
 @Composable
 fun InviteStaffDialog(
     onDismiss: () -> Unit,
-    onInvite: (name: String, phone: String, role: Role) -> Unit
+    onInvite: (name: String, phone: String, role: Role, pin: String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
+    var pin by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf(Role.CASHIER) }
 
     AlertDialog(
@@ -412,6 +433,14 @@ fun InviteStaffDialog(
                     )
                 )
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                PinField(
+                    value = pin,
+                    onValueChange = { pin = it },
+                    label = "PIN for this person (${PinSecurity.PIN_LENGTH} digits)"
+                )
+
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Text("Role", style = MaterialTheme.typography.labelSmall, color = TextMuted)
@@ -445,8 +474,8 @@ fun InviteStaffDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (name.isNotBlank() && phone.isNotBlank()) {
-                        onInvite(name, phone, selectedRole)
+                    if (name.isNotBlank() && phone.isNotBlank() && pin.length == PinSecurity.PIN_LENGTH) {
+                        onInvite(name, phone, selectedRole, pin)
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
@@ -764,6 +793,37 @@ fun RecordWagePaymentDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Ghairi", color = TextSecondary) }
+        }
+    )
+}
+
+@Composable
+fun ResetPinDialog(
+    name: String,
+    onDismiss: () -> Unit,
+    onReset: (pin: String) -> Unit
+) {
+    var pin by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = DarkSurface,
+        title = { Text("New PIN for $name", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                Text("Choose a new ${PinSecurity.PIN_LENGTH}-digit PIN and tell $name privately.", color = TextSecondary, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(10.dp))
+                PinField(value = pin, onValueChange = { pin = it }, label = "New PIN")
+            }
+        },
+        confirmButton = {
+            Button(
+                enabled = pin.length == PinSecurity.PIN_LENGTH,
+                onClick = { onReset(pin) },
+                colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
+            ) { Text("Save PIN") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
         }
     )
 }

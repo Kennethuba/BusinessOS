@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.businessos.data.model.Money
 import com.example.businessos.data.repository.AuthRepository
+import com.example.businessos.data.security.AppLock
 import com.example.businessos.ui.ViewModelFactory
 import com.example.businessos.ui.accounting.AccountingScreen
 import com.example.businessos.ui.accounting.AccountingViewModel
@@ -38,7 +39,8 @@ import com.example.businessos.ui.workspace.WorkspaceViewModel
 fun NavGraph(
     navController: NavHostController,
     viewModelFactory: ViewModelFactory,
-    authRepository: AuthRepository
+    authRepository: AuthRepository,
+    appLock: AppLock
 ) {
     val session by authRepository.session.collectAsState()
 
@@ -61,6 +63,7 @@ fun NavGraph(
                     navController.navigate(Screen.Signup.route)
                 },
                 onLoginSuccess = { hasBusiness ->
+                    appLock.unlock()
                     if (hasBusiness) {
                         navController.navigate(Screen.BusinessHome.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
@@ -83,6 +86,7 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onSignupSuccess = {
+                    appLock.unlock()
                     navController.navigate(Screen.WorkspaceSwitcher.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
@@ -124,7 +128,7 @@ fun NavGraph(
                 onNavigateToStaff = { navController.navigate(Screen.StaffManagement.route) },
                 onNavigateToAuditLog = { navController.navigate(Screen.AuditLog.route) },
                 onNavigateToManual = { navController.navigate(Screen.UserManual.route) },
-                onNavigateToPinLock = { navController.navigate(Screen.PinLock.route) }
+                onNavigateToSecurity = { navController.navigate(Screen.Security.route) }
             )
         }
 
@@ -275,12 +279,13 @@ fun NavGraph(
             )
         }
 
-        // Security: PIN Setup / Lock Screen
-        composable(Screen.PinLock.route) {
-            com.example.businessos.ui.auth.PinLockScreen(
-                isSetupMode = true,
-                onSuccess = { navController.popBackStack() },
-                onCancel = { navController.popBackStack() }
+        // Security: auto-lock timeout and change PIN
+        composable(Screen.Security.route) {
+            val authViewModel: AuthViewModel = viewModel(factory = viewModelFactory)
+            com.example.businessos.ui.auth.SecurityScreen(
+                viewModel = authViewModel,
+                appLock = appLock,
+                onBack = { navController.popBackStack() }
             )
         }
     }

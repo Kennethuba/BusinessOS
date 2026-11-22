@@ -11,15 +11,8 @@ import java.nio.charset.StandardCharsets
 
 object WhatsAppHelper {
 
-    private fun normalizeKenyanPhone(phone: String): String {
-        val cleaned = phone.replace("[^0-9+]".toRegex(), "")
-        return when {
-            cleaned.startsWith("+254") -> cleaned.substring(1)
-            cleaned.startsWith("254") -> cleaned
-            cleaned.startsWith("0") -> "254" + cleaned.substring(1)
-            else -> "254$cleaned"
-        }
-    }
+    private fun normalizeKenyanPhone(phone: String): String =
+        com.example.businessos.util.KenyanPhone.forWhatsApp(phone) ?: phone.filter { it.isDigit() }
 
     fun openWhatsAppEstimateApproval(context: Context, jobCard: JobCardEntity, businessName: String?, parts: List<PartItem>) {
         val phone = normalizeKenyanPhone(jobCard.customerPhone)

@@ -146,7 +146,7 @@ fun AppShell(
     onNavigateToStaff: () -> Unit,
     onNavigateToAuditLog: () -> Unit,
     onNavigateToManual: () -> Unit,
-    onNavigateToPinLock: () -> Unit
+    onNavigateToSecurity: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -437,7 +437,7 @@ fun AppShell(
                                     BackupRestoreHelper.exportDatabaseBackup(context)
                                 })
                             }
-                            add(Entry(AppLanguageManager.tr("PIN lock", "PIN ya usalama"), AppLanguageManager.tr("Protect the app", "Linda programu"), Icons.Default.Lock, onNavigateToPinLock))
+                            add(Entry(AppLanguageManager.tr("Security", "Usalama"), AppLanguageManager.tr("PIN and auto-lock", "PIN na kufunga"), Icons.Default.Lock, onNavigateToSecurity))
                             if (role == Role.OWNER) {
                                 add(Entry(AppLanguageManager.tr("Activity log", "Kumbukumbu"), AppLanguageManager.tr("Who did what", "Nani alifanya nini"), Icons.Default.Security, onNavigateToAuditLog))
                             }

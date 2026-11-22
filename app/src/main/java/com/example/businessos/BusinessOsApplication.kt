@@ -4,6 +4,8 @@ import android.app.Application
 import com.example.businessos.data.local.AppDatabase
 import com.example.businessos.data.repository.AuthRepository
 import com.example.businessos.data.repository.BusinessOsRepository
+import com.example.businessos.data.security.AppLock
+import com.example.businessos.data.security.PrefsSessionStore
 import com.example.businessos.ui.ViewModelFactory
 
 class BusinessOsApplication : Application() {
@@ -12,9 +14,12 @@ class BusinessOsApplication : Application() {
         AppDatabase.getInstance(this)
     }
 
+    val appLock: AppLock by lazy { AppLock(this) }
+
     val authRepository: AuthRepository by lazy {
         AuthRepository(
             database = database,
+            sessionStore = PrefsSessionStore(this),
             userDao = database.userDao(),
             businessDao = database.businessDao(),
             businessMemberDao = database.businessMemberDao()

@@ -39,19 +39,24 @@ class StaffViewModel(
     private val _successMessage = MutableStateFlow<String?>(null)
     val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
 
-    fun inviteStaff(name: String, email: String, phone: String, role: Role) {
-        if (name.isBlank() || phone.isBlank()) {
-            _errorMessage.value = "Name and Phone are required"
-            return
-        }
+    fun inviteStaff(name: String, phone: String, role: Role, pin: String) {
         viewModelScope.launch {
             _errorMessage.value = null
-            val result = repository.inviteOrAddStaff(name, email, phone, role)
+            val result = repository.inviteOrAddStaff(name, phone, role, pin)
             result.onSuccess {
-                _successMessage.value = "Staff member $name added successfully"
+                _successMessage.value = "$name was added. Share the PIN with them privately."
             }.onFailure {
                 _errorMessage.value = it.message
             }
+        }
+    }
+
+    fun resetPin(userId: String, newPin: String) {
+        viewModelScope.launch {
+            _errorMessage.value = null
+            repository.resetStaffPin(userId, newPin)
+                .onSuccess { _successMessage.value = "PIN changed. Share it with them privately." }
+                .onFailure { _errorMessage.value = it.message }
         }
     }
 

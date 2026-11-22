@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.businessos.data.model.CurrentUserSession
 import com.example.businessos.data.repository.AuthRepository
+import com.example.businessos.data.repository.LockCandidate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,44 +22,81 @@ class AuthViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    fun login(phone: String, pin: String = "", onSuccess: (hasBusiness: Boolean) -> Unit) {
-        if (phone.isBlank()) {
-            _errorMessage.value = "Please enter your phone number"
-            return
-        }
+    private val _candidates = MutableStateFlow<List<LockCandidate>>(emptyList())
+    val candidates: StateFlow<List<LockCandidate>> = _candidates.asStateFlow()
+
+    private val _message = MutableStateFlow<String?>(null)
+    val message: StateFlow<String?> = _message.asStateFlow()
+
+    fun login(phone: String, pin: String, onSuccess: (hasBusiness: Boolean) -> Unit) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            val result = authRepository.login(phone.trim(), pin.trim())
+            val result = authRepository.login(phone, pin)
             _isLoading.value = false
             result.onSuccess {
-                val hasBusiness = authRepository.session.value?.activeBusinessId != null
-                onSuccess(hasBusiness)
+                onSuccess(authRepository.session.value?.activeBusinessId != null)
             }.onFailure {
-                _errorMessage.value = it.message ?: "Login failed"
+                _errorMessage.value = it.message ?: "Could not sign in"
             }
         }
     }
 
-    fun signup(name: String, phone: String, pin: String = "1234", onSuccess: () -> Unit) {
-        if (name.isBlank() || phone.isBlank()) {
-            _errorMessage.value = "Name and phone are required"
+    fun signup(name: String, phone: String, pin: String, confirmPin: String, onSuccess: () -> Unit) {
+        if (pin != confirmPin) {
+            _errorMessage.value = "The two PINs do not match"
             return
         }
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            val result = authRepository.signup(name.trim(), phone.trim(), pin.trim().ifBlank { "1234" })
+            val result = authRepository.signup(name, phone, pin)
             _isLoading.value = false
-            result.onSuccess {
-                onSuccess()
-            }.onFailure {
-                _errorMessage.value = it.message ?: "Signup failed"
-            }
+            result.onSuccess { onSuccess() }
+                .onFailure { _errorMessage.value = it.message ?: "Could not create the account" }
         }
     }
+
+    fun loadCandidates() {
+        viewModelScope.launch { _candidates.value = authRepository.lockCandidates() }
+    }
+
+    fun unlock(userId: String, pin: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            val result = authRepository.unlock(userId, pin)
+            _isLoading.value = false
+            result.onSuccess { onSuccess() }
+                .onFailure { _errorMessage.value = it.message ?: "Could not unlock" }
+        }
+    }
+
+    fun changePin(oldPin: String, newPin: String, confirmPin: String, onSuccess: () -> Unit) {
+        val userId = session.value?.userId ?: return
+        if (newPin != confirmPin) {
+            _errorMessage.value = "The two new PINs do not match"
+            return
+        }
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            val result = authRepository.changePin(userId, oldPin, newPin)
+            _isLoading.value = false
+            result.onSuccess {
+                _message.value = "PIN changed"
+                onSuccess()
+            }.onFailure { _errorMessage.value = it.message ?: "Could not change the PIN" }
+        }
+    }
+
+    fun logout() = authRepository.logout()
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    fun clearMessage() {
+        _message.value = null
     }
 }
