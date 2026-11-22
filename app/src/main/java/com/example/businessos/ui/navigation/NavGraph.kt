@@ -25,9 +25,9 @@ import com.example.businessos.ui.garage.GarageViewModel
 import com.example.businessos.ui.garage.JobCardDetailScreen
 import com.example.businessos.ui.garage.JobCardListScreen
 import com.example.businessos.ui.garage.VehicleHistoryScreen
-import com.example.businessos.ui.home.HomeScreen
 import com.example.businessos.ui.home.HomeViewModel
 import com.example.businessos.ui.pos.PosScreen
+import com.example.businessos.ui.shell.AppShell
 import com.example.businessos.ui.pos.PosViewModel
 import com.example.businessos.ui.staff.StaffManagementScreen
 import com.example.businessos.ui.staff.StaffViewModel
@@ -111,44 +111,20 @@ fun NavGraph(
         // Business Home Dashboard
         composable(Screen.BusinessHome.route) {
             val homeViewModel: HomeViewModel = viewModel(factory = viewModelFactory)
-            HomeScreen(
+            AppShell(
                 viewModel = homeViewModel,
-                onSwitchWorkspace = {
-                    navController.navigate(Screen.WorkspaceSwitcher.route)
-                },
-                onNavigateToPos = {
-                    navController.navigate(Screen.Pos.route)
-                },
-                onNavigateToDeniLedger = {
-                    navController.navigate(Screen.DeniLedger.route)
-                },
-                onNavigateToGarageJobs = {
-                    navController.navigate(Screen.GarageJobs.route)
-                },
-                onNavigateToVehicleHistory = {
-                    navController.navigate(Screen.VehicleHistory.route)
-                },
-                onNavigateToStaff = {
-                    navController.navigate(Screen.StaffManagement.route)
-                },
-                onNavigateToAuditLog = {
-                    navController.navigate(Screen.AuditLog.route)
-                },
-                onNavigateToManual = {
-                    navController.navigate(Screen.UserManual.route)
-                },
-                onNavigateToAccounting = {
-                    navController.navigate(Screen.Accounting.route)
-                },
-                onNavigateToStockAudit = {
-                    navController.navigate(Screen.StockAudit.route)
-                },
-                onNavigateToLayaway = {
-                    navController.navigate(Screen.Layaway.route)
-                },
-                onNavigateToPinLock = {
-                    navController.navigate(Screen.PinLock.route)
-                }
+                onSwitchCompany = { navController.navigate(Screen.WorkspaceSwitcher.route) },
+                onNavigateToPos = { navController.navigate(Screen.Pos.route) },
+                onNavigateToJobOrders = { navController.navigate(Screen.GarageJobs.route) },
+                onNavigateToDeni = { navController.navigate(Screen.DeniLedger.route) },
+                onNavigateToAccounting = { navController.navigate(Screen.Accounting.route) },
+                onNavigateToStockAudit = { navController.navigate(Screen.StockAudit.route) },
+                onNavigateToLayaway = { navController.navigate(Screen.Layaway.route) },
+                onNavigateToVehicleHistory = { navController.navigate(Screen.VehicleHistory.route) },
+                onNavigateToStaff = { navController.navigate(Screen.StaffManagement.route) },
+                onNavigateToAuditLog = { navController.navigate(Screen.AuditLog.route) },
+                onNavigateToManual = { navController.navigate(Screen.UserManual.route) },
+                onNavigateToPinLock = { navController.navigate(Screen.PinLock.route) }
             )
         }
 

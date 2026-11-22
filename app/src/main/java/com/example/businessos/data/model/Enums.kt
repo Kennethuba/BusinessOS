@@ -5,6 +5,16 @@ enum class BusinessType {
     STALL
 }
 
+/**
+ * Any business can use job orders. CLIENT_ORDER is work for a customer to be delivered
+ * (a car repair, a pair of shoes made to order). PRODUCTION is an in-house order to make
+ * goods that will later be sold from stock.
+ */
+enum class JobOrderKind {
+    CLIENT_ORDER,
+    PRODUCTION
+}
+
 enum class BusinessSide {
     SHOP,
     GARAGE

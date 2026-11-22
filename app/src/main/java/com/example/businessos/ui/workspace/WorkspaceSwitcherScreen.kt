@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -54,7 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.businessos.data.local.entity.BusinessEntity
-import com.example.businessos.data.model.BusinessType
+import com.example.businessos.ui.util.AppLanguageManager
 import com.example.businessos.ui.theme.AmberAccent
 import com.example.businessos.ui.theme.CardBackground
 import com.example.businessos.ui.theme.CardBorder
@@ -231,8 +233,8 @@ fun WorkspaceSwitcherScreen(
         if (showCreateDialog) {
             CreateBusinessDialog(
                 onDismiss = { showCreateDialog = false },
-                onCreate = { name, type ->
-                    viewModel.createBusiness(name, type) {
+                onCreate = { name, useSales, useJobOrders ->
+                    viewModel.createBusiness(name, useSales, useJobOrders) {
                         showCreateDialog = false
                         onWorkspaceSelected()
                     }
@@ -271,13 +273,13 @@ fun BusinessCard(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(if (business.type == BusinessType.GARAGE) Color(0xFF2E2211) else Color(0xFF0F2B22)),
+                    .background(if (business.isGarageEnabled && !business.isShopEnabled) Color(0xFF2E2211) else Color(0xFF0F2B22)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = if (business.type == BusinessType.GARAGE) Icons.Default.Build else Icons.Default.Storefront,
+                    imageVector = if (business.isGarageEnabled && !business.isShopEnabled) Icons.Default.Build else Icons.Default.Storefront,
                     contentDescription = null,
-                    tint = if (business.type == BusinessType.GARAGE) AmberAccent else TealAccent,
+                    tint = if (business.isGarageEnabled && !business.isShopEnabled) AmberAccent else TealAccent,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -330,36 +332,28 @@ fun BusinessCard(
 @Composable
 fun CreateBusinessDialog(
     onDismiss: () -> Unit,
-    onCreate: (name: String, type: BusinessType) -> Unit
+    onCreate: (name: String, useSales: Boolean, useJobOrders: Boolean) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf(BusinessType.GARAGE) }
+    var useSales by remember { mutableStateOf(true) }
+    var useJobOrders by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = {
             Text(
-                text = "Create Business",
+                text = AppLanguageManager.tr("New company", "Kampuni mpya"),
                 style = MaterialTheme.typography.titleLarge,
                 color = TextPrimary
             )
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "Select business type and enter name.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Business Name") },
-                    placeholder = { Text("e.g. Kariakor Spares Stall #4") },
+                    label = { Text(AppLanguageManager.tr("Company name", "Jina la kampuni")) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -375,70 +369,82 @@ fun CreateBusinessDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "BUSINESS TYPE",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    text = AppLanguageManager.tr("What will you use? Pick one or both.", "Utatumia nini? Chagua kimoja au vyote."),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(DarkSurfaceElevated)
-                        .clickable { selectedType = BusinessType.GARAGE }
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = selectedType == BusinessType.GARAGE,
-                        onClick = { selectedType = BusinessType.GARAGE },
-                        colors = RadioButtonDefaults.colors(selectedColor = AmberAccent)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text("Auto Garage", fontWeight = FontWeight.Bold, color = TextPrimary)
-                        Text("Job cards, 3D inspection, stages & WhatsApp", fontSize = 12.sp, color = TextSecondary)
-                    }
-                }
+                ModuleChoiceRow(
+                    title = AppLanguageManager.tr("Sales", "Mauzo"),
+                    description = AppLanguageManager.tr("Sell items and keep stock", "Uza bidhaa na utunze akiba"),
+                    checked = useSales,
+                    onCheckedChange = { useSales = it }
+                )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(DarkSurfaceElevated)
-                        .clickable { selectedType = BusinessType.STALL }
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = selectedType == BusinessType.STALL,
-                        onClick = { selectedType = BusinessType.STALL },
-                        colors = RadioButtonDefaults.colors(selectedColor = AmberAccent)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text("Kariakor Market Stall", fontWeight = FontWeight.Bold, color = TextPrimary)
-                        Text("Quick POS, wholesale toggle & Deni ledger", fontSize = 12.sp, color = TextSecondary)
-                    }
-                }
+                ModuleChoiceRow(
+                    title = AppLanguageManager.tr("Job orders", "Kazi za wateja"),
+                    description = AppLanguageManager.tr(
+                        "Repairs, orders for customers, or making goods for sale",
+                        "Ukarabati, oda za wateja, au kutengeneza bidhaa za kuuza"
+                    ),
+                    checked = useJobOrders,
+                    onCheckedChange = { useJobOrders = it }
+                )
+
+                Text(
+                    text = AppLanguageManager.tr("You can change this later in Settings.", "Unaweza kubadilisha baadaye kwenye Mipangilio."),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMuted,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         },
         confirmButton = {
             Button(
-                onClick = { onCreate(name, selectedType) },
+                enabled = name.isNotBlank() && (useSales || useJobOrders),
+                onClick = { onCreate(name, useSales, useJobOrders) },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
             ) {
-                Text("Create")
+                Text(AppLanguageManager.tr("Create", "Unda"))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextSecondary)
+                Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary)
             }
         }
     )
+}
+
+@Composable
+private fun ModuleChoiceRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(DarkSurfaceElevated)
+            .clickable { onCheckedChange(!checked) }
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = CheckboxDefaults.colors(checkedColor = AmberAccent)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Column {
+            Text(title, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text(description, fontSize = 12.sp, color = TextSecondary)
+        }
+    }
 }

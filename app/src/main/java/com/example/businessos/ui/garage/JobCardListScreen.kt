@@ -18,6 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.input.KeyboardType
+import com.example.businessos.data.model.JobOrderKind
+import com.example.businessos.ui.util.AppLanguageManager
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -251,8 +256,8 @@ fun JobCardListScreen(
         if (showCreateDialog) {
             CreateJobCardDialog(
                 onDismiss = { showCreateDialog = false },
-                onCreate = { plate, name, phone, desc ->
-                    viewModel.createJobCard(plate, name, phone, desc, null) { created ->
+                onCreate = { kind, reference, name, phone, desc ->
+                    viewModel.createJobCard(kind, reference, name, phone, desc) { created ->
                         showCreateDialog = false
                         onNavigateToJobDetail(created.id)
                     }
@@ -371,100 +376,102 @@ fun JobStagePill(stage: JobStage) {
 @Composable
 fun CreateJobCardDialog(
     onDismiss: () -> Unit,
-    onCreate: (plate: String, name: String, phone: String, desc: String) -> Unit
+    onCreate: (kind: JobOrderKind, reference: String, name: String, phone: String, desc: String) -> Unit
 ) {
-    var plate by remember { mutableStateOf("") }
+    var kind by remember { mutableStateOf(JobOrderKind.CLIENT_ORDER) }
+    var reference by remember { mutableStateOf("") }
     var customerName by remember { mutableStateOf("") }
     var customerPhone by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+    val isClientOrder = kind == JobOrderKind.CLIENT_ORDER
+
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = AmberAccent,
+        unfocusedBorderColor = DarkBorder,
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
-        title = { Text("Book In Vehicle (Intake)", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = { Text(AppLanguageManager.tr("New job order", "Kazi mpya"), color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = plate,
-                    onValueChange = { plate = it.uppercase() },
-                    label = { Text("Number Plate") },
-                    placeholder = { Text("e.g. KDL 456Z") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AmberAccent,
-                        unfocusedBorderColor = DarkBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
+            Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = isClientOrder,
+                        onClick = { kind = JobOrderKind.CLIENT_ORDER },
+                        label = { Text(AppLanguageManager.tr("For a customer", "Ya mteja")) }
                     )
-                )
+                    FilterChip(
+                        selected = !isClientOrder,
+                        onClick = { kind = JobOrderKind.PRODUCTION },
+                        label = { Text(AppLanguageManager.tr("Make for stock", "Tengeneza kwa akiba")) }
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
-                    value = customerName,
-                    onValueChange = { customerName = it },
-                    label = { Text("Customer Name") },
-                    placeholder = { Text("e.g. John Kamau") },
+                    value = reference,
+                    onValueChange = { reference = it },
+                    label = {
+                        Text(
+                            if (isClientOrder) AppLanguageManager.tr("Vehicle plate or item", "Namba ya gari au bidhaa")
+                            else AppLanguageManager.tr("What are you making?", "Unatengeneza nini?")
+                        )
+                    },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AmberAccent,
-                        unfocusedBorderColor = DarkBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
+                    colors = fieldColors
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = customerPhone,
-                    onValueChange = { customerPhone = it },
-                    label = { Text("Customer WhatsApp Phone") },
-                    placeholder = { Text("0712345678") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AmberAccent,
-                        unfocusedBorderColor = DarkBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
+                if (isClientOrder) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = customerName,
+                        onValueChange = { customerName = it },
+                        label = { Text(AppLanguageManager.tr("Customer name", "Jina la mteja")) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = fieldColors
                     )
-                )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = customerPhone,
+                        onValueChange = { customerPhone = it },
+                        label = { Text(AppLanguageManager.tr("Customer phone", "Simu ya mteja")) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = fieldColors
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Fault / Problem Description") },
-                    placeholder = { Text("e.g. Brake pad replacement & oil change") },
+                    label = { Text(AppLanguageManager.tr("Details", "Maelezo")) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AmberAccent,
-                        unfocusedBorderColor = DarkBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
+                    colors = fieldColors
                 )
             }
         },
         confirmButton = {
             Button(
-                onClick = {
-                    if (plate.isNotBlank() && customerName.isNotBlank() && customerPhone.isNotBlank()) {
-                        onCreate(plate, customerName, customerPhone, description)
-                    }
-                },
+                onClick = { onCreate(kind, reference, customerName, customerPhone, description) },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
             ) {
-                Text("Open Ticket")
+                Text(AppLanguageManager.tr("Create", "Unda"))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary) }
         }
     )
 }

@@ -138,6 +138,7 @@ class BusinessOsRepository(
         isGarageEnabled: Boolean,
         allowNegativeStock: Boolean
     ): Result<Unit> = runCatching {
+        checkPermission(Permission.EDIT_BUSINESS_SETTINGS)
         val bizId = getActiveBusinessId()
         val existing = businessDao.getBusinessById(bizId)
             ?: throw IllegalStateException("Business not found")
@@ -696,7 +697,8 @@ class BusinessOsRepository(
         laborCost: Money = Money.ZERO,
         partsCost: Money = Money.ZERO,
         estimateTotal: Money = Money.ZERO,
-        targetDeliveryDate: Long? = null
+        targetDeliveryDate: Long? = null,
+        kind: JobOrderKind = JobOrderKind.CLIENT_ORDER
     ): Result<JobCardEntity> = runCatching {
         checkPermission(Permission.INTAKE_JOB)
         val bizId = getActiveBusinessId()
@@ -709,6 +711,7 @@ class BusinessOsRepository(
                 id = jobId,
                 businessId = bizId,
                 jobNumber = jobNum,
+                kind = kind,
                 vehiclePlate = vehiclePlate.trim().uppercase(),
                 vehicleMake = vehicleMake.trim(),
                 vehicleModel = vehicleModel.trim(),

@@ -3,7 +3,6 @@ package com.example.businessos.ui.workspace
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.businessos.data.local.entity.BusinessEntity
-import com.example.businessos.data.model.BusinessType
 import com.example.businessos.data.model.CurrentUserSession
 import com.example.businessos.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,9 +48,8 @@ class WorkspaceViewModel(
 
     fun createBusiness(
         name: String,
-        type: BusinessType = BusinessType.STALL,
-        isShopEnabled: Boolean = (type == BusinessType.STALL),
-        isGarageEnabled: Boolean = (type == BusinessType.GARAGE),
+        isShopEnabled: Boolean,
+        isGarageEnabled: Boolean,
         onSuccess: () -> Unit
     ) {
         if (name.isBlank()) {

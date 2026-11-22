@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.businessos.data.local.dao.MemberWithUser
 import com.example.businessos.data.local.entity.JobCardEntity
 import com.example.businessos.data.model.CurrentUserSession
+import com.example.businessos.data.model.JobOrderKind
 import com.example.businessos.data.model.JobStage
 import com.example.businessos.data.model.Money
 import com.example.businessos.data.model.PartItem
@@ -44,30 +45,36 @@ class GarageViewModel(
     }
 
     fun createJobCard(
-        plate: String,
+        kind: JobOrderKind,
+        reference: String,
         customerName: String,
         customerPhone: String,
         description: String,
-        assignedStaffId: String? = null,
         onSuccess: (JobCardEntity) -> Unit
     ) {
-        if (plate.isBlank() || customerName.isBlank() || customerPhone.isBlank()) {
-            _errorMessage.value = "Plate, Customer Name, and Phone are required"
+        val isClientOrder = kind == JobOrderKind.CLIENT_ORDER
+        if (reference.isBlank()) {
+            _errorMessage.value = "Please enter what the job order is for"
+            return
+        }
+        if (isClientOrder && (customerName.isBlank() || customerPhone.isBlank())) {
+            _errorMessage.value = "Customer name and phone are required"
             return
         }
 
         viewModelScope.launch {
             _errorMessage.value = null
             val result = repository.createJobCard(
-                vehiclePlate = plate,
+                vehiclePlate = reference,
                 vehicleMake = "",
                 vehicleModel = "",
-                customerName = customerName,
-                customerPhone = customerPhone,
-                issueDescription = description
+                customerName = if (isClientOrder) customerName else "In-house",
+                customerPhone = if (isClientOrder) customerPhone else "",
+                issueDescription = description,
+                kind = kind
             )
             result.onSuccess {
-                _successMessage.value = "Job Card for ${it.vehiclePlate} created"
+                _successMessage.value = "Job order ${it.jobNumber} created"
                 onSuccess(it)
             }.onFailure {
                 _errorMessage.value = it.message

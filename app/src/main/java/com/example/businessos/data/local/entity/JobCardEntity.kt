@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.businessos.data.model.JobOrderKind
 import com.example.businessos.data.model.JobStage
 import com.example.businessos.data.model.Money
 
@@ -36,6 +37,7 @@ data class JobCardEntity(
     @PrimaryKey val id: String,
     val businessId: String,
     val jobNumber: String,
+    val kind: JobOrderKind = JobOrderKind.CLIENT_ORDER,
     val vehiclePlate: String,
     val vehicleMake: String = "",
     val vehicleModel: String = "",
