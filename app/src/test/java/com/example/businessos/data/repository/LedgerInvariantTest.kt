@@ -152,6 +152,10 @@ class LedgerInvariantTest {
 
     @Test
     fun cannotSellMoreThanInStock() = runBlocking {
+        // Owners may oversell by default; turn that off to test the stock guard.
+        val userId = auth.session.value!!.userId
+        val member = db.businessMemberDao().getMember(bizId, userId)!!
+        db.businessMemberDao().insertMember(member.copy(canSellNegativeStock = false))
         val item = repo.createItem("Hat", Money(50_000), Money(40_000), initialStock = 2).getOrThrow()
         val result = repo.recordSale(
             null, null, listOf(SaleLineItem(item.id, item.name, 5, Money(50_000)))
