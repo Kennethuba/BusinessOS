@@ -631,12 +631,22 @@ class BusinessOsRepository(
     ): Result<CustomerEntity> = runCatching {
         checkPermission(Permission.CREATE_CUSTOMER)
         val bizId = getActiveBusinessId()
+        if (name.isBlank()) throw IllegalArgumentException("Enter the customer's name")
+        // One customer per phone number: Kenyan numbers are stored in one standard form.
+        val normalizedPhone = if (phone.isBlank()) "" else
+            com.example.businessos.util.KenyanPhone.normalize(phone)
+                ?: throw IllegalArgumentException("Enter a valid phone number, for example 0712345678")
+        if (normalizedPhone.isNotEmpty()) {
+            customerDao.getByPhone(bizId, normalizedPhone)?.let {
+                throw IllegalArgumentException("${it.name} already uses this phone number")
+            }
+        }
         val customerId = UUID.randomUUID().toString()
         val customer = CustomerEntity(
             id = customerId,
             businessId = bizId,
             name = name.trim(),
-            phone = phone.trim(),
+            phone = normalizedPhone,
             balanceCents = initialCredit.cents,
             dueDate = dueDate,
             notes = notes?.trim().orEmpty()

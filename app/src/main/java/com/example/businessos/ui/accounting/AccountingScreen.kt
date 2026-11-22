@@ -52,7 +52,7 @@ fun AccountingScreen(
     val apAgeingReport by viewModel.apAgeingReport.collectAsState()
 
     var selectedTab by remember { mutableStateOf(0) }
-    val tabTitles = listOf("Cashbook", "Invoices (Ankara)", "Suppliers (Wasambazaji)", "General Ledger", "Reports (Ripoti)", "Funga Siku (Cash-Up)")
+    val tabTitles = listOf(com.example.businessos.ui.util.AppLanguageManager.tr("Cashbook","Daftari la pesa"), com.example.businessos.ui.util.AppLanguageManager.tr("Invoices","Ankara"), com.example.businessos.ui.util.AppLanguageManager.tr("Suppliers","Wasambazaji"), com.example.businessos.ui.util.AppLanguageManager.tr("Ledger","Leja"), com.example.businessos.ui.util.AppLanguageManager.tr("Reports","Ripoti"), com.example.businessos.ui.util.AppLanguageManager.tr("Close the day","Funga siku"))
 
     var showAddExpenseDialog by remember { mutableStateOf(false) }
     var showCreateInvoiceDialog by remember { mutableStateOf(false) }
@@ -81,7 +81,7 @@ fun AccountingScreen(
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                     BusinessOsTopBar(
-                        title = "Daftari ya Hesabu (Accounting)",
+                        title = com.example.businessos.ui.util.AppLanguageManager.tr("Accounts","Hesabu"),
                         businessName = uiState.businessName,
                         role = uiState.userRole,
                         onSwitchWorkspace = onSwitchWorkspace,
@@ -678,17 +678,23 @@ private fun ReportsTab(
     onRefresh: () -> Unit
 ) {
     var reportType by remember { mutableStateOf(0) }
-    val reportTitles = listOf("P&L Statement", "Balance Sheet", "Trial Balance", "Ageing Analysis")
+    var advanced by remember { mutableStateOf(false) }
+    val reportTitles = if (advanced) listOf(com.example.businessos.ui.util.AppLanguageManager.tr("Profit and loss","Faida na hasara"), com.example.businessos.ui.util.AppLanguageManager.tr("Balance sheet","Mizania"), com.example.businessos.ui.util.AppLanguageManager.tr("Trial balance","Mizani ya majaribio"), com.example.businessos.ui.util.AppLanguageManager.tr("Who owes","Madeni"))
+    else listOf(com.example.businessos.ui.util.AppLanguageManager.tr("Profit and loss","Faida na hasara"))
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("RIPOTI ZA FEDHA (FINANCIAL STATEMENTS)", style = MaterialTheme.typography.labelSmall, color = AmberAccent, fontWeight = FontWeight.Bold)
+            androidx.compose.material3.FilterChip(
+                selected = advanced,
+                onClick = { advanced = !advanced; reportType = 0 },
+                label = { Text(com.example.businessos.ui.util.AppLanguageManager.tr("Advanced","Zaidi")) }
+            )
             IconButton(onClick = onRefresh) {
                 Icon(Icons.Filled.Refresh, contentDescription = "Refresh", tint = AmberAccent)
             }
         }
 
-        TabRow(selectedTabIndex = reportType, containerColor = Color(0xFF1E2638)) {
+        if (advanced) TabRow(selectedTabIndex = reportType, containerColor = Color(0xFF1E2638)) {
             reportTitles.forEachIndexed { idx, title ->
                 Tab(
                     selected = reportType == idx,

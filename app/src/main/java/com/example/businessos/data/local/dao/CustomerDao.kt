@@ -35,6 +35,9 @@ interface CustomerDao {
     suspend fun updateCustomer(customer: CustomerEntity)
 
     /** Adjust outstanding deni balance — deltaCents positive = owe more, negative = paid down. */
+    @Query("SELECT * FROM customers WHERE businessId = :businessId AND phone = :phone AND phone != '' LIMIT 1")
+    suspend fun getByPhone(businessId: String, phone: String): CustomerEntity?
+
     @Query("UPDATE customers SET balanceCents = balanceCents + :deltaCents WHERE id = :id AND businessId = :businessId")
     suspend fun updateBalanceCents(id: String, businessId: String, deltaCents: Long)
 

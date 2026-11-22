@@ -1,5 +1,6 @@
 package com.example.businessos.ui.shell
 
+import com.example.businessos.ui.theme.StatusRed
 import com.example.businessos.ui.components.FullScreenForm
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
@@ -210,6 +211,47 @@ fun AppShell(
     val shopOn = business?.isShopEnabled ?: session?.isShopEnabled ?: true
     val jobsOn = business?.isGarageEnabled ?: session?.isGarageEnabled ?: false
     val companyName = business?.name ?: session?.activeBusinessName ?: ""
+    var showDelete by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var deleteTyped by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
+    var deleteError by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    val deleteScope = androidx.compose.runtime.rememberCoroutineScope()
+    if (showDelete) {
+        FullScreenForm(
+            onDismissRequest = { showDelete = false; deleteTyped = ""; deleteError = null },
+            title = { Text(AppLanguageManager.tr("Delete company", "Futa kampuni"), fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text(AppLanguageManager.tr(
+                        "This permanently deletes $companyName and all its sales, stock, customers and accounts. Make a backup first. Type the company name to confirm.",
+                        "Hii inafuta $companyName na mauzo yote, akiba, wateja na hesabu zake milele. Fanya nakala kwanza. Andika jina la kampuni kuthibitisha."
+                    ))
+                    androidx.compose.material3.OutlinedTextField(
+                        value = deleteTyped,
+                        onValueChange = { deleteTyped = it },
+                        label = { Text(AppLanguageManager.tr("Company name", "Jina la kampuni")) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                    )
+                    deleteError?.let { Text(it, color = StatusRed, modifier = Modifier.padding(top = 8.dp)) }
+                }
+            },
+            dismissButton = { TextButton(onClick = { showDelete = false; deleteTyped = ""; deleteError = null }) { Text(AppLanguageManager.tr("Cancel", "Ghairi")) } },
+            confirmButton = {
+                TextButton(
+                    enabled = deleteTyped.trim() == companyName && companyName.isNotEmpty(),
+                    onClick = {
+                        val id = session?.activeBusinessId ?: return@TextButton
+                        val app = context.applicationContext as com.example.businessos.BusinessOsApplication
+                        deleteScope.launch {
+                            app.authRepository.deleteBusiness(id, deleteTyped)
+                                .onSuccess { showDelete = false; deleteTyped = ""; onSwitchCompany() }
+                                .onFailure { deleteError = it.message }
+                        }
+                    }
+                ) { Text(AppLanguageManager.tr("Delete", "Futa"), color = StatusRed) }
+            }
+        )
+    }
     fun can(permission: Permission) = RolePermissions.has(role, permission)
 
     LaunchedEffect(message) {
@@ -480,6 +522,9 @@ fun AppShell(
                                 add(Entry(AppLanguageManager.tr("Restore", "Rudisha nakala"), AppLanguageManager.tr("Replace data with a backup file", "Badilisha data na nakala"), Icons.Default.CloudUpload) {
                                     restorePicker.launch(arrayOf("*/*"))
                                 })
+                            }
+                            if (role == Role.OWNER) {
+                                add(Entry(AppLanguageManager.tr("Delete company", "Futa kampuni"), AppLanguageManager.tr("Remove this company and its data", "Ondoa kampuni hii na data yake"), Icons.Default.Security) { showDelete = true })
                             }
                             add(Entry(AppLanguageManager.tr("Security", "Usalama"), AppLanguageManager.tr("PIN and auto-lock", "PIN na kufunga"), Icons.Default.Lock, onNavigateToSecurity))
                             if (role == Role.OWNER) {

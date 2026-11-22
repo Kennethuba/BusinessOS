@@ -174,4 +174,12 @@ class LedgerInvariantTest {
         assertEquals(0L, scalar("SELECT COUNT(*) FROM accounts"))
         assertEquals(0L, scalar("SELECT COUNT(*) FROM journal_entries"))
     }
+
+    @Test
+    fun sameCustomerPhoneIsNotAddedTwice() = runBlocking {
+        assertTrue(repo.createCustomer("Mama Wanjiru", "0722000111").isSuccess)
+        assertTrue(repo.createCustomer("Another", "+254 722 000 111").isFailure)
+        assertEquals(1L, scalar("SELECT COUNT(*) FROM customers"))
+        assertEquals("+254722000111", db.openHelper.readableDatabase.query("SELECT phone FROM customers").use { it.moveToFirst(); it.getString(0) })
+    }
 }
