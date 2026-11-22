@@ -1,5 +1,8 @@
 package com.example.businessos.ui.shell
 
+import androidx.compose.foundation.background
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Palette
 import com.example.businessos.ui.theme.StatusRed
 import com.example.businessos.ui.components.FullScreenForm
 import android.content.res.Configuration
@@ -211,6 +214,33 @@ fun AppShell(
     val shopOn = business?.isShopEnabled ?: session?.isShopEnabled ?: true
     val jobsOn = business?.isGarageEnabled ?: session?.isGarageEnabled ?: false
     val companyName = business?.name ?: session?.activeBusinessName ?: ""
+    var showColours by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    if (showColours) {
+        FullScreenForm(
+            onDismissRequest = { showColours = false },
+            title = { Text(AppLanguageManager.tr("Colour", "Rangi"), fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text(AppLanguageManager.tr("Pick a colour that matches your logo.", "Chagua rangi inayolingana na nembo yako."))
+                    com.example.businessos.ui.theme.AccentTheme.values().forEach { t ->
+                        val picked = ThemeManager.accent.value == t
+                        androidx.compose.foundation.layout.Row(
+                            modifier = Modifier.fillMaxWidth().clickable { ThemeManager.setAccent(context, t) }.padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            androidx.compose.foundation.layout.Box(
+                                modifier = Modifier.size(32.dp).background(t.main, androidx.compose.foundation.shape.CircleShape)
+                            )
+                            androidx.compose.foundation.layout.Spacer(Modifier.width(16.dp))
+                            Text(AppLanguageManager.tr(t.label, t.swLabel), modifier = Modifier.weight(1f), fontWeight = if (picked) FontWeight.Bold else FontWeight.Normal)
+                            if (picked) Icon(Icons.Default.Check, contentDescription = null)
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showColours = false }) { Text(AppLanguageManager.tr("Done", "Sawa")) } }
+        )
+    }
     var showDelete by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     var deleteTyped by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
     var deleteError by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
@@ -535,6 +565,11 @@ fun AppShell(
                                 if (AppLanguageManager.isEnglish()) "English" else "Kiswahili",
                                 Icons.Default.Translate
                             ) { AppLanguageManager.toggleLanguage(context) })
+                            add(Entry(
+                                AppLanguageManager.tr("Colour", "Rangi"),
+                                AppLanguageManager.tr(ThemeManager.accent.value.label, ThemeManager.accent.value.swLabel),
+                                Icons.Default.Palette
+                            ) { showColours = true })
                             add(Entry(
                                 AppLanguageManager.tr("Light or dark", "Mwanga au giza"),
                                 if (ThemeManager.isDarkMode.value) AppLanguageManager.tr("Dark", "Giza") else AppLanguageManager.tr("Light", "Mwanga"),

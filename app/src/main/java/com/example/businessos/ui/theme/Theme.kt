@@ -52,7 +52,8 @@ fun BusinessOSTheme(
     content: @Composable () -> Unit
 ) {
     val isDark = ThemeManager.isDarkMode.value
-    val colorScheme = if (isDark) DarkColorScheme else LightColorScheme
+    val colorScheme = (if (isDark) DarkColorScheme else LightColorScheme)
+        .copy(primary = AmberAccent, onPrimary = TextOnAccent)
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {

@@ -38,9 +38,10 @@ val TagBackground: Color
     get() = if (ThemeManager.isDarkMode.value) Color(0xFF334155) else Color(0xFFF1F5F9)
 
 // Professional Business Accents
-val AmberAccent = Color(0xFFD97706)
-val AmberAccentLight = Color(0xFFF59E0B)
-val AmberAccentDark = Color(0xFFB45309)
+// The accent follows the colour the owner picked in More > Colour (default amber).
+val AmberAccent: Color get() = ThemeManager.accent.value.main
+val AmberAccentLight: Color get() = ThemeManager.accent.value.light
+val AmberAccentDark: Color get() = ThemeManager.accent.value.dark
 
 val TealAccent = Color(0xFF0F766E)
 val TealAccentLight = Color(0xFF14B8A6)
