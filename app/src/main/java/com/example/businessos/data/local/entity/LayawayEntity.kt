@@ -39,8 +39,11 @@ data class LayawayEntity(
     @PrimaryKey val id: String,
     val businessId: String,
     val layawayNumber: String,
-    val customerId: String,
-    val itemId: String,
+    val customerId: String? = null,
+    val customerName: String = "",
+    val customerPhone: String = "",
+    val itemId: String? = null,
+    val itemDescription: String = "",
     val quantity: Int = 1,
     val totalAmountCents: Long,
     val depositAmountCents: Long = 0L,
@@ -50,6 +53,7 @@ data class LayawayEntity(
     val notes: String = "",
     val createdAt: Long = System.currentTimeMillis()
 ) {
+    val description: String get() = itemDescription
     val totalAmount: Double get() = totalAmountCents / 100.0
     val totalPaid: Double get() = depositAmountCents / 100.0
     val balanceDue: Double get() = balanceDueCents / 100.0

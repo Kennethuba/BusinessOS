@@ -97,26 +97,27 @@ fun UserManualScreen(
 
             item {
                 ManualSectionCard(
-                    title = "4. Role-Based Access Control (RBAC)",
+                    title = "4. Who Can Do What (Roles)",
                     icon = Icons.Filled.Security,
                     accentColor = Color(0xFF8B5CF6),
                     content = listOf(
-                        "• OWNER: Full access, view audit logs, manage billing, delete records, invite staff.",
-                        "• MANAGER: Create/edit job cards and sales, override prices; cannot view audit log or invite staff.",
-                        "• STAFF: Can record new sales and intake job cards only. Cannot edit prices, delete records, or view audit trails."
+                        "• Owner: Full access. Manages staff, business settings, backups and the audit log.",
+                        "• Manager: Sells, edits stock, records expenses, pays wages and voids records (a reason is required). Cannot manage staff or settings.",
+                        "• Cashier: Records sales, takes payments, adds customers and opens job cards. Cannot change prices, edit stock or void records.",
+                        "• Viewer: Read-only access to reports. Cannot record anything."
                     )
                 )
             }
 
             item {
                 ManualSectionCard(
-                    title = "5. Offline-First & Sync Architecture",
-                    icon = Icons.Filled.Sync,
+                    title = "5. Works Without Internet",
+                    icon = Icons.Filled.Storage,
                     accentColor = Color(0xFF06B6D4),
                     content = listOf(
-                        "• Offline Source-of-Truth: All data is saved instantly to local SQLite Room database.",
-                        "• Sync Badge: Displays 'All synced' (green), 'Syncing…' (yellow), or 'Offline' (red).",
-                        "• Automatic Recovery: When internet connection returns, SyncManager pushes pending records to the backend in background."
+                        "• All records are saved on this phone. The app never needs internet to work.",
+                        "• Nothing is uploaded anywhere. Use Backup in the More tab to keep a copy of your records.",
+                        "• Mistakes are corrected by voiding the record, never by deleting it, so your books always add up."
                     )
                 )
             }

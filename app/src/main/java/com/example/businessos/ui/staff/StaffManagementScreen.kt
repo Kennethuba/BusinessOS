@@ -66,6 +66,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.businessos.data.local.dao.MemberWithUser
+import com.example.businessos.data.model.Money
+import com.example.businessos.data.model.PaymentMethod
 import com.example.businessos.data.model.Role
 import com.example.businessos.ui.components.RoleBadge
 import com.example.businessos.ui.theme.AmberAccent
@@ -90,10 +92,9 @@ fun StaffManagementScreen(
     onNavigateBack: () -> Unit
 ) {
     val session by viewModel.session.collectAsState()
-    val currentBusiness by viewModel.currentBusiness.collectAsState()
     val staffMembers by viewModel.staffMembers.collectAsState()
     val wagePayments by viewModel.wagePayments.collectAsState()
-    val userRole = session?.activeRole ?: Role.STAFF
+    val userRole = session?.activeRole ?: Role.CASHIER
 
     val errorMessage by viewModel.errorMessage.collectAsState()
     val successMessage by viewModel.successMessage.collectAsState()
@@ -102,10 +103,6 @@ fun StaffManagementScreen(
     var showInviteDialog by remember { mutableStateOf(false) }
     var showRecordWageDialog by remember { mutableStateOf(false) }
     var editRoleTarget by remember { mutableStateOf<MemberWithUser?>(null) }
-
-    val plan = currentBusiness?.subscriptionPlan
-    val maxUsers = plan?.maxUsers ?: 2
-    val isPlanFull = staffMembers.size >= maxUsers
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -186,46 +183,6 @@ fun StaffManagementScreen(
             }
 
             if (selectedTab == 0) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceElevated),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, if (isPlanFull) StatusAmber else DarkBorder)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "SEAT USAGE (${plan?.name ?: "STARTER"})",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (isPlanFull) StatusAmber else TextMuted
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${staffMembers.size} / $maxUsers Active Seats Used",
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                        }
-                        if (isPlanFull) {
-                            Text(
-                                text = "Plan Limit Reached",
-                                color = StatusAmber,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-
                 Text(
                     text = "TEAM MEMBERS (${staffMembers.size})",
                     style = MaterialTheme.typography.labelSmall,
@@ -250,7 +207,7 @@ fun StaffManagementScreen(
                     }
                 }
             } else {
-                val totalWagesPaid = wagePayments.sumOf { it.amount }
+                val totalWagesPaid = Money(wagePayments.filter { !it.isVoided }.sumOf { it.amountCents })
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -267,7 +224,7 @@ fun StaffManagementScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "KSh ${String.format(Locale.getDefault(), "%,.0f", totalWagesPaid)}",
+                            text = totalWagesPaid.formatted,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = StatusGreen
@@ -320,8 +277,8 @@ fun StaffManagementScreen(
             RecordWagePaymentDialog(
                 staffMembers = staffMembers,
                 onDismiss = { showRecordWageDialog = false },
-                onConfirm = { staffId, staffName, amount, period, method, mpesa, notes ->
-                    viewModel.recordWagePayment(staffId, staffName, amount, period, method, mpesa, notes)
+                onConfirm = { staffId, staffName, amount, method, notes ->
+                    viewModel.recordWagePayment(staffId, staffName, amount, method, notes)
                     showRecordWageDialog = false
                 }
             )
@@ -329,11 +286,9 @@ fun StaffManagementScreen(
 
         if (showInviteDialog) {
             InviteStaffDialog(
-                isPlanFull = isPlanFull,
-                planName = plan?.name ?: "STARTER",
                 onDismiss = { showInviteDialog = false },
-                onInvite = { name, email, phone, role ->
-                    viewModel.inviteStaff(name, email, phone, role)
+                onInvite = { name, phone, role ->
+                    viewModel.inviteStaff(name, "", phone, role)
                     showInviteDialog = false
                 }
             )
@@ -385,9 +340,8 @@ fun StaffMemberCard(
                     RoleBadge(role = member.role)
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = member.email, fontSize = 12.sp, color = TextSecondary)
                 if (member.phone.isNotBlank()) {
-                    Text(text = member.phone, fontSize = 11.sp, color = TextMuted)
+                    Text(text = member.phone, fontSize = 12.sp, color = TextSecondary)
                 }
             }
 
@@ -405,147 +359,99 @@ fun StaffMemberCard(
     }
 }
 
+private val assignableRoles = listOf(
+    Triple(Role.CASHIER, "Cashier", "Can sell, take payments and open job cards. No price changes or deleting."),
+    Triple(Role.MANAGER, "Manager", "Can also edit stock, record expenses, pay wages and void records."),
+    Triple(Role.VIEWER, "Viewer", "Can only look at reports. Cannot record anything.")
+)
+
 @Composable
 fun InviteStaffDialog(
-    isPlanFull: Boolean,
-    planName: String,
     onDismiss: () -> Unit,
-    onInvite: (name: String, email: String, phone: String, role: Role) -> Unit
+    onInvite: (name: String, phone: String, role: Role) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
-    var selectedRole by remember { mutableStateOf(Role.STAFF) }
+    var selectedRole by remember { mutableStateOf(Role.CASHIER) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
-        title = { Text("Invite Staff Member", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = { Text("Add staff member", color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
-            if (isPlanFull) {
-                Column {
-                    Text(
-                        text = "Your $planName plan limit is full! Please upgrade your plan in Subscription to invite additional staff members.",
-                        color = StatusAmber,
-                        fontSize = 13.sp
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Full name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AmberAccent,
+                        unfocusedBorderColor = DarkBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
                     )
-                }
-            } else {
-                Column {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Staff Full Name") },
-                        placeholder = { Text("e.g. Dennis Mutua") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AmberAccent,
-                            unfocusedBorderColor = DarkBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        )
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text("Phone number") },
+                    placeholder = { Text("0712345678") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AmberAccent,
+                        unfocusedBorderColor = DarkBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
                     )
+                )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email Address") },
-                        placeholder = { Text("dennis@garage.ke") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AmberAccent,
-                            unfocusedBorderColor = DarkBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        )
-                    )
+                Text("Role", style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                Spacer(modifier = Modifier.height(6.dp))
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    OutlinedTextField(
-                        value = phone,
-                        onValueChange = { phone = it },
-                        label = { Text("Phone Number") },
-                        placeholder = { Text("0712345678") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AmberAccent,
-                            unfocusedBorderColor = DarkBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Text("ASSIGN ROLE", style = MaterialTheme.typography.labelSmall, color = TextMuted)
-                    Spacer(modifier = Modifier.height(6.dp))
-
+                assignableRoles.forEach { (role, title, description) ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(bottom = 6.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(DarkSurfaceElevated)
-                            .clickable { selectedRole = Role.STAFF }
+                            .clickable { selectedRole = role }
                             .padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
-                            selected = selectedRole == Role.STAFF,
-                            onClick = { selectedRole = Role.STAFF },
+                            selected = selectedRole == role,
+                            onClick = { selectedRole = role },
                             colors = RadioButtonDefaults.colors(selectedColor = AmberAccent)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Column {
-                            Text("STAFF (Standard)", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 13.sp)
-                            Text("Create job cards/sales only. No price override or delete.", fontSize = 11.sp, color = TextSecondary)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(DarkSurfaceElevated)
-                            .clickable { selectedRole = Role.MANAGER }
-                            .padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = selectedRole == Role.MANAGER,
-                            onClick = { selectedRole = Role.MANAGER },
-                            colors = RadioButtonDefaults.colors(selectedColor = AmberAccent)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Column {
-                            Text("MANAGER", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 13.sp)
-                            Text("Edit prices, reopen jobs. Cannot delete or manage staff.", fontSize = 11.sp, color = TextSecondary)
+                            Text(title, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 14.sp)
+                            Text(description, fontSize = 12.sp, color = TextSecondary)
                         }
                     }
                 }
             }
         },
         confirmButton = {
-            if (!isPlanFull) {
-                Button(
-                    onClick = {
-                        if (name.isNotBlank() && email.isNotBlank()) {
-                            onInvite(name, email, phone, selectedRole)
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
-                ) {
-                    Text("Add Member")
-                }
+            Button(
+                onClick = {
+                    if (name.isNotBlank() && phone.isNotBlank()) {
+                        onInvite(name, phone, selectedRole)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
+            ) {
+                Text("Add")
             }
         },
         dismissButton = {
@@ -565,33 +471,25 @@ fun EditRoleDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
-        title = { Text("Change Role • ${member.name}", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = { Text("Change role: ${member.name}", color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
             Column {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    RadioButton(
-                        selected = selectedRole == Role.STAFF,
-                        onClick = { selectedRole = Role.STAFF },
-                        colors = RadioButtonDefaults.colors(selectedColor = AmberAccent)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("STAFF (Create only)", color = TextPrimary)
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    RadioButton(
-                        selected = selectedRole == Role.MANAGER,
-                        onClick = { selectedRole = Role.MANAGER },
-                        colors = RadioButtonDefaults.colors(selectedColor = AmberAccent)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("MANAGER (Price override & edits)", color = TextPrimary)
+                assignableRoles.forEach { (role, title, _) ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selectedRole = role }
+                            .padding(vertical = 4.dp)
+                    ) {
+                        RadioButton(
+                            selected = selectedRole == role,
+                            onClick = { selectedRole = role },
+                            colors = RadioButtonDefaults.colors(selectedColor = AmberAccent)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(title, color = TextPrimary)
+                    }
                 }
             }
         },
@@ -600,7 +498,7 @@ fun EditRoleDialog(
                 onClick = { onSave(selectedRole) },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
             ) {
-                Text("Update Role")
+                Text("Save")
             }
         },
         dismissButton = {
@@ -634,13 +532,13 @@ fun WagePaymentCard(payment: WagePaymentEntity) {
                         fontSize = 15.sp
                     )
                     Text(
-                        text = "Kipindi: ${payment.period}",
+                        text = payment.paymentNumber,
                         color = AmberAccent,
                         fontSize = 12.sp
                     )
                 }
                 Text(
-                    text = "KSh ${String.format(Locale.getDefault(), "%,.0f", payment.amount)}",
+                    text = payment.amountMoney.formatted,
                     fontWeight = FontWeight.ExtraBold,
                     color = StatusGreen,
                     fontSize = 16.sp
@@ -656,14 +554,14 @@ fun WagePaymentCard(payment: WagePaymentEntity) {
             ) {
                 Surface(
                     color = when (payment.paymentMethod) {
-                        "MPESA" -> StatusGreen.copy(alpha = 0.15f)
-                        "BANK" -> Color(0xFF60A5FA).copy(alpha = 0.15f)
+                        PaymentMethod.MPESA -> StatusGreen.copy(alpha = 0.15f)
+                        PaymentMethod.BANK -> Color(0xFF60A5FA).copy(alpha = 0.15f)
                         else -> AmberAccent.copy(alpha = 0.15f)
                     },
                     shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
-                        text = "${payment.paymentMethod}${if (!payment.mpesaCode.isNullOrBlank()) " • " + payment.mpesaCode else ""}",
+                        text = payment.paymentMethod.name,
                         color = TextPrimary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
@@ -678,7 +576,7 @@ fun WagePaymentCard(payment: WagePaymentEntity) {
                 )
             }
 
-            if (payment.notes.isNotBlank()) {
+            if (!payment.notes.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Maelezo: ${payment.notes}",
@@ -694,23 +592,13 @@ fun WagePaymentCard(payment: WagePaymentEntity) {
 fun RecordWagePaymentDialog(
     staffMembers: List<MemberWithUser>,
     onDismiss: () -> Unit,
-    onConfirm: (staffId: String, staffName: String, amount: Double, period: String, method: String, mpesa: String?, notes: String) -> Unit
+    onConfirm: (staffId: String, staffName: String, amount: Money, method: PaymentMethod, notes: String) -> Unit
 ) {
     var selectedStaffIndex by remember { mutableStateOf(0) }
     var amountText by remember { mutableStateOf("") }
-    var periodText by remember { mutableStateOf("") }
-    var selectedMethod by remember { mutableStateOf("CASH") }
+    var selectedMethod by remember { mutableStateOf(PaymentMethod.CASH) }
     var mpesaCode by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
-
-    val defaultPeriod = remember {
-        val sdf = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
-        sdf.format(Date())
-    }
-
-    LaunchedEffect(Unit) {
-        if (periodText.isBlank()) periodText = defaultPeriod
-    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -782,20 +670,6 @@ fun RecordWagePaymentDialog(
                         )
                     )
 
-                    OutlinedTextField(
-                        value = periodText,
-                        onValueChange = { periodText = it },
-                        label = { Text("Kipindi (e.g. Mwezi huu, Wiki 44)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AmberAccent,
-                            unfocusedBorderColor = DarkBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        )
-                    )
-
                     Text(
                         text = "Njia ya Malipo:",
                         fontSize = 12.sp,
@@ -807,7 +681,7 @@ fun RecordWagePaymentDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        listOf("CASH" to "Taslimu", "MPESA" to "M-Pesa", "BANK" to "Benki").forEach { (code, label) ->
+                        listOf(PaymentMethod.CASH to "Taslimu", PaymentMethod.MPESA to "M-Pesa", PaymentMethod.BANK to "Benki").forEach { (code, label) ->
                             val isSelected = selectedMethod == code
                             Surface(
                                 color = if (isSelected) AmberAccent else DarkSurfaceElevated,
@@ -830,7 +704,7 @@ fun RecordWagePaymentDialog(
                         }
                     }
 
-                    if (selectedMethod == "MPESA") {
+                    if (selectedMethod == PaymentMethod.MPESA) {
                         OutlinedTextField(
                             value = mpesaCode,
                             onValueChange = { mpesaCode = it.uppercase() },
@@ -866,17 +740,19 @@ fun RecordWagePaymentDialog(
             if (staffMembers.isNotEmpty()) {
                 Button(
                     onClick = {
-                        val amount = amountText.toDoubleOrNull() ?: 0.0
-                        if (amount > 0 && selectedStaffIndex in staffMembers.indices) {
+                        val amount = Money.parseOrZero(amountText)
+                        if (amount.isPositive && selectedStaffIndex in staffMembers.indices) {
                             val member = staffMembers[selectedStaffIndex]
+                            val fullNotes = listOfNotNull(
+                                notes.takeIf { it.isNotBlank() },
+                                mpesaCode.takeIf { selectedMethod == PaymentMethod.MPESA && it.isNotBlank() }?.let { "M-Pesa: $it" }
+                            ).joinToString(" | ")
                             onConfirm(
                                 member.userId,
                                 member.name,
                                 amount,
-                                periodText.ifBlank { defaultPeriod },
                                 selectedMethod,
-                                if (selectedMethod == "MPESA") mpesaCode.ifBlank { null } else null,
-                                notes
+                                fullNotes
                             )
                         }
                     },

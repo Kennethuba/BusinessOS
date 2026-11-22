@@ -9,6 +9,6 @@ interface JobStageTransitionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransition(transition: JobStageTransitionEntity)
 
-    @Query("SELECT * FROM job_stage_transitions WHERE jobCardId = :jobCardId ORDER BY transitionAt ASC")
+    @Query("SELECT * FROM job_stage_transitions WHERE jobCardId = :jobCardId ORDER BY timestamp ASC")
     suspend fun getByJob(jobCardId: String): List<JobStageTransitionEntity>
 }

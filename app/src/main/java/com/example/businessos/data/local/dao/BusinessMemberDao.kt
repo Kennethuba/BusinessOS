@@ -9,6 +9,13 @@ import com.example.businessos.data.local.entity.BusinessMemberEntity
 import com.example.businessos.data.model.Role
 import kotlinx.coroutines.flow.Flow
 
+data class MemberWithUser(
+    val userId: String,
+    val name: String,
+    val phone: String,
+    val role: Role
+)
+
 @Dao
 interface BusinessMemberDao {
     @Query("SELECT * FROM business_members WHERE businessId = :businessId AND userId = :userId LIMIT 1")
@@ -22,6 +29,13 @@ interface BusinessMemberDao {
 
     @Query("SELECT * FROM business_members WHERE businessId = :businessId ORDER BY role ASC")
     suspend fun getMembers(businessId: String): List<BusinessMemberEntity>
+
+    @Query(
+        "SELECT m.userId AS userId, u.name AS name, u.phone AS phone, m.role AS role " +
+            "FROM business_members m INNER JOIN users u ON u.id = m.userId " +
+            "WHERE m.businessId = :businessId ORDER BY m.role ASC"
+    )
+    fun observeMembersWithUser(businessId: String): Flow<List<MemberWithUser>>
 
     @Query("SELECT COUNT(*) FROM business_members WHERE businessId = :businessId")
     suspend fun getMemberCount(businessId: String): Int

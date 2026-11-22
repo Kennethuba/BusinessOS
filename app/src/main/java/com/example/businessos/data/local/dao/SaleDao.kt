@@ -34,6 +34,6 @@ interface SaleDao {
     suspend fun updateSale(sale: SaleEntity)
 
     /** No hard delete — use voidSale in the repository instead. */
-    @Query("UPDATE sales SET isVoided = 1, voidReason = :reason, voidedByUserId = :voidedBy, voidedAt = :voidedAt, updatedAt = :voidedAt WHERE id = :id AND businessId = :businessId")
+    @Query("UPDATE sales SET isVoided = 1, voidReason = :reason, voidedByUserId = :voidedBy, voidedAt = :voidedAt WHERE id = :id AND businessId = :businessId")
     suspend fun markVoided(id: String, businessId: String, reason: String, voidedBy: String, voidedAt: Long = System.currentTimeMillis())
 }

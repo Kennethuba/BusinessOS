@@ -88,7 +88,6 @@ fun JobCardListScreen(
     onSwitchWorkspace: () -> Unit
 ) {
     val session by viewModel.session.collectAsState()
-    val syncState by viewModel.syncManager.syncState.collectAsState()
     val allJobs by viewModel.jobCards.collectAsState()
     val selectedStage by viewModel.selectedStageFilter.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -135,7 +134,6 @@ fun JobCardListScreen(
                 title = "Job Cards",
                 businessName = session?.activeBusinessName,
                 role = session?.activeRole,
-                syncState = syncState,
                 onSwitchWorkspace = onSwitchWorkspace
             )
 

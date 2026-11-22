@@ -20,7 +20,6 @@ sealed class Screen(val route: String) {
     // Management & Settings
     object StaffManagement : Screen("staff_management")
     object AuditLog : Screen("audit_log")
-    object SubscriptionBilling : Screen("subscription_billing")
 
     // Accounting & Cashbook
     object Accounting : Screen("accounting")
@@ -32,6 +31,4 @@ sealed class Screen(val route: String) {
 
     // Knowledge & Help
     object UserManual : Screen("user_manual")
-    object Feedback : Screen("feedback")
-    object Assistant : Screen("assistant")
 }

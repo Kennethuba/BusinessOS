@@ -29,5 +29,6 @@ data class AuditLogEntity(
     val beforeValue: String? = null,
     val afterValue: String? = null,
     val performedByUserId: String,
+    val performedByName: String = "",
     val createdAt: Long = System.currentTimeMillis()
 )

@@ -9,8 +9,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.businessos.data.model.Money
 import com.example.businessos.data.repository.AuthRepository
-import com.example.businessos.sync.SyncManager
 import com.example.businessos.ui.ViewModelFactory
 import com.example.businessos.ui.accounting.AccountingScreen
 import com.example.businessos.ui.accounting.AccountingViewModel
@@ -31,8 +31,6 @@ import com.example.businessos.ui.pos.PosScreen
 import com.example.businessos.ui.pos.PosViewModel
 import com.example.businessos.ui.staff.StaffManagementScreen
 import com.example.businessos.ui.staff.StaffViewModel
-import com.example.businessos.ui.subscription.SubscriptionScreen
-import com.example.businessos.ui.subscription.SubscriptionViewModel
 import com.example.businessos.ui.workspace.WorkspaceSwitcherScreen
 import com.example.businessos.ui.workspace.WorkspaceViewModel
 
@@ -40,11 +38,9 @@ import com.example.businessos.ui.workspace.WorkspaceViewModel
 fun NavGraph(
     navController: NavHostController,
     viewModelFactory: ViewModelFactory,
-    authRepository: AuthRepository,
-    syncManager: SyncManager
+    authRepository: AuthRepository
 ) {
     val session by authRepository.session.collectAsState()
-    val syncState by syncManager.syncState.collectAsState()
 
     val startDestination = when {
         session == null -> Screen.Login.route
@@ -138,20 +134,11 @@ fun NavGraph(
                 onNavigateToAuditLog = {
                     navController.navigate(Screen.AuditLog.route)
                 },
-                onNavigateToSubscription = {
-                    navController.navigate(Screen.SubscriptionBilling.route)
-                },
                 onNavigateToManual = {
                     navController.navigate(Screen.UserManual.route)
                 },
-                onNavigateToFeedback = {
-                    navController.navigate(Screen.Feedback.route)
-                },
                 onNavigateToAccounting = {
                     navController.navigate(Screen.Accounting.route)
-                },
-                onNavigateToAssistant = {
-                    navController.navigate(Screen.Assistant.route)
                 },
                 onNavigateToStockAudit = {
                     navController.navigate(Screen.StockAudit.route)
@@ -170,13 +157,12 @@ fun NavGraph(
             val accountingViewModel: AccountingViewModel = viewModel(factory = viewModelFactory)
             AccountingScreen(
                 viewModel = accountingViewModel,
-                syncState = syncState,
                 onNavigateBack = { navController.popBackStack() },
                 onSwitchWorkspace = { navController.navigate(Screen.WorkspaceSwitcher.route) }
             )
         }
 
-        // Module 2: POS (Kariakor Stall)
+        // Module: POS (Kariakor Stall)
         composable(Screen.Pos.route) {
             val posViewModel: PosViewModel = viewModel(factory = viewModelFactory)
             PosScreen(
@@ -186,7 +172,7 @@ fun NavGraph(
             )
         }
 
-        // Module 2: Deni Ledger (Customer Credit)
+        // Module: Deni Ledger (Customer Credit)
         composable(Screen.DeniLedger.route) {
             val deniViewModel: DeniViewModel = viewModel(factory = viewModelFactory)
             DeniLedgerScreen(
@@ -196,7 +182,7 @@ fun NavGraph(
             )
         }
 
-        // Module 1: Auto Garage Job Cards
+        // Module: Garage Job Cards
         composable(Screen.GarageJobs.route) {
             val garageViewModel: GarageViewModel = viewModel(factory = viewModelFactory)
             JobCardListScreen(
@@ -213,7 +199,7 @@ fun NavGraph(
             )
         }
 
-        // Module 1: Job Card Detail (with 3D Vehicle Inspector)
+        // Module: Job Card Detail
         composable(
             route = Screen.JobDetail.route,
             arguments = listOf(navArgument("jobCardId") { type = NavType.StringType })
@@ -227,7 +213,7 @@ fun NavGraph(
             )
         }
 
-        // Module 1: Vehicle History by Plate
+        // Module: Vehicle History by Plate
         composable(Screen.VehicleHistory.route) {
             val garageViewModel: GarageViewModel = viewModel(factory = viewModelFactory)
             VehicleHistoryScreen(
@@ -239,7 +225,7 @@ fun NavGraph(
             )
         }
 
-        // Management: Staff Management (Owner / Manager)
+        // Management: Staff Management (Owner only)
         composable(Screen.StaffManagement.route) {
             val staffViewModel: StaffViewModel = viewModel(factory = viewModelFactory)
             StaffManagementScreen(
@@ -248,12 +234,11 @@ fun NavGraph(
             )
         }
 
-        // Management: Append-Only Audit Log (Owner Only, 3D Shield)
+        // Management: Append-Only Audit Log (Owner only)
         composable(Screen.AuditLog.route) {
             val auditLogViewModel: AuditLogViewModel = viewModel(factory = viewModelFactory)
             AuditLogScreen(
                 viewModel = auditLogViewModel,
-                syncState = syncState,
                 businessName = session?.activeBusinessName,
                 userRole = session?.activeRole,
                 onSwitchWorkspace = { navController.navigate(Screen.WorkspaceSwitcher.route) },
@@ -261,61 +246,22 @@ fun NavGraph(
             )
         }
 
-        // Management: Subscription & Billing (3D Plan Vault)
-        composable(Screen.SubscriptionBilling.route) {
-            val subscriptionViewModel: SubscriptionViewModel = viewModel(factory = viewModelFactory)
-            SubscriptionScreen(
-                viewModel = subscriptionViewModel,
-                syncState = syncState,
-                businessName = session?.activeBusinessName,
-                onSwitchWorkspace = { navController.navigate(Screen.WorkspaceSwitcher.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        // Field Operations & User Manual
+        // Help: User Manual
         composable(Screen.UserManual.route) {
             com.example.businessos.ui.manual.UserManualScreen(
-                syncState = syncState,
                 businessName = session?.activeBusinessName,
                 onSwitchWorkspace = { navController.navigate(Screen.WorkspaceSwitcher.route) },
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // Developer Feedback & Client Welcome
-        composable(Screen.Feedback.route) {
-            com.example.businessos.ui.feedback.FeedbackScreen(
-                userEmail = session?.email,
-                userName = session?.name,
-                syncState = syncState,
-                businessName = session?.activeBusinessName,
-                onSwitchWorkspace = { navController.navigate(Screen.WorkspaceSwitcher.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        // Module: AI Business Copilot & Assistant (Mshauri wa Biashara)
-        composable(Screen.Assistant.route) {
-            val assistantViewModel: com.example.businessos.ui.assistant.AssistantViewModel = viewModel(factory = viewModelFactory)
-            com.example.businessos.ui.assistant.AssistantScreen(
-                viewModel = assistantViewModel,
-                syncState = syncState,
-                businessName = session?.activeBusinessName,
-                onSwitchWorkspace = { navController.navigate(Screen.WorkspaceSwitcher.route) },
-                onNavigateToScreen = { route -> navController.navigate(route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        // Module: End-of-Month Stock Take / Audit
+        // Module: Stock Take / Audit
         composable(Screen.StockAudit.route) {
             val posViewModel: PosViewModel = viewModel(factory = viewModelFactory)
             val items by posViewModel.items.collectAsState()
             com.example.businessos.ui.pos.StockAuditScreen(
                 items = items,
                 businessName = session?.activeBusinessName,
-                syncState = syncState,
                 onSwitchWorkspace = { navController.navigate(Screen.WorkspaceSwitcher.route) },
                 onNavigateBack = { navController.popBackStack() },
                 onConfirmAudit = { updates ->
@@ -335,14 +281,20 @@ fun NavGraph(
             com.example.businessos.ui.pos.LayawayScreen(
                 layaways = layaways,
                 businessName = session?.activeBusinessName,
-                syncState = syncState,
                 onSwitchWorkspace = { navController.navigate(Screen.WorkspaceSwitcher.route) },
                 onNavigateBack = { navController.popBackStack() },
                 onCreateLayaway = { name, phone, desc, total, deposit, dueDate ->
-                    layawayViewModel.createLayaway(name, phone, desc, total, deposit, dueDate)
+                    layawayViewModel.createLayaway(
+                        customerName = name,
+                        customerPhone = phone,
+                        description = desc,
+                        totalAmount = Money.fromShillingsDouble(total),
+                        depositPaid = Money.fromShillingsDouble(deposit),
+                        dueDate = dueDate
+                    )
                 },
                 onRecordPayment = { id, amount, method ->
-                    layawayViewModel.recordPayment(id, amount, method)
+                    layawayViewModel.recordPayment(id, Money.fromShillingsDouble(amount), method)
                 }
             )
         }

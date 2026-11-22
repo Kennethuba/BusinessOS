@@ -47,6 +47,78 @@ class BusinessOsRepository(
 
     fun getActiveUserId(): String = getSession().userId
 
+    // ── Permission Guard (PLAN.md section 4.3) ───────────────────────────────
+
+    /**
+     * Throws [SecurityException] unless the signed-in user's role in the active business
+     * grants [permission]. Called at the top of every write operation so access control
+     * does not depend on the UI hiding buttons.
+     */
+    private suspend fun checkPermission(permission: Permission) {
+        val session = getSession()
+        val bizId = session.activeBusinessId
+            ?: throw IllegalStateException("No active business selected")
+        val member = businessMemberDao.getMember(bizId, session.userId)
+            ?: throw SecurityException("You are not a member of this business")
+        if (!RolePermissions.has(member.role, permission)) {
+            throw SecurityException("Your role (${member.role.name.lowercase()}) is not allowed to do this")
+        }
+    }
+
+    private fun newMovement(
+        businessId: String,
+        itemId: String,
+        type: StockMovementType,
+        delta: Long,
+        balanceAfter: Long,
+        referenceType: String,
+        referenceId: String,
+        notes: String,
+        userId: String,
+        unitCostCents: Long = 0L
+    ) = StockMovementEntity(
+        id = UUID.randomUUID().toString(),
+        businessId = businessId,
+        itemId = itemId,
+        movementType = type,
+        quantityDelta = delta,
+        balanceAfter = balanceAfter,
+        unitCostCents = unitCostCents,
+        referenceType = referenceType,
+        referenceId = referenceId,
+        notes = notes,
+        createdByUserId = userId
+    )
+
+    private suspend fun writeAudit(
+        businessId: String,
+        action: ActionType,
+        userId: String,
+        details: String,
+        before: String? = null
+    ) {
+        auditLogDao.insertAuditLog(
+            AuditLogEntity(
+                id = UUID.randomUUID().toString(),
+                businessId = businessId,
+                actionType = action,
+                beforeValue = before,
+                afterValue = details,
+                performedByUserId = userId,
+                performedByName = getSession().name
+            )
+        )
+    }
+
+    private fun expenseAccountCode(category: String): String = when (category.lowercase()) {
+        "rent" -> "6010"
+        "utilities", "electricity", "water" -> "6020"
+        "salary", "wage" -> "6030"
+        "transport", "delivery" -> "6040"
+        "food", "meals" -> "6050"
+        else -> "6070"
+    }
+
     // ── Business & Observables ───────────────────────────────────────────────
 
     fun observeCurrentBusiness(): Flow<BusinessEntity?> {
@@ -170,6 +242,7 @@ class BusinessOsRepository(
         unit: String = "pcs",
         costPrice: Money = Money.ZERO
     ): Result<ItemEntity> = runCatching {
+        checkPermission(Permission.EDIT_STOCK)
         val bizId = getActiveBusinessId()
         val itemId = UUID.randomUUID().toString()
         val item = ItemEntity(
@@ -191,14 +264,17 @@ class BusinessOsRepository(
             itemDao.insertItem(item)
             if (initialStock != 0L) {
                 stockMovementDao.insertMovement(
-                    StockMovementEntity(
+                    newMovement(
                         businessId = bizId,
                         itemId = itemId,
-                        movementType = StockMovementType.OPENING,
-                        deltaQty = initialStock,
+                        type = StockMovementType.OPENING,
+                        delta = initialStock,
                         balanceAfter = initialStock,
-                        reference = "Initial opening stock",
-                        recordedByUserId = getActiveUserId()
+                        referenceType = "ITEM",
+                        referenceId = itemId,
+                        notes = "Initial opening stock",
+                        userId = getActiveUserId(),
+                        unitCostCents = costPrice.cents
                     )
                 )
             }
@@ -211,40 +287,44 @@ class BusinessOsRepository(
         physicalCount: Long,
         reason: String
     ): Result<Unit> = runCatching {
+        checkPermission(Permission.STOCK_TAKE_ADJUST)
         val bizId = getActiveBusinessId()
+        val userId = getActiveUserId()
         database.withTransaction {
             val item = itemDao.getItemById(itemId, bizId)
                 ?: throw IllegalArgumentException("Item not found")
             val delta = physicalCount - item.stockQty
             itemDao.adjustStock(itemId, bizId, delta)
             stockMovementDao.insertMovement(
-                StockMovementEntity(
+                newMovement(
                     businessId = bizId,
                     itemId = itemId,
-                    movementType = StockMovementType.ADJUSTMENT,
-                    deltaQty = delta,
+                    type = StockMovementType.ADJUSTMENT,
+                    delta = delta,
                     balanceAfter = physicalCount,
-                    reference = reason.ifBlank { "Stock count adjustment" },
-                    recordedByUserId = getActiveUserId()
+                    referenceType = "STOCK_AUDIT",
+                    referenceId = itemId,
+                    notes = reason.ifBlank { "Stock count adjustment" },
+                    userId = userId,
+                    unitCostCents = item.costPriceCents
                 )
             )
-            auditLogDao.insertAuditLog(
-                AuditLogEntity(
-                    id = UUID.randomUUID().toString(),
-                    businessId = bizId,
-                    userId = getActiveUserId(),
-                    userName = getSession().name,
-                    actionType = ActionType.STOCK_ADJUSTED,
-                    entityId = itemId,
-                    details = "Adjusted ${item.name} stock from ${item.stockQty} to $physicalCount. Reason: $reason"
-                )
+            writeAudit(
+                bizId, ActionType.STOCK_ADJUSTED, userId,
+                details = "Adjusted ${item.name} stock to $physicalCount. Reason: $reason",
+                before = "${item.name}: ${item.stockQty}"
             )
         }
     }
 
     // ── Journal Posting Engine (Debits == Credits Invariant) ──────────────────
 
-    suspend fun postJournalEntry(
+    /**
+     * Posts a balanced journal entry. Throws if debits != credits so that, when called inside
+     * a withTransaction block, the whole operation rolls back instead of leaving the books
+     * half-written.
+     */
+    private suspend fun postJournalEntry(
         businessId: String,
         date: Long,
         description: String,
@@ -252,7 +332,7 @@ class BusinessOsRepository(
         sourceId: String?,
         side: BusinessSide,
         lines: List<JournalLineItem>
-    ): Result<JournalEntryEntity> = runCatching {
+    ): JournalEntryEntity {
         val totalDebit = lines.fold(Money.ZERO) { acc, l -> acc + l.debit }
         val totalCredit = lines.fold(Money.ZERO) { acc, l -> acc + l.credit }
 
@@ -262,7 +342,7 @@ class BusinessOsRepository(
             )
         }
 
-        database.withTransaction {
+        return database.withTransaction {
             val entryNum = documentCounterDao.nextNumber(businessId, DocumentType.JOURNAL, "JRN-")
             val entryId = UUID.randomUUID().toString()
 
@@ -285,11 +365,12 @@ class BusinessOsRepository(
 
             val childLines = lines.map { l ->
                 JournalLineEntity(
+                    id = UUID.randomUUID().toString(),
                     entryId = entryId,
                     accountId = l.accountId,
                     debitCents = l.debit.cents,
                     creditCents = l.credit.cents,
-                    narration = l.narration
+                    notes = l.narration ?: ""
                 )
             }
             journalLineDao.insertLines(childLines)
@@ -323,6 +404,7 @@ class BusinessOsRepository(
         mpesaReference: String? = null,
         side: BusinessSide = BusinessSide.SHOP
     ): Result<SaleEntity> = runCatching {
+        checkPermission(Permission.MAKE_SALE)
         val bizId = getActiveBusinessId()
         val userId = getActiveUserId()
         if (items.isEmpty()) throw IllegalArgumentException("Cannot record an empty sale")
@@ -366,14 +448,14 @@ class BusinessOsRepository(
 
             val childItems = items.map { l ->
                 SaleItemEntity(
+                    id = UUID.randomUUID().toString(),
                     saleId = saleId,
                     itemId = l.itemId,
                     itemName = l.itemName,
-                    qty = l.qty,
+                    quantity = l.qty,
                     unitPriceCents = l.unitPrice.cents,
                     costPriceCents = l.costPrice.cents,
-                    subtotalCents = l.subtotal.cents,
-                    priceType = l.priceType
+                    subtotalCents = l.subtotal.cents
                 )
             }
             saleItemDao.insertSaleItems(childItems)
@@ -384,14 +466,17 @@ class BusinessOsRepository(
                 val currentItem = itemDao.getItemById(line.itemId, bizId)
                 val balanceAfter = currentItem?.stockQty ?: 0L
                 stockMovementDao.insertMovement(
-                    StockMovementEntity(
+                    newMovement(
                         businessId = bizId,
                         itemId = line.itemId,
-                        movementType = StockMovementType.SALE,
-                        deltaQty = -line.qty.toLong(),
+                        type = StockMovementType.SALE,
+                        delta = -line.qty.toLong(),
                         balanceAfter = balanceAfter,
-                        reference = "Sale $saleNum",
-                        recordedByUserId = userId
+                        referenceType = "SALE",
+                        referenceId = saleId,
+                        notes = "Sale $saleNum",
+                        userId = userId,
+                        unitCostCents = line.costPrice.cents
                     )
                 )
             }
@@ -427,23 +512,13 @@ class BusinessOsRepository(
                 )
             }
 
-            auditLogDao.insertAuditLog(
-                AuditLogEntity(
-                    id = UUID.randomUUID().toString(),
-                    businessId = bizId,
-                    userId = userId,
-                    userName = getSession().name,
-                    actionType = ActionType.PRICE_OVERRIDE,
-                    entityId = saleId,
-                    details = "Recorded sale $saleNum for ${total.formatted} via $paymentMethod"
-                )
-            )
-
             sale
         }
     }
 
     suspend fun voidSale(saleId: String, reason: String): Result<Unit> = runCatching {
+        checkPermission(Permission.VOID_RECORD)
+        if (reason.isBlank()) throw IllegalArgumentException("A reason is required to void a sale")
         val bizId = getActiveBusinessId()
         val userId = getActiveUserId()
 
@@ -457,17 +532,20 @@ class BusinessOsRepository(
             // Restore inventory
             val saleItems = saleItemDao.getBySale(saleId)
             for (item in saleItems) {
-                itemDao.adjustStock(item.itemId, bizId, item.qty.toLong())
+                itemDao.adjustStock(item.itemId, bizId, item.quantity.toLong())
                 val current = itemDao.getItemById(item.itemId, bizId)
                 stockMovementDao.insertMovement(
-                    StockMovementEntity(
+                    newMovement(
                         businessId = bizId,
                         itemId = item.itemId,
-                        movementType = StockMovementType.VOID_SALE,
-                        deltaQty = item.qty.toLong(),
+                        type = StockMovementType.VOID_SALE,
+                        delta = item.quantity.toLong(),
                         balanceAfter = current?.stockQty ?: 0L,
-                        reference = "Void Sale ${sale.saleNumber}: $reason",
-                        recordedByUserId = userId
+                        referenceType = "SALE",
+                        referenceId = saleId,
+                        notes = "Void Sale ${sale.saleNumber}: $reason",
+                        userId = userId,
+                        unitCostCents = item.costPriceCents
                     )
                 )
             }
@@ -504,16 +582,10 @@ class BusinessOsRepository(
                 )
             }
 
-            auditLogDao.insertAuditLog(
-                AuditLogEntity(
-                    id = UUID.randomUUID().toString(),
-                    businessId = bizId,
-                    userId = userId,
-                    userName = getSession().name,
-                    actionType = ActionType.SALE_VOIDED,
-                    entityId = saleId,
-                    details = "Voided sale ${sale.saleNumber}. Reason: $reason"
-                )
+            writeAudit(
+                bizId, ActionType.SALE_VOIDED, userId,
+                details = "Voided sale ${sale.saleNumber}. Reason: $reason",
+                before = "${sale.saleNumber}: ${Money(sale.totalCents).formatted}"
             )
         }
     }
@@ -527,6 +599,7 @@ class BusinessOsRepository(
         dueDate: Long? = null,
         notes: String? = null
     ): Result<CustomerEntity> = runCatching {
+        checkPermission(Permission.CREATE_CUSTOMER)
         val bizId = getActiveBusinessId()
         val customerId = UUID.randomUUID().toString()
         val customer = CustomerEntity(
@@ -536,7 +609,7 @@ class BusinessOsRepository(
             phone = phone.trim(),
             balanceCents = initialCredit.cents,
             dueDate = dueDate,
-            notes = notes?.trim()?.ifBlank { null }
+            notes = notes?.trim().orEmpty()
         )
 
         database.withTransaction {
@@ -569,6 +642,7 @@ class BusinessOsRepository(
         paymentMethod: PaymentMethod = PaymentMethod.CASH,
         mpesaCode: String? = null
     ): Result<Unit> = runCatching {
+        checkPermission(Permission.TAKE_PAYMENT)
         val bizId = getActiveBusinessId()
         database.withTransaction {
             val customer = customerDao.getCustomerById(customerId, bizId)
@@ -606,7 +680,7 @@ class BusinessOsRepository(
         val customer = customerDao.getCustomerById(customerId, bizId)
             ?: throw IllegalArgumentException("Customer not found")
         customerDao.updateCustomer(
-            customer.copy(dueDate = dueDate, notes = notes?.trim()?.ifBlank { null })
+            customer.copy(dueDate = dueDate, notes = notes?.trim().orEmpty())
         )
     }
 
@@ -624,6 +698,7 @@ class BusinessOsRepository(
         estimateTotal: Money = Money.ZERO,
         targetDeliveryDate: Long? = null
     ): Result<JobCardEntity> = runCatching {
+        checkPermission(Permission.INTAKE_JOB)
         val bizId = getActiveBusinessId()
         val userId = getActiveUserId()
         val jobId = UUID.randomUUID().toString()
@@ -652,9 +727,12 @@ class BusinessOsRepository(
             jobCardDao.insertJobCard(jobCard)
             jobStageTransitionDao.insertTransition(
                 JobStageTransitionEntity(
+                    id = UUID.randomUUID().toString(),
                     jobCardId = jobId,
-                    toStage = JobStage.INTAKE,
-                    note = "Initial intake"
+                    fromStage = "",
+                    toStage = JobStage.INTAKE.name,
+                    notes = "Initial intake",
+                    userId = userId
                 )
             )
             jobCard
@@ -662,6 +740,7 @@ class BusinessOsRepository(
     }
 
     suspend fun updateJobParts(jobCardId: String, newParts: List<PartItem>): Result<Unit> = runCatching {
+        checkPermission(Permission.UPDATE_JOB_STAGE)
         val bizId = getActiveBusinessId()
         val userId = getActiveUserId()
 
@@ -672,18 +751,21 @@ class BusinessOsRepository(
             val existingParts = jobPartDao.getByJob(jobCardId)
             // Restore stock for removed parts that had stock deducted
             for (p in existingParts) {
-                if (p.stockDeducted && p.itemId != null && newParts.none { it.id == p.id }) {
-                    itemDao.adjustStock(p.itemId, bizId, p.qty.toLong())
+                if (p.isStockDeducted && p.itemId != null && newParts.none { it.id == p.id }) {
+                    itemDao.adjustStock(p.itemId, bizId, p.quantity.toLong())
                     val cur = itemDao.getItemById(p.itemId, bizId)
                     stockMovementDao.insertMovement(
-                        StockMovementEntity(
+                        newMovement(
                             businessId = bizId,
                             itemId = p.itemId,
-                            movementType = StockMovementType.VOID_JOB,
-                            deltaQty = p.qty.toLong(),
+                            type = StockMovementType.VOID_JOB,
+                            delta = p.quantity.toLong(),
                             balanceAfter = cur?.stockQty ?: 0L,
-                            reference = "Removed from Job ${job.jobNumber}",
-                            recordedByUserId = userId
+                            referenceType = "JOB_CARD",
+                            referenceId = jobCardId,
+                            notes = "Removed from Job ${job.jobNumber}",
+                            userId = userId,
+                            unitCostCents = p.costPriceCents
                         )
                     )
                 }
@@ -697,14 +779,17 @@ class BusinessOsRepository(
                     itemDao.adjustStock(p.itemId, bizId, -p.quantity.toLong())
                     val cur = itemDao.getItemById(p.itemId, bizId)
                     stockMovementDao.insertMovement(
-                        StockMovementEntity(
+                        newMovement(
                             businessId = bizId,
                             itemId = p.itemId,
-                            movementType = StockMovementType.JOB_PART,
-                            deltaQty = -p.quantity.toLong(),
+                            type = StockMovementType.JOB_PART,
+                            delta = -p.quantity.toLong(),
                             balanceAfter = cur?.stockQty ?: 0L,
-                            reference = "Assigned to Job ${job.jobNumber}",
-                            recordedByUserId = userId
+                            referenceType = "JOB_CARD",
+                            referenceId = jobCardId,
+                            notes = "Assigned to Job ${job.jobNumber}",
+                            userId = userId,
+                            unitCostCents = p.costPrice.cents
                         )
                     )
                     stockDeducted = true
@@ -714,11 +799,11 @@ class BusinessOsRepository(
                     id = p.id,
                     jobCardId = jobCardId,
                     itemId = p.itemId,
-                    name = p.name,
+                    partName = p.name,
                     unitPriceCents = p.unitPrice.cents,
                     costPriceCents = p.costPrice.cents,
-                    qty = p.quantity,
-                    stockDeducted = stockDeducted
+                    quantity = p.quantity,
+                    isStockDeducted = stockDeducted
                 )
             }
             jobPartDao.insertJobParts(childParts)
@@ -734,7 +819,9 @@ class BusinessOsRepository(
     }
 
     suspend fun advanceJobStage(jobCardId: String, note: String?): Result<JobStage?> = runCatching {
+        checkPermission(Permission.UPDATE_JOB_STAGE)
         val bizId = getActiveBusinessId()
+        val userId = getActiveUserId()
         database.withTransaction {
             val job = jobCardDao.getJobCardById(jobCardId, bizId)
                 ?: throw IllegalArgumentException("Job card not found")
@@ -743,9 +830,12 @@ class BusinessOsRepository(
             jobCardDao.updateStage(jobCardId, bizId, next)
             jobStageTransitionDao.insertTransition(
                 JobStageTransitionEntity(
+                    id = UUID.randomUUID().toString(),
                     jobCardId = jobCardId,
-                    toStage = next,
-                    note = note
+                    fromStage = job.stage.name,
+                    toStage = next.name,
+                    notes = note.orEmpty(),
+                    userId = userId
                 )
             )
 
@@ -763,23 +853,28 @@ class BusinessOsRepository(
                     ),
                     side = BusinessSide.GARAGE
                 )
-                invRes.onSuccess { inv ->
-                    jobCardDao.linkInvoice(jobCardId, bizId, inv.id)
-                }
+                jobCardDao.linkInvoice(jobCardId, bizId, invRes.getOrThrow().id)
             }
             next
         }
     }
 
     suspend fun reopenJobStage(jobCardId: String, targetStage: JobStage, reason: String?): Result<Unit> = runCatching {
+        checkPermission(Permission.VOID_RECORD)
         val bizId = getActiveBusinessId()
+        val userId = getActiveUserId()
         database.withTransaction {
+            val job = jobCardDao.getJobCardById(jobCardId, bizId)
+                ?: throw IllegalArgumentException("Job card not found")
             jobCardDao.updateStage(jobCardId, bizId, targetStage)
             jobStageTransitionDao.insertTransition(
                 JobStageTransitionEntity(
+                    id = UUID.randomUUID().toString(),
                     jobCardId = jobCardId,
-                    toStage = targetStage,
-                    note = reason
+                    fromStage = job.stage.name,
+                    toStage = targetStage.name,
+                    notes = reason.orEmpty(),
+                    userId = userId
                 )
             )
         }
@@ -795,6 +890,7 @@ class BusinessOsRepository(
         notes: String? = null,
         side: BusinessSide = BusinessSide.SHOP
     ): Result<ExpenseEntity> = runCatching {
+        checkPermission(Permission.RECORD_EXPENSE)
         val bizId = getActiveBusinessId()
         val userId = getActiveUserId()
 
@@ -817,15 +913,7 @@ class BusinessOsRepository(
             )
             expenseDao.insertExpense(expense)
 
-            val expAccCode = when (category.lowercase()) {
-                "rent" -> "6010"
-                "utilities", "electricity", "water" -> "6020"
-                "salary", "wage" -> "6030"
-                "transport", "delivery" -> "6040"
-                "food", "meals" -> "6050"
-                else -> "6070"
-            }
-            val expAccount = accountDao.getAccountByCode(expAccCode, bizId)
+            val expAccount = accountDao.getAccountByCode(expenseAccountCode(category), bizId)
             val cashAccount = accountDao.getAccountByCode(if (paymentMethod == PaymentMethod.MPESA) "1020" else "1010", bizId)
 
             if (expAccount != null && cashAccount != null && amount > Money.ZERO) {
@@ -843,18 +931,6 @@ class BusinessOsRepository(
                 )
             }
 
-            auditLogDao.insertAuditLog(
-                AuditLogEntity(
-                    id = UUID.randomUUID().toString(),
-                    businessId = bizId,
-                    userId = userId,
-                    userName = getSession().name,
-                    actionType = ActionType.PRICE_OVERRIDE,
-                    entityId = expId,
-                    details = "Recorded expense $expNum for ${amount.formatted}"
-                )
-            )
-
             expense
         }
     }
@@ -862,23 +938,43 @@ class BusinessOsRepository(
     suspend fun deleteExpense(expenseId: String): Result<Unit> = voidExpense(expenseId, "User deleted expense")
 
     suspend fun voidExpense(expenseId: String, reason: String): Result<Unit> = runCatching {
+        checkPermission(Permission.VOID_RECORD)
+        if (reason.isBlank()) throw IllegalArgumentException("A reason is required to void an expense")
         val bizId = getActiveBusinessId()
         val userId = getActiveUserId()
 
         database.withTransaction {
-            val expense = expenseDao.observeExpenses(bizId) // check existence
+            val expense = expenseDao.getExpenseById(expenseId, bizId)
+                ?: throw IllegalArgumentException("Expense not found")
+            if (expense.isVoided) throw IllegalStateException("Expense is already voided")
+
             expenseDao.markVoided(expenseId, bizId, reason.trim(), userId)
 
-            auditLogDao.insertAuditLog(
-                AuditLogEntity(
-                    id = UUID.randomUUID().toString(),
+            // Balanced reversal of the original posting (debit cash, credit expense)
+            val amount = Money(expense.amountCents)
+            val expAccount = accountDao.getAccountByCode(expenseAccountCode(expense.category), bizId)
+            val cashAccount = accountDao.getAccountByCode(
+                if (expense.paymentMethod == PaymentMethod.MPESA) "1020" else "1010", bizId
+            )
+            if (expAccount != null && cashAccount != null && amount > Money.ZERO) {
+                postJournalEntry(
                     businessId = bizId,
-                    userId = userId,
-                    userName = getSession().name,
-                    actionType = ActionType.EXPENSE_VOIDED,
-                    entityId = expenseId,
-                    details = "Voided expense $expenseId. Reason: $reason"
+                    date = System.currentTimeMillis(),
+                    description = "VOID Expense ${expense.expenseNumber} ($reason)",
+                    sourceType = JournalSourceType.VOID_REVERSAL,
+                    sourceId = expenseId,
+                    side = expense.side,
+                    lines = listOf(
+                        JournalLineItem(cashAccount.id, cashAccount.code, cashAccount.name, debit = amount),
+                        JournalLineItem(expAccount.id, expAccount.code, expAccount.name, credit = amount)
+                    )
                 )
+            }
+
+            writeAudit(
+                bizId, ActionType.EXPENSE_VOIDED, userId,
+                details = "Voided expense ${expense.expenseNumber}. Reason: $reason",
+                before = "${expense.expenseNumber}: ${amount.formatted}"
             )
         }
     }
@@ -892,6 +988,7 @@ class BusinessOsRepository(
         paymentMethod: PaymentMethod = PaymentMethod.CASH,
         notes: String? = null
     ): Result<WagePaymentEntity> = runCatching {
+        checkPermission(Permission.PAY_WAGES)
         val bizId = getActiveBusinessId()
         val userId = getActiveUserId()
 
@@ -931,6 +1028,11 @@ class BusinessOsRepository(
                 )
             }
 
+            writeAudit(
+                bizId, ActionType.WAGE_PAID, userId,
+                details = "Paid ${amount.formatted} to $staffName ($wageNum)"
+            )
+
             wage
         }
     }
@@ -943,6 +1045,7 @@ class BusinessOsRepository(
         depositAmount: Money,
         dueDate: Long
     ): Result<LayawayEntity> = runCatching {
+        checkPermission(Permission.MAKE_SALE)
         val bizId = getActiveBusinessId()
         val balanceDue = (totalAmount - depositAmount).coerceAtLeast(Money.ZERO)
 
@@ -971,6 +1074,7 @@ class BusinessOsRepository(
         paymentAmount: Money,
         paymentMethod: PaymentMethod = PaymentMethod.CASH
     ): Result<Unit> = runCatching {
+        checkPermission(Permission.TAKE_PAYMENT)
         database.withTransaction {
             val layaway = layawayDao.getLayawayById(layawayId)
                 ?: throw IllegalArgumentException("Layaway not found")
@@ -1020,13 +1124,14 @@ class BusinessOsRepository(
 
             val childItems = items.map { i ->
                 InvoiceItemEntity(
+                    id = UUID.randomUUID().toString(),
                     invoiceId = invId,
                     itemId = i.itemId,
                     description = i.description,
-                    qty = i.qty,
+                    quantity = i.qty,
                     unitPriceCents = i.unitPrice.cents,
                     costPriceCents = i.costPrice.cents,
-                    totalCents = i.total.cents
+                    subtotalCents = i.total.cents
                 )
             }
             invoiceItemDao.insertInvoiceItems(childItems)
@@ -1064,6 +1169,7 @@ class BusinessOsRepository(
         reference: String? = null,
         description: String? = null
     ): Result<Unit> = runCatching {
+        checkPermission(Permission.TAKE_PAYMENT)
         val bizId = getActiveBusinessId()
         database.withTransaction {
             val inv = invoiceDao.getInvoiceById(invoiceId, bizId)
@@ -1117,6 +1223,8 @@ class BusinessOsRepository(
     // ── Staff Management & Security ──────────────────────────────────────────
 
     suspend fun inviteOrAddStaff(name: String, email: String, phone: String, role: Role): Result<Unit> = runCatching {
+        checkPermission(Permission.MANAGE_STAFF)
+        if (role == Role.OWNER) throw IllegalArgumentException("A business can only have one owner")
         val bizId = getActiveBusinessId()
         val cleanPhone = phone.trim()
 
@@ -1148,14 +1256,28 @@ class BusinessOsRepository(
     }
 
     suspend fun updateStaffRole(userId: String, newRole: Role): Result<Unit> = runCatching {
+        checkPermission(Permission.MANAGE_STAFF)
+        if (newRole == Role.OWNER) throw IllegalArgumentException("A business can only have one owner")
         val bizId = getActiveBusinessId()
         val member = businessMemberDao.getMember(bizId, userId)
             ?: throw IllegalArgumentException("Staff member not found")
-        businessMemberDao.updateMember(member.copy(role = newRole))
+        if (member.role == Role.OWNER) throw IllegalStateException("The owner's role cannot be changed")
+        businessMemberDao.updateMember(
+            member.copy(role = newRole, updatedAt = System.currentTimeMillis())
+        )
+        writeAudit(
+            bizId, ActionType.ROLE_CHANGED, getActiveUserId(),
+            details = "Role changed to ${newRole.name}",
+            before = member.role.name
+        )
     }
 
     suspend fun removeStaff(userId: String): Result<Unit> = runCatching {
+        checkPermission(Permission.MANAGE_STAFF)
         val bizId = getActiveBusinessId()
+        val member = businessMemberDao.getMember(bizId, userId)
+            ?: throw IllegalArgumentException("Staff member not found")
+        if (member.role == Role.OWNER) throw IllegalStateException("The owner cannot be removed")
         businessMemberDao.deleteMember(bizId, userId)
     }
 
@@ -1302,6 +1424,7 @@ class BusinessOsRepository(
         reference: String?,
         description: String?
     ): Result<Unit> = runCatching {
+        checkPermission(Permission.RECORD_EXPENSE)
         val bizId = getActiveBusinessId()
         val from = accountDao.getAccountByCode(fromAccountCode, bizId)
             ?: throw IllegalArgumentException("Source account $fromAccountCode not found")
@@ -1320,6 +1443,7 @@ class BusinessOsRepository(
                 JournalLineItem(from.id, from.code, from.name, credit = amount)
             )
         )
+        Unit
     }
 
     // ── Backwards-compatibility and No-op Stubs ──────────────────────────────

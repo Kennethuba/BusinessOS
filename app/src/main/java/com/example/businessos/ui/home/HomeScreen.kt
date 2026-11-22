@@ -74,6 +74,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.businessos.data.model.BusinessType
+import com.example.businessos.util.FeatureFlag
 import com.example.businessos.data.model.JobStage
 import com.example.businessos.data.model.Role
 import com.example.businessos.ui.auth.PinSecurityManager
@@ -124,11 +125,8 @@ fun HomeScreen(
     onNavigateToVehicleHistory: () -> Unit,
     onNavigateToStaff: () -> Unit,
     onNavigateToAuditLog: () -> Unit,
-    onNavigateToSubscription: () -> Unit,
     onNavigateToManual: () -> Unit,
-    onNavigateToFeedback: () -> Unit,
     onNavigateToAccounting: () -> Unit,
-    onNavigateToAssistant: () -> Unit,
     onNavigateToStockAudit: () -> Unit = {},
     onNavigateToLayaway: () -> Unit = {},
     onNavigateToPinLock: () -> Unit = {}
@@ -276,7 +274,6 @@ fun HomeScreen(
                     onNavigateToStaff = onNavigateToStaff,
                     onNavigateToPinLock = onNavigateToPinLock,
                     onNavigateToManual = onNavigateToManual,
-                    onNavigateToSubscription = onNavigateToSubscription,
                     onSeedDemoData = {
                         viewModel.seedDemoData(businessType)
                         showDemoSuccessBanner = true
@@ -1168,7 +1165,6 @@ private fun MoreSettingsView(
     onNavigateToStaff: () -> Unit,
     onNavigateToPinLock: () -> Unit,
     onNavigateToManual: () -> Unit,
-    onNavigateToSubscription: () -> Unit,
     onSeedDemoData: () -> Unit
 ) {
     val context = LocalContext.current
@@ -1346,15 +1342,7 @@ private fun MoreSettingsView(
             onClick = onNavigateToManual
         )
 
-        if (role == Role.OWNER) {
-            Spacer(modifier = Modifier.height(8.dp))
-            SettingsItemCard(
-                title = AppLanguageManager.tr("Subscription & Limits", "Kiwango cha Usajili"),
-                description = AppLanguageManager.tr("Manage business capacity and active devices", "Angalia uwezo wa akaunti na vifaa"),
-                icon = Icons.Default.CardMembership,
-                onClick = onNavigateToSubscription
-            )
-
+        if (role == Role.OWNER && FeatureFlag.ENABLE_DEMO_WORKSPACE) {
             Spacer(modifier = Modifier.height(8.dp))
             SettingsItemCard(
                 title = AppLanguageManager.tr("Load Sample Demo Data", "Weka Data za Mfano"),

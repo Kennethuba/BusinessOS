@@ -8,7 +8,7 @@ import com.example.businessos.data.model.DocumentType
 interface DocumentCounterDao {
 
     @Query("SELECT * FROM document_counters WHERE businessId = :businessId AND documentType = :type LIMIT 1")
-    suspend fun getCounter(businessId: String, type: DocumentType): DocumentCounterEntity?
+    suspend fun getCounter(businessId: String, type: String): DocumentCounterEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertCounter(counter: DocumentCounterEntity)
@@ -19,14 +19,13 @@ interface DocumentCounterDao {
      */
     @Transaction
     suspend fun nextNumber(businessId: String, type: DocumentType, prefix: String): String {
-        val existing = getCounter(businessId, type)
-        val newSeq = (existing?.lastSequence ?: 0L) + 1L
+        val existing = getCounter(businessId, type.name)
+        val newSeq = (existing?.currentValue ?: 0L) + 1L
         upsertCounter(
             DocumentCounterEntity(
                 businessId = businessId,
-                documentType = type,
-                lastSequence = newSeq,
-                updatedAt = System.currentTimeMillis()
+                documentType = type.name,
+                currentValue = newSeq
             )
         )
         return "$prefix${newSeq.toString().padStart(5, '0')}"

@@ -26,8 +26,8 @@ interface UserDao {
     suspend fun updateUser(user: UserEntity)
 
     @Query("UPDATE users SET failedAttempts = :attempts, lockoutUntil = :lockoutUntil WHERE id = :userId")
-    suspend fun updateLockout(userId: String, attempts: Int, lockoutUntil: Long?)
+    suspend fun updateLockout(userId: String, attempts: Int, lockoutUntil: Long)
 
-    @Query("UPDATE users SET failedAttempts = 0, lockoutUntil = NULL WHERE id = :userId")
+    @Query("UPDATE users SET failedAttempts = 0, lockoutUntil = 0 WHERE id = :userId")
     suspend fun clearLockout(userId: String)
 }

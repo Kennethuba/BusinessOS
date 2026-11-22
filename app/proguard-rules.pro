@@ -19,3 +19,15 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# --- BusinessOS ---
+# Room entities and DAOs are accessed by generated code
+-keep class com.example.businessos.data.local.entity.** { *; }
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Dao interface *
+# Gson-serialised models
+-keep class com.example.businessos.data.model.** { *; }
+-keepattributes Signature, *Annotation*
+# Keep line numbers for crash reports
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

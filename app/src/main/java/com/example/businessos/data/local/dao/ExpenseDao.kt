@@ -12,6 +12,9 @@ interface ExpenseDao {
     @Update
     suspend fun updateExpense(expense: ExpenseEntity)
 
+    @Query("SELECT * FROM expenses WHERE id = :id AND businessId = :businessId LIMIT 1")
+    suspend fun getExpenseById(id: String, businessId: String): ExpenseEntity?
+
     @Query("SELECT * FROM expenses WHERE businessId = :businessId AND isVoided = 0 ORDER BY createdAt DESC")
     fun observeExpenses(businessId: String): Flow<List<ExpenseEntity>>
 
@@ -24,6 +27,6 @@ interface ExpenseDao {
     @Query("SELECT COALESCE(SUM(amountCents), 0) FROM expenses WHERE businessId = :businessId AND createdAt >= :startMs AND createdAt <= :endMs AND isVoided = 0")
     suspend fun getTotalExpensesBetween(businessId: String, startMs: Long, endMs: Long): Long
 
-    @Query("UPDATE expenses SET isVoided = 1, voidReason = :reason, voidedByUserId = :voidedBy, voidedAt = :voidedAt, updatedAt = :voidedAt WHERE id = :id AND businessId = :businessId")
+    @Query("UPDATE expenses SET isVoided = 1, voidReason = :reason, voidedByUserId = :voidedBy, voidedAt = :voidedAt WHERE id = :id AND businessId = :businessId")
     suspend fun markVoided(id: String, businessId: String, reason: String, voidedBy: String, voidedAt: Long = System.currentTimeMillis())
 }

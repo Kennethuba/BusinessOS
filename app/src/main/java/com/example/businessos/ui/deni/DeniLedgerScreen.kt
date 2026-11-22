@@ -70,7 +70,6 @@ import androidx.compose.ui.unit.sp
 import com.example.businessos.data.local.entity.CustomerEntity
 import com.example.businessos.ui.components.BusinessOsTopBar
 import com.example.businessos.ui.components.WhatsAppHelper
-import com.example.businessos.ui.threed.Tactile3DCard
 import com.example.businessos.ui.theme.AmberAccent
 import com.example.businessos.ui.theme.CardBackground
 import com.example.businessos.ui.theme.CardBorder
@@ -96,7 +95,6 @@ fun DeniLedgerScreen(
 ) {
     val context = LocalContext.current
     val session by viewModel.session.collectAsState()
-    val syncState by viewModel.syncManager.syncState.collectAsState()
     val deniCustomers by viewModel.deniList.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val successMessage by viewModel.successMessage.collectAsState()
@@ -152,13 +150,12 @@ fun DeniLedgerScreen(
                 title = "Deni Ledger (Madeni)",
                 businessName = session?.activeBusinessName,
                 role = session?.activeRole,
-                syncState = syncState,
                 onSwitchWorkspace = onSwitchWorkspace
             )
 
             // Total Outstanding Banner
             Box(modifier = Modifier.padding(16.dp)) {
-                Tactile3DCard(height = 110.dp) {
+                Box(modifier = Modifier.fillMaxWidth().height(110.dp).clip(RoundedCornerShape(16.dp))) {
                     Card(
                         modifier = Modifier.fillMaxSize(),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF281E10)),

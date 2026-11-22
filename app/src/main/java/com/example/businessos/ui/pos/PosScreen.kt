@@ -80,7 +80,6 @@ import com.example.businessos.data.model.PaymentMethod
 import com.example.businessos.data.model.PriceType
 import com.example.businessos.data.model.Role
 import com.example.businessos.ui.components.BusinessOsTopBar
-import com.example.businessos.ui.threed.Tactile3DCard
 import com.example.businessos.ui.theme.AmberAccent
 import com.example.businessos.ui.theme.CardBackground
 import com.example.businessos.ui.theme.CardBorder
@@ -113,7 +112,6 @@ fun PosScreen(
     onSwitchWorkspace: () -> Unit
 ) {
     val session by viewModel.session.collectAsState()
-    val syncState by viewModel.syncManager.syncState.collectAsState()
     val items by viewModel.items.collectAsState()
     val customers by viewModel.customers.collectAsState()
     val cart by viewModel.cart.collectAsState()
@@ -151,7 +149,7 @@ fun PosScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = DarkBackground,
         floatingActionButton = {
-            if (session?.activeRole != Role.STAFF) {
+            if (session?.activeRole != Role.CASHIER) {
                 FloatingActionButton(
                     onClick = { showAddItemDialog = true },
                     containerColor = AmberAccent,
@@ -171,7 +169,6 @@ fun PosScreen(
                 title = "Kariakor POS",
                 businessName = session?.activeBusinessName,
                 role = session?.activeRole,
-                syncState = syncState,
                 onSwitchWorkspace = onSwitchWorkspace
             )
 
@@ -453,7 +450,7 @@ fun PosScreen(
             ) {
                 CartSheetContent(
                     cart = cart,
-                    role = session?.activeRole ?: Role.STAFF,
+                    role = session?.activeRole ?: Role.CASHIER,
                     onQtyDelta = { id, delta -> viewModel.updateCartQty(id, delta) },
                     onTogglePriceType = { id -> viewModel.togglePriceType(id) },
                     onOverridePrice = { id, newPrice -> viewModel.overrideItemPrice(id, newPrice) },
@@ -769,7 +766,7 @@ fun CartSheetContent(
                                 )
                             }
 
-                            if (role != Role.STAFF) {
+                            if (role != Role.CASHIER) {
                                 IconButton(onClick = {
                                     overrideTargetId = cartItem.item.id
                                     overridePriceInput = cartItem.unitPrice.toString()
@@ -886,8 +883,7 @@ fun CheckoutDialog(
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                // Tactile 3D Digital Receipt Simulation
-                Tactile3DCard(height = 90.dp) {
+                Box(modifier = Modifier.fillMaxWidth().height(90.dp).clip(RoundedCornerShape(16.dp))) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()

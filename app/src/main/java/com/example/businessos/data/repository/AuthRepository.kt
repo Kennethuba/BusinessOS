@@ -45,7 +45,7 @@ class AuthRepository(
             if (!valid) {
                 val attempts = user.failedAttempts + 1
                 val lockoutTime = if (attempts >= 5) now + (5 * 60 * 1000L) else 0L
-                userDao.updateLockout(user.id, attempts, if (lockoutTime > 0) lockoutTime else null)
+                userDao.updateLockout(user.id, attempts, if (lockoutTime > 0) lockoutTime else 0L)
                 return Result.failure(Exception("Incorrect PIN. Attempt $attempts of 5."))
             }
         }
@@ -152,8 +152,7 @@ class AuthRepository(
             businessId = bizId,
             userId = current.userId,
             role = Role.OWNER,
-            canSellNegativeStock = true,
-            joinedAt = System.currentTimeMillis()
+            canSellNegativeStock = true
         )
 
         val defaultAccounts = DefaultAccounts.createDefaultAccounts(bizId)

@@ -24,6 +24,6 @@ interface WagePaymentDao {
     @Query("SELECT COALESCE(SUM(amountCents), 0) FROM wage_payments WHERE businessId = :businessId AND isVoided = 0")
     suspend fun getTotalWagesPaid(businessId: String): Long
 
-    @Query("UPDATE wage_payments SET isVoided = 1, voidReason = :reason, voidedByUserId = :voidedBy, voidedAt = :voidedAt, updatedAt = :voidedAt WHERE id = :id AND businessId = :businessId")
+    @Query("UPDATE wage_payments SET isVoided = 1, voidReason = :reason, voidedByUserId = :voidedBy, voidedAt = :voidedAt WHERE id = :id AND businessId = :businessId")
     suspend fun markVoided(id: String, businessId: String, reason: String, voidedBy: String, voidedAt: Long = System.currentTimeMillis())
 }

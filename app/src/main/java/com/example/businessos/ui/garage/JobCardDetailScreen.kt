@@ -69,6 +69,7 @@ import com.example.businessos.data.model.PartItem
 import com.example.businessos.data.model.Role
 import com.example.businessos.ui.components.WhatsAppHelper
 import com.example.businessos.ui.threed.Vehicle3DInspector
+import com.example.businessos.util.FeatureFlag
 import com.example.businessos.ui.theme.AmberAccent
 import com.example.businessos.ui.theme.CardBackground
 import com.example.businessos.ui.theme.CardBorder
@@ -98,7 +99,7 @@ fun JobCardDetailScreen(
     val session by viewModel.session.collectAsState()
     val allJobs by viewModel.jobCards.collectAsState()
     val jobCard = allJobs.find { it.id == jobCardId }
-    val userRole = session?.activeRole ?: Role.STAFF
+    val userRole = session?.activeRole ?: Role.CASHIER
 
     val errorMessage by viewModel.errorMessage.collectAsState()
     val successMessage by viewModel.successMessage.collectAsState()
@@ -184,14 +185,16 @@ fun JobCardDetailScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Interactive 3D Vehicle Inspector
-                item {
-                    Vehicle3DInspector(
-                        onZoneSelected = { zone ->
-                            presetPartName = zone.title
-                            showAddPartDialog = true
-                        }
-                    )
+                // Optional 3D Vehicle Inspector (off by default)
+                if (FeatureFlag.ENABLE_3D_INSPECTOR) {
+                    item {
+                        Vehicle3DInspector(
+                            onZoneSelected = { zone ->
+                                presetPartName = zone.title
+                                showAddPartDialog = true
+                            }
+                        )
+                    }
                 }
 
                 // Description Card
@@ -323,7 +326,7 @@ fun JobCardDetailScreen(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 13.sp
                                     )
-                                    if (userRole != Role.STAFF) {
+                                    if (userRole != Role.CASHIER) {
                                         IconButton(
                                             onClick = { viewModel.removePartFromJob(jobCard.id, jobCard.partsList, part.id) },
                                             modifier = Modifier.size(24.dp)
@@ -427,7 +430,7 @@ fun JobCardDetailScreen(
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    if (userRole != Role.STAFF && jobCard.stage != JobStage.INTAKE) {
+                    if (userRole != Role.CASHIER && jobCard.stage != JobStage.INTAKE) {
                         OutlinedButton(
                             onClick = { showReopenDialog = true },
                             modifier = Modifier.weight(1f),
