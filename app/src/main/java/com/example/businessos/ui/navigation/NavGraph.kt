@@ -99,6 +99,7 @@ fun NavGraph(
             val workspaceViewModel: WorkspaceViewModel = viewModel(factory = viewModelFactory)
             WorkspaceSwitcherScreen(
                 viewModel = workspaceViewModel,
+                onAddBusiness = { navController.navigate(Screen.SetupWizard.route) },
                 onWorkspaceSelected = {
                     navController.navigate(Screen.BusinessHome.route) {
                         popUpTo(Screen.WorkspaceSwitcher.route) { inclusive = true }
@@ -107,6 +108,19 @@ fun NavGraph(
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.SetupWizard.route) {
+            val workspaceViewModel: WorkspaceViewModel = viewModel(factory = viewModelFactory)
+            com.example.businessos.ui.workspace.SetupWizardScreen(
+                viewModel = workspaceViewModel,
+                onCancel = { navController.popBackStack() },
+                onDone = {
+                    navController.navigate(Screen.BusinessHome.route) {
+                        popUpTo(Screen.WorkspaceSwitcher.route) { inclusive = true }
                     }
                 }
             )

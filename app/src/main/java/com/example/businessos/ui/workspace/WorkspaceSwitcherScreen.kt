@@ -74,6 +74,7 @@ import com.example.businessos.ui.theme.TextSecondary
 @Composable
 fun WorkspaceSwitcherScreen(
     viewModel: WorkspaceViewModel,
+    onAddBusiness: () -> Unit,
     onWorkspaceSelected: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -81,7 +82,6 @@ fun WorkspaceSwitcherScreen(
     val businesses by viewModel.businesses.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    var showCreateDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -210,7 +210,7 @@ fun WorkspaceSwitcherScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { showCreateDialog = true },
+                onClick = onAddBusiness,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -228,18 +228,6 @@ fun WorkspaceSwitcherScreen(
                     fontSize = 15.sp
                 )
             }
-        }
-
-        if (showCreateDialog) {
-            CreateBusinessDialog(
-                onDismiss = { showCreateDialog = false },
-                onCreate = { name, useSales, useJobOrders ->
-                    viewModel.createBusiness(name, useSales, useJobOrders) {
-                        showCreateDialog = false
-                        onWorkspaceSelected()
-                    }
-                }
-            )
         }
     }
 }
@@ -330,98 +318,7 @@ fun BusinessCard(
 }
 
 @Composable
-fun CreateBusinessDialog(
-    onDismiss: () -> Unit,
-    onCreate: (name: String, useSales: Boolean, useJobOrders: Boolean) -> Unit
-) {
-    var name by remember { mutableStateOf("") }
-    var useSales by remember { mutableStateOf(true) }
-    var useJobOrders by remember { mutableStateOf(false) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = DarkSurface,
-        title = {
-            Text(
-                text = AppLanguageManager.tr("New company", "Kampuni mpya"),
-                style = MaterialTheme.typography.titleLarge,
-                color = TextPrimary
-            )
-        },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(AppLanguageManager.tr("Company name", "Jina la kampuni")) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AmberAccent,
-                        unfocusedBorderColor = DarkBorder,
-                        focusedLabelColor = AmberAccent,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    ),
-                    shape = RoundedCornerShape(10.dp)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = AppLanguageManager.tr("What will you use? Pick one or both.", "Utatumia nini? Chagua kimoja au vyote."),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                ModuleChoiceRow(
-                    title = AppLanguageManager.tr("Sales", "Mauzo"),
-                    description = AppLanguageManager.tr("Sell items and keep stock", "Uza bidhaa na utunze akiba"),
-                    checked = useSales,
-                    onCheckedChange = { useSales = it }
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                ModuleChoiceRow(
-                    title = AppLanguageManager.tr("Job orders", "Kazi za wateja"),
-                    description = AppLanguageManager.tr(
-                        "Repairs, orders for customers, or making goods for sale",
-                        "Ukarabati, oda za wateja, au kutengeneza bidhaa za kuuza"
-                    ),
-                    checked = useJobOrders,
-                    onCheckedChange = { useJobOrders = it }
-                )
-
-                Text(
-                    text = AppLanguageManager.tr("You can change this later in Settings.", "Unaweza kubadilisha baadaye kwenye Mipangilio."),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextMuted,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                enabled = name.isNotBlank() && (useSales || useJobOrders),
-                onClick = { onCreate(name, useSales, useJobOrders) },
-                colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
-            ) {
-                Text(AppLanguageManager.tr("Create", "Unda"))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary)
-            }
-        }
-    )
-}
-
-@Composable
-private fun ModuleChoiceRow(
+internal fun ModuleChoiceRow(
     title: String,
     description: String,
     checked: Boolean,

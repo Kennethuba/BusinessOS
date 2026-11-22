@@ -2,6 +2,7 @@ package com.example.businessos.ui.workspace
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.businessos.data.model.Money
 import com.example.businessos.data.local.entity.BusinessEntity
 import com.example.businessos.data.model.CurrentUserSession
 import com.example.businessos.data.repository.AuthRepository
@@ -50,6 +51,8 @@ class WorkspaceViewModel(
         name: String,
         isShopEnabled: Boolean,
         isGarageEnabled: Boolean,
+        openingCash: Money = Money.ZERO,
+        openingMpesa: Money = Money.ZERO,
         onSuccess: () -> Unit
     ) {
         if (name.isBlank()) {
@@ -62,7 +65,9 @@ class WorkspaceViewModel(
             val result = authRepository.createBusiness(
                 name = name.trim(),
                 isShopEnabled = isShopEnabled,
-                isGarageEnabled = isGarageEnabled
+                isGarageEnabled = isGarageEnabled,
+                openingCash = openingCash,
+                openingMpesa = openingMpesa
             )
             _isCreating.value = false
             result.onSuccess {
@@ -70,6 +75,15 @@ class WorkspaceViewModel(
             }.onFailure {
                 _errorMessage.value = it.message ?: "Failed to create business"
             }
+        }
+    }
+
+    fun deleteBusiness(businessId: String, typedName: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _errorMessage.value = null
+            authRepository.deleteBusiness(businessId, typedName)
+                .onSuccess { onSuccess() }
+                .onFailure { _errorMessage.value = it.message ?: "Could not delete business" }
         }
     }
 

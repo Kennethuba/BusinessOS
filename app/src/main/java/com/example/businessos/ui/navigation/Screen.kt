@@ -4,6 +4,7 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Signup : Screen("signup")
     object WorkspaceSwitcher : Screen("workspace_switcher")
+    object SetupWizard : Screen("setup_wizard")
     object BusinessHome : Screen("business_home")
 
     // Kariakor Stall

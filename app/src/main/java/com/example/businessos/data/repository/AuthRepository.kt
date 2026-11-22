@@ -10,6 +10,7 @@ import com.example.businessos.data.local.entity.BusinessEntity
 import com.example.businessos.data.local.entity.BusinessMemberEntity
 import com.example.businessos.data.local.entity.UserEntity
 import com.example.businessos.data.model.CurrentUserSession
+import com.example.businessos.data.model.Money
 import com.example.businessos.data.model.Role
 import com.example.businessos.data.security.LockoutPolicy
 import com.example.businessos.data.security.PinSecurity
@@ -214,8 +215,13 @@ class AuthRepository(
         phone: String = "",
         isShopEnabled: Boolean = true,
         isGarageEnabled: Boolean = false,
-        isDemo: Boolean = false
+        isDemo: Boolean = false,
+        openingCash: Money = Money.ZERO,
+        openingMpesa: Money = Money.ZERO
     ): Result<BusinessEntity> {
+        if (openingCash < Money.ZERO || openingMpesa < Money.ZERO) {
+            return Result.failure(IllegalArgumentException("Opening balances cannot be negative"))
+        }
         val current = _session.value ?: return Result.failure(Exception("Not logged in"))
 
         val bizId = UUID.randomUUID().toString()
@@ -248,10 +254,69 @@ class AuthRepository(
             businessDao.insertBusiness(business)
             businessMemberDao.insertMember(membership)
             database.accountDao().insertAccounts(defaultAccounts)
+            // Opening balances: Dr cash / M-Pesa, Cr owner's capital. A new business is otherwise empty.
+            postOpening(bizId, defaultAccounts, "1010", openingCash, "Opening cash balance", current.userId)
+            postOpening(bizId, defaultAccounts, "1020", openingMpesa, "Opening M-Pesa balance", current.userId)
         }
 
         switchWorkspace(bizId)
         return Result.success(business)
+    }
+
+    private suspend fun postOpening(
+        bizId: String,
+        accounts: List<com.example.businessos.data.local.entity.AccountEntity>,
+        code: String,
+        amount: Money,
+        description: String,
+        userId: String
+    ) {
+        if (amount <= Money.ZERO) return
+        val asset = accounts.first { it.code == code }
+        val capital = accounts.first { it.code == "3010" }
+        val entryId = UUID.randomUUID().toString()
+        val now = clock()
+        database.journalEntryDao().insertEntry(
+            com.example.businessos.data.local.entity.JournalEntryEntity(
+                id = entryId,
+                businessId = bizId,
+                entryNumber = database.documentCounterDao().nextNumber(bizId, com.example.businessos.data.model.DocumentType.JOURNAL, "JRN-"),
+                date = now,
+                description = description,
+                sourceType = com.example.businessos.data.model.JournalSourceType.OPENING_BALANCE,
+                totalDebitCents = amount.cents,
+                totalCreditCents = amount.cents,
+                createdByUserId = userId,
+                createdAt = now
+            )
+        )
+        database.journalLineDao().insertLines(
+            listOf(
+                com.example.businessos.data.local.entity.JournalLineEntity(UUID.randomUUID().toString(), entryId, asset.id, amount.cents, 0L, ""),
+                com.example.businessos.data.local.entity.JournalLineEntity(UUID.randomUUID().toString(), entryId, capital.id, 0L, amount.cents, "")
+            )
+        )
+        database.accountDao().adjustBalance(asset.id, bizId, amount.cents)
+        database.accountDao().adjustBalance(capital.id, bizId, amount.cents)
+    }
+
+    /** Owner-only. Removes the business and everything under it (foreign keys cascade). */
+    suspend fun deleteBusiness(businessId: String, typedName: String): Result<Unit> {
+        val current = _session.value ?: return Result.failure(Exception("Not logged in"))
+        val business = businessDao.getBusinessById(businessId)
+            ?: return Result.failure(Exception("Business not found"))
+        if (business.ownerId != current.userId) {
+            return Result.failure(SecurityException("Only the owner can delete a business"))
+        }
+        if (typedName.trim() != business.name) {
+            return Result.failure(IllegalArgumentException("Type the business name exactly to confirm"))
+        }
+        businessDao.deleteBusiness(businessId)
+        if (current.activeBusinessId == businessId) {
+            _session.value = current.copy(activeBusinessId = null, activeBusinessName = null, activeRole = null)
+            persist()
+        }
+        return Result.success(Unit)
     }
 
     fun logout() {
