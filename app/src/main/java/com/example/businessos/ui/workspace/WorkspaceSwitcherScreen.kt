@@ -341,7 +341,7 @@ internal fun ModuleChoiceRow(
         Spacer(modifier = Modifier.width(8.dp))
         Column {
             Text(title, fontWeight = FontWeight.Bold, color = TextPrimary)
-            Text(description, fontSize = 12.sp, color = TextSecondary)
+            Text(description, fontSize = 14.sp, color = TextSecondary)
         }
     }
 }

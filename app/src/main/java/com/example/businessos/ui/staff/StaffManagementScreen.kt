@@ -237,7 +237,7 @@ fun StaffManagementScreen(
                         )
                         Text(
                             text = "Malipo ${wagePayments.size} yaliyothibitishwa",
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             color = TextSecondary
                         )
                     }
@@ -261,7 +261,7 @@ fun StaffManagementScreen(
                             text = "Hakuna malipo ya mishahara yaliyorekodiwa bado.\nBonyeza kitufe hapa chini kulipa mshahara.",
                             color = TextSecondary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                            fontSize = 13.sp
+                            fontSize = 14.sp
                         )
                     }
                 } else {
@@ -359,7 +359,7 @@ fun StaffMemberCard(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 if (member.phone.isNotBlank()) {
-                    Text(text = member.phone, fontSize = 12.sp, color = TextSecondary)
+                    Text(text = member.phone, fontSize = 14.sp, color = TextSecondary)
                 }
             }
 
@@ -466,7 +466,7 @@ fun InviteStaffDialog(
                         Spacer(modifier = Modifier.width(6.dp))
                         Column {
                             Text(title, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 14.sp)
-                            Text(description, fontSize = 12.sp, color = TextSecondary)
+                            Text(description, fontSize = 14.sp, color = TextSecondary)
                         }
                     }
                 }
@@ -564,7 +564,7 @@ fun WagePaymentCard(payment: WagePaymentEntity) {
                     Text(
                         text = payment.paymentNumber,
                         color = AmberAccent,
-                        fontSize = 12.sp
+                        fontSize = 14.sp
                     )
                 }
                 Text(
@@ -593,7 +593,7 @@ fun WagePaymentCard(payment: WagePaymentEntity) {
                     Text(
                         text = payment.paymentMethod.name,
                         color = TextPrimary,
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
@@ -601,7 +601,7 @@ fun WagePaymentCard(payment: WagePaymentEntity) {
 
                 Text(
                     text = formattedDate,
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     color = TextMuted
                 )
             }
@@ -610,7 +610,7 @@ fun WagePaymentCard(payment: WagePaymentEntity) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Maelezo: ${payment.notes}",
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     color = TextSecondary
                 )
             }
@@ -651,12 +651,12 @@ fun RecordWagePaymentDialog(
                     Text(
                         text = "Hakuna wafanyakazi waliosajiliwa. Ongeza mfanyakazi kwanza.",
                         color = StatusRed,
-                        fontSize = 12.sp
+                        fontSize = 14.sp
                     )
                 } else {
                     Text(
                         text = "Chagua Mfanyakazi:",
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         color = TextSecondary,
                         fontWeight = FontWeight.Bold
                     )
@@ -679,7 +679,7 @@ fun RecordWagePaymentDialog(
                                 Text(
                                     text = "${member.name} (${member.role.name})",
                                     color = TextPrimary,
-                                    fontSize = 13.sp
+                                    fontSize = 14.sp
                                 )
                             }
                         }
@@ -702,7 +702,7 @@ fun RecordWagePaymentDialog(
 
                     Text(
                         text = "Njia ya Malipo:",
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         color = TextSecondary,
                         fontWeight = FontWeight.Bold
                     )
@@ -725,7 +725,7 @@ fun RecordWagePaymentDialog(
                                 Text(
                                     text = label,
                                     color = if (isSelected) TextOnAccent else TextPrimary,
-                                    fontSize = 12.sp,
+                                    fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                                     modifier = Modifier.padding(vertical = 8.dp)

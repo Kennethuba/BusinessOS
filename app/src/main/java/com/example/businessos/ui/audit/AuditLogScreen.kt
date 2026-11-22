@@ -80,13 +80,13 @@ private fun AuditShieldBanner(modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = "Rekodi Zote za Wafanyakazi Zinalindwa Kisheria",
-                    fontSize = 13.sp,
+                    fontSize = 14.sp,
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     text = "Mabadiliko ya bei, kufuta mauzo au kurekebisha hisa hayawezi kubadilishwa bila idhini ya mwenye biashara",
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     color = Color(0xFF8B949E)
                 )
             }

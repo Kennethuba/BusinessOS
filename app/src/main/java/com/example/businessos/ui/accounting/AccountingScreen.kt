@@ -106,7 +106,7 @@ fun AccountingScreen(
                                 Text(
                                     text = title,
                                     fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = 13.sp
+                                    fontSize = 14.sp
                                 )
                             }
                         )
@@ -294,7 +294,7 @@ private fun CashbookTab(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text("Hakuna rekodi za matumizi", color = TextSecondary, fontWeight = FontWeight.Bold)
-                        Text("Bofya kitufe cha chini kuweka gharama za uendeshaji.", fontSize = 12.sp, color = TextMuted)
+                        Text("Bofya kitufe cha chini kuweka gharama za uendeshaji.", fontSize = 14.sp, color = TextMuted)
                     }
                 }
             }
@@ -371,8 +371,8 @@ private fun CashbookHeroCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        Text("Deni Nje (AR):", fontSize = 10.sp, color = Color(0xFFFBBF24))
-                        Text(totalDeni.formatted, fontWeight = FontWeight.Bold, color = Color(0xFFFBBF24), fontSize = 13.sp)
+                        Text("Deni Nje (AR):", fontSize = 12.sp, color = Color(0xFFFBBF24))
+                        Text(totalDeni.formatted, fontWeight = FontWeight.Bold, color = Color(0xFFFBBF24), fontSize = 14.sp)
                     }
                 }
             }
@@ -398,7 +398,7 @@ private fun ExpenseRowItem(expense: ExpenseEntity, onDelete: () -> Unit) {
                 Text(
                     "${expense.category} • ${expense.paymentMethod.name}",
                     color = TextSecondary,
-                    fontSize = 12.sp
+                    fontSize = 14.sp
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -449,7 +449,7 @@ private fun InvoicesTab(
                         Text("MADENI YA ANKARA (ACCOUNTS RECEIVABLE)", style = MaterialTheme.typography.labelSmall, color = StatusGreen, fontWeight = FontWeight.Bold)
                         Text(totalReceivables.formatted, style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.ExtraBold)
                     }
-                    Text("${invoices.size} Ankara", color = StatusGreen, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("${invoices.size} Ankara", color = StatusGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
         }
@@ -463,7 +463,7 @@ private fun InvoicesTab(
                 ) {
                     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Hakuna Ankara Zilizotolewa", color = TextSecondary, fontWeight = FontWeight.Bold)
-                        Text("Bofya 'Ankara Mpya' kutoa ankara ya huduma au mauzo.", fontSize = 12.sp, color = TextMuted)
+                        Text("Bofya 'Ankara Mpya' kutoa ankara ya huduma au mauzo.", fontSize = 14.sp, color = TextMuted)
                     }
                 }
             }
@@ -495,7 +495,7 @@ private fun InvoicesTab(
                                     Text(
                                         text = invoice.status.name,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                        fontSize = 10.sp,
+                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = if (invoice.status == InvoiceStatus.PAID) StatusGreen else AmberAccent
                                     )
@@ -508,7 +508,7 @@ private fun InvoicesTab(
                         Spacer(Modifier.height(8.dp))
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("Tarehe: ${sdf.format(Date(invoice.issueDate))}", fontSize = 11.sp, color = TextMuted)
+                            Text("Tarehe: ${sdf.format(Date(invoice.issueDate))}", fontSize = 12.sp, color = TextMuted)
                             if (invoice.status != InvoiceStatus.PAID && invoice.status != InvoiceStatus.VOIDED) {
                                 Button(
                                     onClick = { onPayInvoice(invoice) },
@@ -516,7 +516,7 @@ private fun InvoicesTab(
                                     shape = RoundedCornerShape(8.dp),
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                                 ) {
-                                    Text("Pokea Malipo (${Money(invoice.balanceDueCents).formatted})", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text("Pokea Malipo (${Money(invoice.balanceDueCents).formatted})", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -569,7 +569,7 @@ private fun SuppliersTab(
                 ) {
                     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Hakuna Wasambazaji Waliorekodiwa", color = TextSecondary, fontWeight = FontWeight.Bold)
-                        Text("Bofya 'Msambazaji Mpya' kuongeza wasambazaji wa bidhaa au vipuri.", fontSize = 12.sp, color = TextMuted)
+                        Text("Bofya 'Msambazaji Mpya' kuongeza wasambazaji wa bidhaa au vipuri.", fontSize = 14.sp, color = TextMuted)
                     }
                 }
             }
@@ -588,9 +588,9 @@ private fun SuppliersTab(
                     ) {
                         Column {
                             Text(supplier.name, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 15.sp)
-                            Text(supplier.phone, color = TextSecondary, fontSize = 12.sp)
+                            Text(supplier.phone, color = TextSecondary, fontSize = 14.sp)
                             if (supplier.email.isNotBlank()) {
-                                Text(supplier.email, color = TextMuted, fontSize = 11.sp)
+                                Text(supplier.email, color = TextMuted, fontSize = 12.sp)
                             }
                         }
                         if (supplier.balanceCents > 0L) {
@@ -598,7 +598,7 @@ private fun SuppliersTab(
                                 "Deni: ${Money(supplier.balanceCents).formatted}",
                                 color = Color(0xFFF87171),
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
+                                fontSize = 14.sp
                             )
                         }
                     }
@@ -622,8 +622,8 @@ private fun GeneralLedgerTab(
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         TabRow(selectedTabIndex = viewSubTab, containerColor = Color(0xFF161E2E)) {
-            Tab(selected = viewSubTab == 0, onClick = { viewSubTab = 0 }, text = { Text("Chati ya Akaunti", fontSize = 12.sp) })
-            Tab(selected = viewSubTab == 1, onClick = { viewSubTab = 1 }, text = { Text("Miamala ya Journal", fontSize = 12.sp) })
+            Tab(selected = viewSubTab == 0, onClick = { viewSubTab = 0 }, text = { Text("Chati ya Akaunti", fontSize = 14.sp) })
+            Tab(selected = viewSubTab == 1, onClick = { viewSubTab = 1 }, text = { Text("Miamala ya Journal", fontSize = 14.sp) })
         }
 
         Spacer(Modifier.height(12.dp))
@@ -634,8 +634,8 @@ private fun GeneralLedgerTab(
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                             Column {
-                                Text("${acc.code} • ${acc.name}", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 13.sp)
-                                Text("${acc.category.name} • ${acc.subCategory.name}", color = TextSecondary, fontSize = 11.sp)
+                                Text("${acc.code} • ${acc.name}", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 14.sp)
+                                Text("${acc.category.name} • ${acc.subCategory.name}", color = TextSecondary, fontSize = 12.sp)
                             }
                             Text(Money(acc.balanceCents).formatted, fontWeight = FontWeight.Bold, color = AmberAccent, fontSize = 14.sp)
                         }
@@ -648,14 +648,14 @@ private fun GeneralLedgerTab(
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(entry.entryNumber, fontWeight = FontWeight.Bold, color = TealAccent, fontSize = 13.sp)
-                                Text(sdf.format(Date(entry.date)), color = TextMuted, fontSize = 11.sp)
+                                Text(entry.entryNumber, fontWeight = FontWeight.Bold, color = TealAccent, fontSize = 14.sp)
+                                Text(sdf.format(Date(entry.date)), color = TextMuted, fontSize = 12.sp)
                             }
-                            Text(entry.description, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text(entry.description, color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Aina: ${entry.sourceType.name} (${entry.side.name})", color = TextSecondary, fontSize = 11.sp)
-                                Text("Jumla: ${Money(entry.totalDebitCents).formatted}", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 12.sp)
+                                Text("Aina: ${entry.sourceType.name} (${entry.side.name})", color = TextSecondary, fontSize = 12.sp)
+                                Text("Jumla: ${Money(entry.totalDebitCents).formatted}", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
                             }
                         }
                     }
@@ -699,7 +699,7 @@ private fun ReportsTab(
                 Tab(
                     selected = reportType == idx,
                     onClick = { reportType = idx },
-                    text = { Text(title, fontSize = 11.sp, fontWeight = if (reportType == idx) FontWeight.Bold else FontWeight.Normal) }
+                    text = { Text(title, fontSize = 12.sp, fontWeight = if (reportType == idx) FontWeight.Bold else FontWeight.Normal) }
                 )
             }
         }
@@ -726,11 +726,11 @@ private fun ProfitAndLossView(pnl: ProfitAndLossReport?) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("MAPATO YA UENDESHAJI (REVENUE)", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 12.sp)
+                    Text("MAPATO YA UENDESHAJI (REVENUE)", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
                     pnl.revenueItems.forEach {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(it.accountName, color = TextSecondary, fontSize = 12.sp)
-                            Text(it.amount.formatted, color = TextPrimary, fontSize = 12.sp)
+                            Text(it.accountName, color = TextSecondary, fontSize = 14.sp)
+                            Text(it.amount.formatted, color = TextPrimary, fontSize = 14.sp)
                         }
                     }
                     Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.1f)).padding(vertical = 4.dp))
@@ -745,11 +745,11 @@ private fun ProfitAndLossView(pnl: ProfitAndLossReport?) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("GHARAMA ZA MOJA KWA MOJA (COGS)", fontWeight = FontWeight.Bold, color = Color(0xFFF87171), fontSize = 12.sp)
+                    Text("GHARAMA ZA MOJA KWA MOJA (COGS)", fontWeight = FontWeight.Bold, color = Color(0xFFF87171), fontSize = 14.sp)
                     pnl.costOfSalesItems.forEach {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(it.accountName, color = TextSecondary, fontSize = 12.sp)
-                            Text(it.amount.formatted, color = TextPrimary, fontSize = 12.sp)
+                            Text(it.accountName, color = TextSecondary, fontSize = 14.sp)
+                            Text(it.amount.formatted, color = TextPrimary, fontSize = 14.sp)
                         }
                     }
                     Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.1f)).padding(vertical = 4.dp))
@@ -764,11 +764,11 @@ private fun ProfitAndLossView(pnl: ProfitAndLossReport?) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("MATUMIZI YA UENDESHAJI (OPERATING EXPENSES)", fontWeight = FontWeight.Bold, color = Color(0xFFF87171), fontSize = 12.sp)
+                    Text("MATUMIZI YA UENDESHAJI (OPERATING EXPENSES)", fontWeight = FontWeight.Bold, color = Color(0xFFF87171), fontSize = 14.sp)
                     pnl.operatingExpenses.forEach {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(it.accountName, color = TextSecondary, fontSize = 12.sp)
-                            Text(it.amount.formatted, color = TextPrimary, fontSize = 12.sp)
+                            Text(it.accountName, color = TextSecondary, fontSize = 14.sp)
+                            Text(it.amount.formatted, color = TextPrimary, fontSize = 14.sp)
                         }
                     }
                     Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.1f)).padding(vertical = 4.dp))
@@ -793,9 +793,9 @@ private fun BalanceSheetView(bs: BalanceSheetReport?) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("RASILIMALI (ASSETS)", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 12.sp)
-                    Text("Current Assets: ${bs.totalCurrentAssets.formatted}", color = TextSecondary, fontSize = 12.sp)
-                    Text("Fixed Assets: ${bs.totalFixedAssets.formatted}", color = TextSecondary, fontSize = 12.sp)
+                    Text("RASILIMALI (ASSETS)", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
+                    Text("Current Assets: ${bs.totalCurrentAssets.formatted}", color = TextSecondary, fontSize = 14.sp)
+                    Text("Fixed Assets: ${bs.totalFixedAssets.formatted}", color = TextSecondary, fontSize = 14.sp)
                     Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.1f)).padding(vertical = 4.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("Jumla ya Rasilimali (Total Assets):", fontWeight = FontWeight.Bold, color = TextPrimary)
@@ -808,9 +808,9 @@ private fun BalanceSheetView(bs: BalanceSheetReport?) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("DHIMA & MTAJI (LIABILITIES & EQUITY)", fontWeight = FontWeight.Bold, color = Color(0xFF60A5FA), fontSize = 12.sp)
-                    Text("Current Liabilities: ${bs.totalCurrentLiabilities.formatted}", color = TextSecondary, fontSize = 12.sp)
-                    Text("Total Equity + Net Profit: ${bs.totalEquity.formatted}", color = TextSecondary, fontSize = 12.sp)
+                    Text("DHIMA & MTAJI (LIABILITIES & EQUITY)", fontWeight = FontWeight.Bold, color = Color(0xFF60A5FA), fontSize = 14.sp)
+                    Text("Current Liabilities: ${bs.totalCurrentLiabilities.formatted}", color = TextSecondary, fontSize = 14.sp)
+                    Text("Total Equity + Net Profit: ${bs.totalEquity.formatted}", color = TextSecondary, fontSize = 14.sp)
                     Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.1f)).padding(vertical = 4.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("Jumla ya Dhima na Mtaji:", fontWeight = FontWeight.Bold, color = TextPrimary)
@@ -827,7 +827,7 @@ private fun BalanceSheetView(bs: BalanceSheetReport?) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(modifier = Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Ulingano wa Mizania:", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextPrimary)
+                    Text("Ulingano wa Mizania:", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextPrimary)
                     Text(if (bs.isBalanced) "IMEPIMIKA (BALANCED)" else "HUKO SAWA", fontWeight = FontWeight.ExtraBold, color = if (bs.isBalanced) StatusGreen else StatusRed)
                 }
             }
@@ -845,11 +845,11 @@ private fun TrialBalanceView(tb: TrialBalanceReport?) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         item {
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Akaunti", fontWeight = FontWeight.Bold, color = TextSecondary, fontSize = 12.sp)
+                Text("Akaunti", fontWeight = FontWeight.Bold, color = TextSecondary, fontSize = 14.sp)
                 Row {
-                    Text("Debit", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 12.sp)
+                    Text("Debit", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
                     Spacer(Modifier.width(30.dp))
-                    Text("Credit", fontWeight = FontWeight.Bold, color = Color(0xFF60A5FA), fontSize = 12.sp)
+                    Text("Credit", fontWeight = FontWeight.Bold, color = Color(0xFF60A5FA), fontSize = 14.sp)
                 }
             }
         }
@@ -857,11 +857,11 @@ private fun TrialBalanceView(tb: TrialBalanceReport?) {
         items(tb.items) { item ->
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                 Row(modifier = Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("${item.accountCode} ${item.accountName}", color = TextPrimary, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                    Text("${item.accountCode} ${item.accountName}", color = TextPrimary, fontSize = 14.sp, modifier = Modifier.weight(1f))
                     Row {
-                        Text(if (item.debit > Money.ZERO) item.debit.formatted else "-", color = TextSecondary, fontSize = 12.sp)
+                        Text(if (item.debit > Money.ZERO) item.debit.formatted else "-", color = TextSecondary, fontSize = 14.sp)
                         Spacer(Modifier.width(16.dp))
-                        Text(if (item.credit > Money.ZERO) item.credit.formatted else "-", color = TextSecondary, fontSize = 12.sp)
+                        Text(if (item.credit > Money.ZERO) item.credit.formatted else "-", color = TextSecondary, fontSize = 14.sp)
                     }
                 }
             }
@@ -874,7 +874,7 @@ private fun TrialBalanceView(tb: TrialBalanceReport?) {
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
             ) {
                 Row(modifier = Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Jumla (Debits vs Credits):", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextPrimary)
+                    Text("Jumla (Debits vs Credits):", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextPrimary)
                     Text("${tb.totalDebit.formatted} / ${tb.totalCredit.formatted}", fontWeight = FontWeight.Bold, color = if (tb.isBalanced) StatusGreen else StatusRed)
                 }
             }
@@ -889,15 +889,15 @@ private fun AgeingAnalysisView(
 ) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
-            Text("Wateja Wanaodaiwa (AR Ageing)", fontWeight = FontWeight.Bold, color = AmberAccent, fontSize = 13.sp)
+            Text("Wateja Wanaodaiwa (AR Ageing)", fontWeight = FontWeight.Bold, color = AmberAccent, fontSize = 14.sp)
             if (ar == null || ar.customers.isEmpty()) {
-                Text("Hakuna wateja wa deni kwa sasa.", color = TextMuted, fontSize = 12.sp)
+                Text("Hakuna wateja wa deni kwa sasa.", color = TextMuted, fontSize = 14.sp)
             } else {
                 ar.customers.forEach { item ->
                     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                         Row(modifier = Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("${item.entityName} (${item.phone})", color = TextPrimary, fontSize = 12.sp)
-                            Text(item.bucket.total.formatted, color = AmberAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text("${item.entityName} (${item.phone})", color = TextPrimary, fontSize = 14.sp)
+                            Text(item.bucket.total.formatted, color = AmberAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
                     }
                 }
@@ -961,7 +961,7 @@ private fun DailyCashUpTab(
                     Spacer(Modifier.height(6.dp))
                     Text(
                         text = "Linganisha pesa taslimu kwenye droo na salio la M-Pesa dhidi ya mauzo ya mfumo wa leo.",
-                        fontSize = 13.sp,
+                        fontSize = 14.sp,
                         color = Color(0xFF8B949E)
                     )
                 }
@@ -979,24 +979,24 @@ private fun DailyCashUpTab(
                     Text("1. Hali ya Mauzo ya Leo Kwenye Mfumo", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 15.sp)
                     Spacer(Modifier.height(10.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Mauzo ya Pesa Taslimu (Cash Sales):", color = Color(0xFF8B949E), fontSize = 13.sp)
-                        Text(expectedCashSales.formatted, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Mauzo ya Pesa Taslimu (Cash Sales):", color = Color(0xFF8B949E), fontSize = 14.sp)
+                        Text(expectedCashSales.formatted, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Spacer(Modifier.height(6.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Matumizi ya Taslimu (Cash Outflows):", color = Color(0xFFF87171), fontSize = 13.sp)
-                        Text("- ${cashExpenses.formatted}", color = Color(0xFFF87171), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Matumizi ya Taslimu (Cash Outflows):", color = Color(0xFFF87171), fontSize = 14.sp)
+                        Text("- ${cashExpenses.formatted}", color = Color(0xFFF87171), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Spacer(Modifier.height(8.dp))
                     Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xFF30363D)))
                     Spacer(Modifier.height(8.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Pesa Inayotakiwa Drooni (Expected Cash):", color = AmberAccent, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Pesa Inayotakiwa Drooni (Expected Cash):", color = AmberAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         Text(expectedCashInDrawer.formatted, color = AmberAccent, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
                     }
                     Spacer(Modifier.height(10.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Mauzo ya M-Pesa Yanayotakiwa:", color = TealAccent, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Mauzo ya M-Pesa Yanayotakiwa:", color = TealAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         Text(expectedMpesaSales.formatted, color = TealAccent, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
                     }
                 }
@@ -1096,14 +1096,14 @@ private fun AddExpenseDialog(
                 OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Sababu ya Matumizi") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = amountStr, onValueChange = { amountStr = it }, label = { Text("Kiasi (KSh)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
 
-                Text("Aina ya Gharama:", fontSize = 12.sp, color = TextSecondary)
+                Text("Aina ya Gharama:", fontSize = 14.sp, color = TextSecondary)
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     categories.take(3).forEach { cat ->
-                        FilterChip(selected = category == cat, onClick = { category = cat }, label = { Text(cat, fontSize = 11.sp) })
+                        FilterChip(selected = category == cat, onClick = { category = cat }, label = { Text(cat, fontSize = 12.sp) })
                     }
                 }
 
-                Text("Njia ya Malipo:", fontSize = 12.sp, color = TextSecondary)
+                Text("Njia ya Malipo:", fontSize = 14.sp, color = TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = method == PaymentMethod.CASH, onClick = { method = PaymentMethod.CASH }, label = { Text("Cash") })
                     FilterChip(selected = method == PaymentMethod.MPESA, onClick = { method = PaymentMethod.MPESA }, label = { Text("M-Pesa") })
@@ -1211,7 +1211,7 @@ private fun AccountTransferDialog(
         title = { Text("Uhamisho wa Pesa (Inter-Account Transfer)", fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Chagua akaunti:", fontSize = 12.sp, color = TextSecondary)
+                Text("Chagua akaunti:", fontSize = 14.sp, color = TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = fromCode == "1020", onClick = { fromCode = "1020" }, label = { Text("Kutoka: M-Pesa") })
                     FilterChip(selected = fromCode == "1010", onClick = { fromCode = "1010" }, label = { Text("Kutoka: Cash") })

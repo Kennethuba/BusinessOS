@@ -118,15 +118,15 @@ fun LayawayScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Iliyolipwa (Deposits)", fontSize = 11.sp, color = TextSecondary)
+                            Text("Iliyolipwa (Deposits)", fontSize = 12.sp, color = TextSecondary)
                             Text("KSh ${totalDepositsCollected.toInt()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = StatusGreen)
                         }
                         Column {
-                            Text("Inayodaiwa (Balance)", fontSize = 11.sp, color = TextSecondary)
+                            Text("Inayodaiwa (Balance)", fontSize = 12.sp, color = TextSecondary)
                             Text("KSh ${totalBalanceRemaining.toInt()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = AmberAccent)
                         }
                         Column {
-                            Text("Thamani Yote", fontSize = 11.sp, color = TextSecondary)
+                            Text("Thamani Yote", fontSize = 12.sp, color = TextSecondary)
                             Text("KSh ${totalActiveAmount.toInt()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                         }
                     }
@@ -164,7 +164,7 @@ fun LayawayScreen(
                         else "Hakuna mauzo yaliyokamilika bado.",
                         color = TextSecondary,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        fontSize = 13.sp
+                        fontSize = 14.sp
                     )
                 }
             } else {
@@ -252,7 +252,7 @@ fun LayawayCard(
             ) {
                 Column {
                     Text(layaway.customerName, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 15.sp)
-                    Text(layaway.customerPhone, color = TextMuted, fontSize = 11.sp)
+                    Text(layaway.customerPhone, color = TextMuted, fontSize = 12.sp)
                 }
 
                 Surface(
@@ -265,7 +265,7 @@ fun LayawayCard(
                         else if (isOverdue) AppLanguageManager.tr("Overdue", "Imepitiliza") else AppLanguageManager.tr("In progress", "Inaendelea"),
                         color = if (layaway.status == "COMPLETED") StatusGreen
                         else if (isOverdue) StatusRed else AmberAccent,
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
@@ -277,7 +277,7 @@ fun LayawayCard(
                 text = "Bidhaa: ${layaway.description}",
                 fontWeight = FontWeight.SemiBold,
                 color = TextSecondary,
-                fontSize = 13.sp
+                fontSize = 14.sp
             )
 
             Spacer(Modifier.height(8.dp))
@@ -298,13 +298,13 @@ fun LayawayCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Imelipwa: KSh ${layaway.totalPaid.toInt()} (${(progress * 100).toInt()}%)", color = StatusGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Text("Baki: KSh ${layaway.balanceDue.toInt()}", color = if (layaway.balanceDue > 0) AmberAccent else TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Text("Jumla: KSh ${layaway.totalAmount.toInt()}", color = TextSecondary, fontSize = 12.sp)
+                Text("Imelipwa: KSh ${layaway.totalPaid.toInt()} (${(progress * 100).toInt()}%)", color = StatusGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Baki: KSh ${layaway.balanceDue.toInt()}", color = if (layaway.balanceDue > 0) AmberAccent else TextMuted, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Jumla: KSh ${layaway.totalAmount.toInt()}", color = TextSecondary, fontSize = 14.sp)
             }
 
             Spacer(Modifier.height(6.dp))
-            Text("Tarehe ya Mwisho: $dueDateStr", color = if (isOverdue) StatusRed else TextMuted, fontSize = 11.sp)
+            Text("Tarehe ya Mwisho: $dueDateStr", color = if (isOverdue) StatusRed else TextMuted, fontSize = 12.sp)
 
             if (layaway.status == "ACTIVE") {
                 Spacer(Modifier.height(10.dp))
@@ -319,7 +319,7 @@ fun LayawayCard(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Kumbusha WhatsApp", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("Kumbusha WhatsApp", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -330,7 +330,7 @@ fun LayawayCard(
                     ) {
                         Icon(Icons.Default.Payment, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Lipa Sehemu", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("Lipa Sehemu", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -454,7 +454,7 @@ fun RecordLayawayPaymentDialog(
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Salio Lililobaki: KSh ${layaway.balanceDue.toInt()}", color = AmberAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
 
-                Text("Njia ya Malipo:", fontSize = 12.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
+                Text("Njia ya Malipo:", fontSize = 14.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf(PaymentMethod.CASH to "Taslimu", PaymentMethod.MPESA to "M-Pesa", PaymentMethod.BANK to "Benki").forEach { (method, label) ->
                         val isSelected = selectedMethod == method
@@ -469,7 +469,7 @@ fun RecordLayawayPaymentDialog(
                             Text(
                                 text = label,
                                 color = if (isSelected) TextOnAccent else TextPrimary,
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                                 modifier = Modifier.padding(vertical = 8.dp)

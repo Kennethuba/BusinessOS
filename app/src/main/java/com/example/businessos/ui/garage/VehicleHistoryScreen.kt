@@ -161,7 +161,7 @@ fun VehicleHistoryScreen(
                                 Text(
                                     text = "All past visits, parts replaced, and diagnoses for this vehicle will appear here.",
                                     color = TextSecondary,
-                                    fontSize = 12.sp,
+                                    fontSize = 14.sp,
                                     modifier = Modifier.padding(top = 4.dp)
                                 )
                             }

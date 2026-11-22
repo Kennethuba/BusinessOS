@@ -630,7 +630,7 @@ private fun androidx.compose.foundation.layout.RowScope.ShellNavItem(
         selected = selected,
         onClick = onClick,
         icon = { Icon(icon, contentDescription = label) },
-        label = { Text(label, fontSize = 12.sp, maxLines = 1) },
+        label = { Text(label, fontSize = 14.sp, maxLines = 1) },
         colors = navItemColors()
     )
 }
@@ -770,7 +770,7 @@ private fun EntryCard(entry: Entry) {
             Spacer(Modifier.height(10.dp))
             Text(entry.title, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
             Spacer(Modifier.height(2.dp))
-            Text(entry.subtitle, fontSize = 13.sp, color = TextSecondary)
+            Text(entry.subtitle, fontSize = 14.sp, color = TextSecondary)
         }
     }
 }
@@ -790,7 +790,7 @@ private fun EntryRow(entry: Entry) {
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(entry.title, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                Text(entry.subtitle, fontSize = 13.sp, color = TextSecondary)
+                Text(entry.subtitle, fontSize = 14.sp, color = TextSecondary)
             }
             Icon(Icons.Default.ArrowForward, contentDescription = null, tint = TextSecondary)
         }
@@ -919,7 +919,7 @@ private fun ModulesCard(shopOn: Boolean, jobsOn: Boolean, onSetModules: (Boolean
                     "Switching one off only hides it. Your records are kept.",
                     "Kuzima kunaficha tu. Rekodi zako zinabaki."
                 ),
-                fontSize = 12.sp,
+                fontSize = 14.sp,
                 color = TextSecondary,
                 modifier = Modifier.padding(top = 4.dp)
             )

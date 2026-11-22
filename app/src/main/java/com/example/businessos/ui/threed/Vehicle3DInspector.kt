@@ -219,7 +219,7 @@ fun Vehicle3DInspector(
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = "Matatizo ya Kawaida & Ufundi (Common Scope):",
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = selectedZone.color
                     )
@@ -233,7 +233,7 @@ fun Vehicle3DInspector(
                                     .background(selectedZone.color)
                             )
                             Spacer(Modifier.width(6.dp))
-                            Text(text = repair, fontSize = 12.sp, color = TextPrimary)
+                            Text(text = repair, fontSize = 14.sp, color = TextPrimary)
                         }
                     }
 
@@ -244,7 +244,7 @@ fun Vehicle3DInspector(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Add ${selectedZone.title} Part/Cost", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.Black)
+                        Text("Add ${selectedZone.title} Part/Cost", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Black)
                     }
                 }
             }
@@ -288,12 +288,12 @@ private fun VehicleZoneCard(
                     text = zone.title,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                     color = if (isSelected) TextPrimary else TextSecondary,
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     maxLines = 1
                 )
                 Text(
                     text = zone.swahiliName,
-                    fontSize = 10.sp,
+                    fontSize = 12.sp,
                     color = if (isSelected) zone.color else TextMuted,
                     maxLines = 1
                 )

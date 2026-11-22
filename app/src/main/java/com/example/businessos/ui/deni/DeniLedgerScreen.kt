@@ -191,7 +191,7 @@ fun DeniLedgerScreen(
                                     Text(
                                         text = AppLanguageManager.tr("$overdueCount overdue", "$overdueCount zimepitiliza muda"),
                                         color = StatusRed,
-                                        fontSize = 11.sp,
+                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -207,7 +207,7 @@ fun DeniLedgerScreen(
                                     text = "${deniCustomers.size} Wateja",
                                     color = AmberAccent,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
+                                    fontSize = 14.sp
                                 )
                             }
                         }
@@ -239,7 +239,7 @@ fun DeniLedgerScreen(
                     ) {
                         Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(14.dp), tint = StatusGreen)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Kumbusha Wote WhatsApp", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("Kumbusha Wote WhatsApp", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -358,7 +358,7 @@ fun DeniLedgerScreen(
 
                         Text(
                             text = "Njia ya Malipo:",
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             color = TextSecondary,
                             fontWeight = FontWeight.Bold
                         )
@@ -378,7 +378,7 @@ fun DeniLedgerScreen(
                                     Text(
                                         text = label,
                                         color = if (isSelected) TextOnAccent else TextPrimary,
-                                        fontSize = 12.sp,
+                                        fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
                                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                                         modifier = Modifier.padding(vertical = 8.dp)
@@ -402,14 +402,14 @@ fun DeniLedgerScreen(
                                     ) {
                                         Text(
                                             text = "SMS ya M-Pesa (Auto-Fill):",
-                                            fontSize = 11.sp,
+                                            fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = StatusGreen
                                         )
                                         TextButton(onClick = { showMpesaPasteBox = !showMpesaPasteBox }) {
                                             Icon(Icons.Default.ContentPaste, contentDescription = null, tint = StatusGreen, modifier = Modifier.size(14.dp))
                                             Spacer(Modifier.width(4.dp))
-                                            Text(if (showMpesaPasteBox) "Funga" else "Bandika SMS", color = StatusGreen, fontSize = 11.sp)
+                                            Text(if (showMpesaPasteBox) "Funga" else "Bandika SMS", color = StatusGreen, fontSize = 12.sp)
                                         }
                                     }
 
@@ -453,7 +453,7 @@ fun DeniLedgerScreen(
                                             Text(
                                                 text = "Code: ${parsedMpesaInfo?.code} • KSh ${parsedMpesaInfo?.amount?.toInt()} • ${parsedMpesaInfo?.senderName}",
                                                 color = StatusGreen,
-                                                fontSize = 11.sp,
+                                                fontSize = 12.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 modifier = Modifier.padding(6.dp)
                                             )
@@ -550,7 +550,7 @@ fun DeniLedgerScreen(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "Tuma ujumbe wa makubaliano ya deni kwa kila mteja kwa mbofyo 1:",
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             color = TextSecondary
                         )
                         Spacer(modifier = Modifier.height(10.dp))
@@ -575,8 +575,8 @@ fun DeniLedgerScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
-                                            Text(cust.name, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 13.sp)
-                                            Text("Deni: KSh ${cust.balance.toInt()} • ${cust.phone}", color = AmberAccent, fontSize = 11.sp)
+                                            Text(cust.name, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 14.sp)
+                                            Text("Deni: KSh ${cust.balance.toInt()} • ${cust.phone}", color = AmberAccent, fontSize = 12.sp)
                                         }
 
                                         Button(
@@ -597,7 +597,7 @@ fun DeniLedgerScreen(
                                         ) {
                                             Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(13.dp))
                                             Spacer(Modifier.width(4.dp))
-                                            Text("Tuma", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                            Text("Tuma", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                         }
                                     }
                                 }
@@ -651,7 +651,7 @@ fun DeniCustomerCard(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = customer.phone,
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             color = TextSecondary
                         )
                     }
@@ -666,7 +666,7 @@ fun DeniCustomerCard(
                     )
                     Text(
                         text = "Deni Linadaiwa",
-                        fontSize = 10.sp,
+                        fontSize = 12.sp,
                         color = TextMuted
                     )
                 }
@@ -698,7 +698,7 @@ fun DeniCustomerCard(
                                 else -> "${AppLanguageManager.tr("Due", "Tarehe ya mwisho")}: ${dateFormat.format(Date(dueDate))}"
                             },
                             color = if (isOverdue) StatusRed else if (diffDays <= 1) AmberAccent else TealAccent,
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -706,7 +706,7 @@ fun DeniCustomerCard(
                     Text(
                         text = "Badilisha",
                         color = AmberAccent,
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { onEditDueDate() }
                     )
@@ -720,12 +720,12 @@ fun DeniCustomerCard(
                     Text(
                         text = "Bado hujaweka tarehe ya makubaliano",
                         color = TextMuted,
-                        fontSize = 11.sp
+                        fontSize = 12.sp
                     )
                     Text(
                         text = "+ Weka Tarehe",
                         color = AmberAccent,
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { onEditDueDate() }
                     )
@@ -737,7 +737,7 @@ fun DeniCustomerCard(
                 Text(
                     text = "Maelezo: ${customer.notes}",
                     color = TextSecondary,
-                    fontSize = 11.sp
+                    fontSize = 12.sp
                 )
             }
 
@@ -746,7 +746,7 @@ fun DeniCustomerCard(
                 Text(
                     text = "${AppLanguageManager.tr("Reminder sent", "Kikumbusho kimetumwa")}: ${dateFormat.format(Date(customer.lastReminderSent))}",
                     color = TextMuted,
-                    fontSize = 10.sp
+                    fontSize = 12.sp
                 )
             }
 
@@ -768,7 +768,7 @@ fun DeniCustomerCard(
                 ) {
                     Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("WhatsApp Kikumbusho", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("WhatsApp Kikumbusho", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Button(
@@ -782,7 +782,7 @@ fun DeniCustomerCard(
                 ) {
                     Icon(Icons.Default.Payment, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Lipa Deni", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("Lipa Deni", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -817,7 +817,7 @@ fun SetDueDateDialog(
                 Text(
                     text = "Chagua lini mteja anatarajiwa kukamilisha deni hili:",
                     color = TextSecondary,
-                    fontSize = 12.sp
+                    fontSize = 14.sp
                 )
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -845,7 +845,7 @@ fun SetDueDateDialog(
                                 text = label,
                                 color = if (isSelected) TextOnAccent else TextPrimary,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp
+                                fontSize = 12.sp
                             )
                         }
                     }
@@ -858,7 +858,7 @@ fun SetDueDateDialog(
                         text = "Tarehe iliyochaguliwa: ${dateFormat.format(Date(selectedDueDate!!))}",
                         color = TealAccent,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
+                        fontSize = 14.sp
                     )
                 }
 
@@ -884,7 +884,7 @@ fun SetDueDateDialog(
                     Text(
                         text = "Ondoa tarehe ya makubaliano",
                         color = StatusRed,
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { selectedDueDate = null }
                     )
@@ -981,7 +981,7 @@ fun AddCustomerDialog(
                 Text(
                     text = "Lini anatarajiwa kulipa? (Due Date):",
                     color = TextSecondary,
-                    fontSize = 11.sp
+                    fontSize = 12.sp
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -1009,7 +1009,7 @@ fun AddCustomerDialog(
                                 text = label,
                                 color = if (isSelected) TextOnAccent else TextPrimary,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp
+                                fontSize = 12.sp
                             )
                         }
                     }

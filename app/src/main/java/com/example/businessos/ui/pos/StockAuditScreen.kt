@@ -118,19 +118,19 @@ fun StockAuditScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Bidhaa Zote", fontSize = 11.sp, color = TextSecondary)
+                            Text("Bidhaa Zote", fontSize = 12.sp, color = TextSecondary)
                             Text("$totalItems", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                         }
                         Column {
-                            Text("Zilizolingana", fontSize = 11.sp, color = TextSecondary)
+                            Text("Zilizolingana", fontSize = 12.sp, color = TextSecondary)
                             Text("$balancedCount", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = StatusGreen)
                         }
                         Column {
-                            Text("Pungufu (Short)", fontSize = 11.sp, color = TextSecondary)
+                            Text("Pungufu (Short)", fontSize = 12.sp, color = TextSecondary)
                             Text("$shortageCount", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (shortageCount > 0) StatusRed else TextPrimary)
                         }
                         Column {
-                            Text("Ziada (Surplus)", fontSize = 11.sp, color = TextSecondary)
+                            Text("Ziada (Surplus)", fontSize = 12.sp, color = TextSecondary)
                             Text("$surplusCount", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (surplusCount > 0) StatusAmber else TextPrimary)
                         }
                     }
@@ -159,7 +159,7 @@ fun StockAuditScreen(
                         Text(
                             text = "${shortageCount + surplusCount} Zina Tofauti",
                             color = StatusAmber,
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                         )
@@ -208,14 +208,14 @@ fun StockAuditScreen(
                                     text = item.name,
                                     fontWeight = FontWeight.Bold,
                                     color = TextPrimary,
-                                    fontSize = 13.sp
+                                    fontSize = 14.sp
                                 )
                                 Spacer(Modifier.height(2.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         text = "Mfumo: ${item.stockQty}",
                                         color = TextSecondary,
-                                        fontSize = 11.sp
+                                        fontSize = 12.sp
                                     )
                                     Spacer(Modifier.width(8.dp))
                                     Text(
@@ -230,7 +230,7 @@ fun StockAuditScreen(
                                             else -> StatusGreen
                                         },
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 11.sp
+                                        fontSize = 12.sp
                                     )
                                 }
                             }
@@ -302,7 +302,7 @@ fun StockAuditScreen(
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = StatusGreen)
                         Spacer(Modifier.width(6.dp))
-                        Text("Tuma Ripoti", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Tuma Ripoti", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -328,7 +328,7 @@ fun StockAuditScreen(
                         } else {
                             Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Thibitisha Ukaguzi", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Thibitisha Ukaguzi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

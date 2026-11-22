@@ -197,7 +197,7 @@ fun JobCardListScreen(
                     Text(
                         text = "Search Vehicle Repair History",
                         color = TealAccent,
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -245,7 +245,7 @@ fun JobCardListScreen(
                                 Text(
                                     text = "Tap the + button to book a vehicle into intake.",
                                     color = TextSecondary,
-                                    fontSize = 12.sp
+                                    fontSize = 14.sp
                                 )
                             }
                         }
@@ -332,14 +332,14 @@ fun JobCardRow(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = jobCard.customerName,
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         color = TextSecondary
                     )
                 }
 
                 Text(
                     text = "Estimate: KSh ${jobCard.estimateTotal.toInt()}",
-                    fontSize = 13.sp,
+                    fontSize = 14.sp,
                     color = if (jobCard.estimateTotal > 0) StatusGreen else TextMuted,
                     fontWeight = FontWeight.Bold
                 )
@@ -368,7 +368,7 @@ fun JobStagePill(stage: JobStage) {
         Text(
             text = stage.title,
             color = textColor,
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )

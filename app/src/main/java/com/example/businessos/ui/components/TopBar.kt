@@ -121,7 +121,7 @@ fun BusinessOsTopBar(
                         Text(
                             text = if (AppLanguageManager.isEnglish()) "EN" else "SW",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             color = TextPrimary
                         )
                     }

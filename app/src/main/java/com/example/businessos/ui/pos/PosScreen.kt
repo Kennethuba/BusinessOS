@@ -230,12 +230,12 @@ fun PosScreen(
                                 text = AppLanguageManager.tr("Low Stock Alert: ${lowStockItems.size} items", "Onyo la Akiba: Bidhaa ${lowStockItems.size}"),
                                 color = StatusRed,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
+                                fontSize = 14.sp
                             )
                             Text(
                                 text = lowStockItems.take(3).joinToString(", ") { "${it.name} (${it.stockQty})" } + if (lowStockItems.size > 3) "..." else "",
                                 color = TextPrimary,
-                                fontSize = 11.sp
+                                fontSize = 12.sp
                             )
                         }
                     }
@@ -253,7 +253,7 @@ fun PosScreen(
                 Text(
                     text = "${filteredItems.size} " + AppLanguageManager.tr("Products", "Bidhaa"),
                     color = TextSecondary,
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
                 )
 
@@ -280,7 +280,7 @@ fun PosScreen(
                             Spacer(Modifier.width(4.dp))
                             Text(
                                 text = "Grid",
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (isGridView) TextOnAccent else TextSecondary
                             )
@@ -304,7 +304,7 @@ fun PosScreen(
                             Spacer(Modifier.width(4.dp))
                             Text(
                                 text = "List",
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (!isGridView) TextOnAccent else TextSecondary
                             )
@@ -338,7 +338,7 @@ fun PosScreen(
                         Text(
                             text = AppLanguageManager.tr("Tap the + button to add products to your stall.", "Gusa kitufe cha + kuongeza bidhaa dukani."),
                             color = TextSecondary,
-                            fontSize = 12.sp
+                            fontSize = 14.sp
                         )
                     }
                 }
@@ -420,7 +420,7 @@ fun PosScreen(
                                 )
                                 Text(
                                     text = "Tap to view items & toggle prices",
-                                    fontSize = 11.sp,
+                                    fontSize = 12.sp,
                                     color = TealAccent
                                 )
                             }
@@ -543,7 +543,7 @@ fun PosItemGridCard(
                             text = "$inCartQty",
                             fontWeight = FontWeight.Bold,
                             color = TextOnAccent,
-                            fontSize = 12.sp
+                            fontSize = 14.sp
                         )
                     }
                 }
@@ -565,7 +565,7 @@ fun PosItemGridCard(
             Text(
                 text = "KSh ${item.retailPrice.toInt()}",
                 color = StatusGreen,
-                fontSize = 13.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
 
@@ -579,7 +579,7 @@ fun PosItemGridCard(
                 Text(
                     text = "${AppLanguageManager.tr("Stock", "Akiba")}: ${item.stockQty}" + if (item.stockQty <= item.minStockLevel) " (${AppLanguageManager.tr("low", "chini")})" else "",
                     color = if (item.stockQty <= item.minStockLevel) StatusRed else TextMuted,
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     fontWeight = if (item.stockQty <= item.minStockLevel) FontWeight.Bold else FontWeight.Normal
                 )
 
@@ -638,20 +638,20 @@ fun PosItemRow(
                     Text(
                         text = "Retail: KSh ${item.retailPrice.toInt()}",
                         color = StatusGreen,
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Wholesale: KSh ${item.wholesalePrice.toInt()}",
                         color = AmberAccent,
-                        fontSize = 12.sp
+                        fontSize = 14.sp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "${AppLanguageManager.tr("Stock", "Akiba")}: ${item.stockQty}" + if (item.stockQty <= item.minStockLevel) " (${AppLanguageManager.tr("low", "chini")})" else "",
                         color = if (item.stockQty <= item.minStockLevel) StatusRed else TextMuted,
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = if (item.stockQty <= item.minStockLevel) FontWeight.Bold else FontWeight.Normal
                     )
                 }
@@ -762,7 +762,7 @@ fun CartSheetContent(
                                 Text(
                                     text = if (cartItem.priceType == PriceType.RETAIL) "Retail @ ${cartItem.unitPrice.formatCompact()}" else "Wholesale @ ${cartItem.unitPrice.formatCompact()}",
                                     color = if (cartItem.priceType == PriceType.RETAIL) StatusGreen else AmberAccent,
-                                    fontSize = 11.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
@@ -818,7 +818,7 @@ fun CartSheetContent(
             title = { Text("Manager Price Override", color = TextPrimary) },
             text = {
                 Column {
-                    Text("Enter custom unit price (will be audit logged).", color = TextSecondary, fontSize = 12.sp)
+                    Text("Enter custom unit price (will be audit logged).", color = TextSecondary, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = overridePriceInput,
@@ -959,7 +959,7 @@ fun CheckoutDialog(
                         Column(modifier = Modifier.padding(10.dp)) {
                             Text(
                                 text = "Bandika SMS ya M-Pesa (Auto-Extract)",
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = StatusGreen
                             )
@@ -973,7 +973,7 @@ fun CheckoutDialog(
                                         mpesaCode = parsed.code
                                     }
                                 },
-                                placeholder = { Text("Paste M-Pesa SMS hapa...", fontSize = 12.sp) },
+                                placeholder = { Text("Paste M-Pesa SMS hapa...", fontSize = 14.sp) },
                                 maxLines = 2,
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -1044,7 +1044,7 @@ fun CheckoutDialog(
                                     text = {
                                         Column {
                                             Text(cust.name, fontWeight = FontWeight.Bold, color = TextPrimary)
-                                            Text("${cust.phone} • Bal: KSh ${cust.balance.toInt()}", fontSize = 11.sp, color = TextSecondary)
+                                            Text("${cust.phone} • Bal: KSh ${cust.balance.toInt()}", fontSize = 12.sp, color = TextSecondary)
                                         }
                                     },
                                     onClick = {
@@ -1096,7 +1096,7 @@ fun PaymentMethodPill(
                 text = label,
                 color = if (isSelected) TextOnAccent else TextPrimary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
+                fontSize = 14.sp
             )
         }
     }
@@ -1140,7 +1140,7 @@ fun AddItemDialog(
         title = {
             Column {
                 Text("Ongeza Bidhaa Dukani (Add Stock)", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                Text("Picha na maelezo huhifadhiwa ndani ya app pekee", color = TextMuted, fontSize = 11.sp)
+                Text("Picha na maelezo huhifadhiwa ndani ya app pekee", color = TextMuted, fontSize = 12.sp)
             }
         },
         text = {
@@ -1173,8 +1173,8 @@ fun AddItemDialog(
                             )
                             Spacer(Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(AppLanguageManager.tr("Photo taken", "Picha imepigwa"), color = StatusGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                Text("Gusa hapa kubadilisha picha", color = TextSecondary, fontSize = 11.sp)
+                                Text(AppLanguageManager.tr("Photo taken", "Picha imepigwa"), color = StatusGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text("Gusa hapa kubadilisha picha", color = TextSecondary, fontSize = 12.sp)
                             }
                         } else {
                             Box(
@@ -1188,8 +1188,8 @@ fun AddItemDialog(
                             }
                             Spacer(Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Piga Picha ya Bidhaa (Camera)", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                Text("Hifadhi picha ya bidhaa ndani ya app bila kujaza gallery", color = TextMuted, fontSize = 10.sp)
+                                Text("Piga Picha ya Bidhaa (Camera)", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text("Hifadhi picha ya bidhaa ndani ya app bila kujaza gallery", color = TextMuted, fontSize = 12.sp)
                             }
                         }
                     }
@@ -1197,7 +1197,7 @@ fun AddItemDialog(
 
                 Text(
                     text = "Chagua Kiolezo (Quick Preset):",
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     color = AmberAccent,
                     fontWeight = FontWeight.Bold
                 )
@@ -1219,7 +1219,7 @@ fun AddItemDialog(
                         ) {
                             Text(
                                 text = presetName,
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 color = if (name == presetName) AmberAccent else TextPrimary,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)

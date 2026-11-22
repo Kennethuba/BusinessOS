@@ -176,7 +176,7 @@ fun JobCardDetailScreen(
                         )
                         Text(
                             text = "Customer: ${jobCard.customerName}",
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             color = TextSecondary
                         )
                     }
@@ -226,7 +226,7 @@ fun JobCardDetailScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "Phone: ${jobCard.customerPhone}",
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 color = TextSecondary
                             )
                         }
@@ -256,7 +256,7 @@ fun JobCardDetailScreen(
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = "Send full cost breakdown of KSh ${jobCard.estimateTotal.toInt()} directly to ${jobCard.customerName}'s WhatsApp for 1-tap signoff.",
-                                    fontSize = 12.sp,
+                                    fontSize = 14.sp,
                                     color = TextPrimary
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
@@ -307,7 +307,7 @@ fun JobCardDetailScreen(
                                 }) {
                                     Icon(Icons.Default.Add, contentDescription = null, tint = AmberAccent, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Add Part", color = AmberAccent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text("Add Part", color = AmberAccent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
 
@@ -331,7 +331,7 @@ fun JobCardDetailScreen(
                                         text = part.unitPrice.formatCompact(),
                                         color = AmberAccent,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp
+                                        fontSize = 14.sp
                                     )
                                     if (userRole != Role.CASHIER) {
                                         IconButton(
@@ -348,7 +348,7 @@ fun JobCardDetailScreen(
                                 Text(
                                     text = "No parts or line items assigned yet.",
                                     color = TextMuted,
-                                    fontSize = 12.sp,
+                                    fontSize = 14.sp,
                                     modifier = Modifier.padding(vertical = 8.dp)
                                 )
                             }
@@ -409,13 +409,13 @@ fun JobCardDetailScreen(
                                                 text = transition.stage.title,
                                                 fontWeight = FontWeight.Bold,
                                                 color = TextPrimary,
-                                                fontSize = 13.sp
+                                                fontSize = 14.sp
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
-                                            Text(text = dateStr, fontSize = 11.sp, color = TextMuted)
+                                            Text(text = dateStr, fontSize = 12.sp, color = TextMuted)
                                         }
                                         if (!transition.note.isNullOrEmpty()) {
-                                            Text(text = transition.note, fontSize = 12.sp, color = TextSecondary)
+                                            Text(text = transition.note, fontSize = 14.sp, color = TextSecondary)
                                         }
                                     }
                                 }
@@ -446,7 +446,7 @@ fun JobCardDetailScreen(
                         ) {
                             Icon(Icons.Default.Replay, contentDescription = null, tint = StatusRed, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Reopen Stage", color = StatusRed, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Reopen Stage", color = StatusRed, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -458,7 +458,7 @@ fun JobCardDetailScreen(
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
                         ) {
-                            Text("Move to ${nextStage.title}", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("Move to ${nextStage.title}", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             Spacer(modifier = Modifier.width(6.dp))
                             Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
                         }
@@ -541,14 +541,14 @@ fun AddPartDialog(
         title = {
             Column {
                 Text("Add Part / Labor Cost", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text("Ufundi wa Bodi, Rangi, Viti vya Ngozi, Matairi & Injini", color = TextMuted, fontSize = 12.sp)
+                Text("Ufundi wa Bodi, Rangi, Viti vya Ngozi, Matairi & Injini", color = TextMuted, fontSize = 14.sp)
             }
         },
         text = {
             Column {
                 Text(
                     text = "Quick Repair Presets (Gusa Kujaza Haraka):",
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     color = AmberAccent,
                     fontWeight = FontWeight.Bold
                 )
@@ -571,7 +571,7 @@ fun AddPartDialog(
                         ) {
                             Text(
                                 text = "$presetTitle (KSh ${presetPrice.toInt()})",
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 color = if (partName == presetTitle) AmberAccent else TextPrimary,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
@@ -651,12 +651,12 @@ fun ReopenStageDialog(
                 Text(
                     text = "Skipping stages backwards requires an explicit reason and will be logged to the business audit log.",
                     color = StatusRed,
-                    fontSize = 12.sp
+                    fontSize = 14.sp
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Text("Target Stage:", color = TextSecondary, fontSize = 12.sp)
+                Text("Target Stage:", color = TextSecondary, fontSize = 14.sp)
                 eligibleStages.forEach { stage ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -668,7 +668,7 @@ fun ReopenStageDialog(
                             colors = RadioButtonDefaults.colors(selectedColor = AmberAccent)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(stage.title, color = TextPrimary, fontSize = 13.sp)
+                        Text(stage.title, color = TextPrimary, fontSize = 14.sp)
                     }
                 }
 
