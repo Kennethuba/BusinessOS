@@ -203,7 +203,7 @@ private fun AuditSummaryStrip(logs: List<AuditLogEntity>) {
     val total = logs.size
     val today = logs.count {
         val now = Calendar.getInstance()
-        val logCal = Calendar.getInstance().apply { timeInMillis = it.timestamp }
+        val logCal = Calendar.getInstance().apply { timeInMillis = it.createdAt }
         now.get(Calendar.DAY_OF_YEAR) == logCal.get(Calendar.DAY_OF_YEAR)
     }
     val priceOverrides = logs.count { it.actionType == ActionType.PRICE_OVERRIDE }
@@ -310,7 +310,7 @@ fun AuditLogCard(log: AuditLogEntity) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        sdf.format(Date(log.timestamp)),
+                        sdf.format(Date(log.createdAt)),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -319,14 +319,14 @@ fun AuditLogCard(log: AuditLogEntity) {
                 Spacer(Modifier.height(6.dp))
 
                 // Before vs After values
-                if (log.beforeValue.isNotBlank() || log.afterValue.isNotBlank()) {
+                if (!log.beforeValue.isNullOrBlank() || !log.afterValue.isNullOrBlank()) {
                     Column(
                         Modifier
                             .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f), RoundedCornerShape(6.dp))
                             .padding(8.dp)
                     ) {
-                        if (log.beforeValue.isNotBlank()) {
+                        if (!log.beforeValue.isNullOrBlank()) {
                             Text(
                                 "Before: ${log.beforeValue}",
                                 style = MaterialTheme.typography.bodySmall,
@@ -335,7 +335,7 @@ fun AuditLogCard(log: AuditLogEntity) {
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
-                        if (log.afterValue.isNotBlank()) {
+                        if (!log.afterValue.isNullOrBlank()) {
                             Text(
                                 "After:  ${log.afterValue}",
                                 style = MaterialTheme.typography.bodySmall,
@@ -357,7 +357,7 @@ fun AuditLogCard(log: AuditLogEntity) {
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        if (log.actorName.isNotBlank()) log.actorName else log.actorUserId.take(12),
+                        if (log.performedByName.isNotBlank()) log.performedByName else log.performedByUserId.take(12),
                         style = MaterialTheme.typography.labelSmall,
                         fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -396,16 +396,22 @@ private fun EmptyAuditState() {
 @Composable
 fun actionTypeColor(type: ActionType): Color = when (type) {
     ActionType.PRICE_OVERRIDE -> Color(0xFFF59E0B) // Amber
-    ActionType.SALE_DELETED   -> Color(0xFFEF4444) // Red
+    ActionType.SALE_VOIDED    -> Color(0xFFEF4444) // Red
+    ActionType.EXPENSE_VOIDED -> Color(0xFFEF4444) // Red
     ActionType.JOB_CANCELLED  -> Color(0xFFDC2626) // Dark Red
     ActionType.STOCK_EDITED   -> Color(0xFF3B82F6) // Blue
+    ActionType.STOCK_ADJUSTED -> Color(0xFF3B82F6) // Blue
+    ActionType.WAGE_PAID      -> Color(0xFF10B981) // Green
     ActionType.ROLE_CHANGED   -> Color(0xFF8B5CF6) // Purple
 }
 
 fun actionTypeIcon(type: ActionType) = when (type) {
     ActionType.PRICE_OVERRIDE -> Icons.Filled.PriceChange
-    ActionType.SALE_DELETED   -> Icons.Filled.Delete
+    ActionType.SALE_VOIDED    -> Icons.Filled.Delete
+    ActionType.EXPENSE_VOIDED -> Icons.Filled.Delete
     ActionType.JOB_CANCELLED  -> Icons.Filled.Cancel
     ActionType.STOCK_EDITED   -> Icons.Filled.Inventory
+    ActionType.STOCK_ADJUSTED -> Icons.Filled.Inventory
+    ActionType.WAGE_PAID      -> Icons.Filled.Payments
     ActionType.ROLE_CHANGED   -> Icons.Filled.AdminPanelSettings
 }

@@ -357,6 +357,7 @@ fun JobStagePill(stage: JobStage) {
         JobStage.IN_PROGRESS -> Pair(Color(0xFF381010), StatusRed)
         JobStage.COMPLETED -> Pair(Color(0xFF103828), StatusGreen)
         JobStage.INVOICED -> Pair(Color(0xFF103828), TealAccent)
+        JobStage.CANCELLED -> Pair(Color(0xFF282828), Color(0xFF9CA3AF))
     }
 
     Surface(

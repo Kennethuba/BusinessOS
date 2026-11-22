@@ -40,6 +40,10 @@ class GarageViewModel(
     private val _successMessage = MutableStateFlow<String?>(null)
     val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
 
+    fun partsFor(jobCardId: String) = repository.observeJobParts(jobCardId)
+
+    fun historyFor(jobCardId: String) = repository.observeJobHistory(jobCardId)
+
     fun setStageFilter(stage: JobStage?) {
         _selectedStageFilter.value = stage
     }

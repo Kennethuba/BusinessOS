@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import com.example.businessos.data.local.entity.JobCardEntity
+import com.example.businessos.data.model.PartItem
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -20,10 +21,10 @@ object WhatsAppHelper {
         }
     }
 
-    fun openWhatsAppEstimateApproval(context: Context, jobCard: JobCardEntity, businessName: String?) {
+    fun openWhatsAppEstimateApproval(context: Context, jobCard: JobCardEntity, businessName: String?, parts: List<PartItem>) {
         val phone = normalizeKenyanPhone(jobCard.customerPhone)
-        val partsSummary = if (jobCard.partsList.isNotEmpty()) {
-            jobCard.partsList.joinToString("\n") { "• ${it.name}: KSh ${it.cost.toInt()}" }
+        val partsSummary = if (parts.isNotEmpty()) {
+            parts.joinToString("\n") { "• ${it.name}: ${it.unitPrice.formatCompact()}" }
         } else {
             "• Inspection & Diagnostic Services"
         }

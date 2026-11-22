@@ -1,5 +1,6 @@
 package com.example.businessos.ui.pos
 
+import com.example.businessos.data.model.Money
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -129,7 +130,7 @@ fun PosScreen(
         else items.filter { it.name.contains(searchQuery, ignoreCase = true) }
     }
 
-    val totalAmount = cart.sumOf { it.subtotal }
+    val totalAmount = Money(cart.sumOf { it.subtotal.cents })
     val totalQty = cart.sumOf { it.qty }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -411,7 +412,7 @@ fun PosScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = "KSh ${totalAmount.toInt()}",
+                                    text = totalAmount.formatCompact(),
                                     style = MaterialTheme.typography.titleLarge,
                                     color = TextPrimary,
                                     fontWeight = FontWeight.Bold
@@ -453,7 +454,7 @@ fun PosScreen(
                     role = session?.activeRole ?: Role.CASHIER,
                     onQtyDelta = { id, delta -> viewModel.updateCartQty(id, delta) },
                     onTogglePriceType = { id -> viewModel.togglePriceType(id) },
-                    onOverridePrice = { id, newPrice -> viewModel.overrideItemPrice(id, newPrice) },
+                    onOverridePrice = { id, newPrice -> viewModel.overrideItemPrice(id, Money.fromShillingsDouble(newPrice)) },
                     onCheckout = {
                         showCartSheet = false
                         showCheckoutSheet = true
@@ -486,7 +487,7 @@ fun PosScreen(
             AddItemDialog(
                 onDismiss = { showAddItemDialog = false },
                 onAdd = { name, retail, wholesale, stock, minStock, photo ->
-                    viewModel.addItemToInventory(name, retail, wholesale, stock, minStock) { newItem ->
+                    viewModel.addItemToInventory(name, Money.fromShillingsDouble(retail), Money.fromShillingsDouble(wholesale), stock.toLong(), minStock) { newItem ->
                         if (photo != null) {
                             StockImageStorage.saveCustomImage(context, newItem.id, photo)
                         }
@@ -738,7 +739,7 @@ fun CartSheetContent(
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                text = "KSh ${cartItem.subtotal.toInt()}",
+                                text = cartItem.subtotal.formatCompact(),
                                 fontWeight = FontWeight.Bold,
                                 color = AmberAccent,
                                 fontSize = 15.sp
@@ -758,7 +759,7 @@ fun CartSheetContent(
                                 modifier = Modifier.clickable { onTogglePriceType(cartItem.item.id) }
                             ) {
                                 Text(
-                                    text = if (cartItem.priceType == PriceType.RETAIL) "Retail @ KSh ${cartItem.unitPrice.toInt()}" else "Wholesale @ KSh ${cartItem.unitPrice.toInt()}",
+                                    text = if (cartItem.priceType == PriceType.RETAIL) "Retail @ ${cartItem.unitPrice.formatCompact()}" else "Wholesale @ ${cartItem.unitPrice.formatCompact()}",
                                     color = if (cartItem.priceType == PriceType.RETAIL) StatusGreen else AmberAccent,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
@@ -859,7 +860,7 @@ fun CartSheetContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutDialog(
-    totalAmount: Double,
+    totalAmount: Money,
     customers: List<CustomerEntity>,
     onDismiss: () -> Unit,
     onConfirm: (method: PaymentMethod, customerId: String?, mpesaCode: String?) -> Unit
@@ -875,7 +876,7 @@ fun CheckoutDialog(
         containerColor = DarkSurface,
         title = {
             Text(
-                text = "Checkout • KSh ${totalAmount.toInt()}",
+                text = "Checkout • ${totalAmount.formatCompact()}",
                 style = MaterialTheme.typography.titleLarge,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold
@@ -892,7 +893,7 @@ fun CheckoutDialog(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("PAYABLE AMOUNT", style = MaterialTheme.typography.labelSmall, color = TealAccent)
-                            Text("KSh ${totalAmount.toInt()}", style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.Bold)
+                            Text(totalAmount.formatCompact(), style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

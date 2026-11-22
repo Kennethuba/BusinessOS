@@ -7,6 +7,7 @@ import com.example.businessos.data.local.entity.*
 import com.example.businessos.data.model.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import java.util.UUID
 
 class BusinessOsRepository(
@@ -174,6 +175,32 @@ class BusinessOsRepository(
         val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
         return saleDao.observeSalesForBusiness(bizId)
     }
+
+    fun observeJobParts(jobCardId: String): Flow<List<PartItem>> =
+        jobPartDao.observeByJob(jobCardId).map { rows ->
+            rows.map {
+                PartItem(
+                    id = it.id,
+                    itemId = it.itemId,
+                    name = it.partName,
+                    unitPrice = Money(it.unitPriceCents),
+                    costPrice = Money(it.costPriceCents),
+                    quantity = it.quantity,
+                    isStockDeducted = it.isStockDeducted
+                )
+            }
+        }
+
+    fun observeJobHistory(jobCardId: String): Flow<List<StageTransition>> =
+        jobStageTransitionDao.observeByJob(jobCardId).map { rows ->
+            rows.map {
+                StageTransition(
+                    stage = runCatching { JobStage.valueOf(it.toStage) }.getOrDefault(JobStage.INTAKE),
+                    timestamp = it.timestamp,
+                    note = it.notes.ifBlank { null }
+                )
+            }
+        }
 
     fun observeJobCards(): Flow<List<JobCardEntity>> {
         val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())

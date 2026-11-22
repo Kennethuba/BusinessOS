@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.businessos.data.local.entity.JobCardEntity
 import com.example.businessos.data.model.JobStage
+import com.example.businessos.data.model.Money
 import com.example.businessos.data.model.PartItem
 import com.example.businessos.data.model.Role
 import com.example.businessos.ui.components.WhatsAppHelper
@@ -99,6 +100,10 @@ fun JobCardDetailScreen(
     val session by viewModel.session.collectAsState()
     val allJobs by viewModel.jobCards.collectAsState()
     val jobCard = allJobs.find { it.id == jobCardId }
+    val partsFlow = remember(jobCardId) { viewModel.partsFor(jobCardId) }
+    val historyFlow = remember(jobCardId) { viewModel.historyFor(jobCardId) }
+    val parts by partsFlow.collectAsState(initial = emptyList())
+    val stageHistory by historyFlow.collectAsState(initial = emptyList())
     val userRole = session?.activeRole ?: Role.CASHIER
 
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -259,7 +264,8 @@ fun JobCardDetailScreen(
                                         WhatsAppHelper.openWhatsAppEstimateApproval(
                                             context = context,
                                             jobCard = jobCard,
-                                            businessName = session?.activeBusinessName
+                                            businessName = session?.activeBusinessName,
+                                            parts = parts
                                         )
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = StatusGreen, contentColor = TextOnAccent),
@@ -306,7 +312,7 @@ fun JobCardDetailScreen(
 
                             Spacer(modifier = Modifier.height(6.dp))
 
-                            jobCard.partsList.forEach { part ->
+                            parts.forEach { part ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -321,14 +327,14 @@ fun JobCardDetailScreen(
                                         modifier = Modifier.weight(1f)
                                     )
                                     Text(
-                                        text = "KSh ${part.cost.toInt()}",
+                                        text = part.unitPrice.formatCompact(),
                                         color = AmberAccent,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 13.sp
                                     )
                                     if (userRole != Role.CASHIER) {
                                         IconButton(
-                                            onClick = { viewModel.removePartFromJob(jobCard.id, jobCard.partsList, part.id) },
+                                            onClick = { viewModel.removePartFromJob(jobCard.id, parts, part.id) },
                                             modifier = Modifier.size(24.dp)
                                         ) {
                                             Icon(Icons.Default.Delete, contentDescription = "Delete", tint = StatusRed, modifier = Modifier.size(14.dp))
@@ -337,7 +343,7 @@ fun JobCardDetailScreen(
                                 }
                             }
 
-                            if (jobCard.partsList.isEmpty()) {
+                            if (parts.isEmpty()) {
                                 Text(
                                     text = "No parts or line items assigned yet.",
                                     color = TextMuted,
@@ -380,7 +386,7 @@ fun JobCardDetailScreen(
                             )
                             Spacer(modifier = Modifier.height(10.dp))
 
-                            jobCard.stageHistory.forEach { transition ->
+                            stageHistory.forEach { transition ->
                                 val dateStr = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()).format(Date(transition.timestamp))
                                 Row(
                                     modifier = Modifier
@@ -475,7 +481,7 @@ fun JobCardDetailScreen(
                 initialName = presetPartName,
                 onDismiss = { showAddPartDialog = false },
                 onAdd = { name, cost ->
-                    viewModel.addPartToJob(jobCard.id, jobCard.partsList, name, cost)
+                    viewModel.addPartToJob(jobCard.id, parts, name, Money.fromShillingsDouble(cost))
                     showAddPartDialog = false
                 }
             )

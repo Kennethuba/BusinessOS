@@ -1,5 +1,6 @@
 package com.example.businessos.ui.deni
 
+import com.example.businessos.data.model.Money
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -309,7 +310,7 @@ fun DeniLedgerScreen(
             AddCustomerDialog(
                 onDismiss = { showAddCustomerDialog = false },
                 onAdd = { name, phone, initialBal, dueDate, notes ->
-                    viewModel.addCustomer(name, phone, initialBal, dueDate, notes)
+                    viewModel.addCustomer(name, phone, Money.fromShillingsDouble(initialBal), dueDate, notes)
                     showAddCustomerDialog = false
                 }
             )
@@ -500,7 +501,7 @@ fun DeniLedgerScreen(
                             if (amount != null && amount > 0) {
                                 viewModel.recordPayment(
                                     paymentTargetCustomer!!.id,
-                                    amount,
+                                    Money.fromShillingsDouble(amount),
                                     paymentMethod,
                                     if (paymentMethod == PaymentMethod.MPESA) mpesaCodeInput.ifBlank { null } else null
                                 )

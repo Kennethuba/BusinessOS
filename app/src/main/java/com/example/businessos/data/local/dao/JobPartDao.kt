@@ -2,9 +2,13 @@ package com.example.businessos.data.local.dao
 
 import androidx.room.*
 import com.example.businessos.data.local.entity.JobPartEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface JobPartDao {
+
+    @Query("SELECT * FROM job_parts WHERE jobCardId = :jobCardId")
+    fun observeByJob(jobCardId: String): Flow<List<JobPartEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertJobPart(part: JobPartEntity)
