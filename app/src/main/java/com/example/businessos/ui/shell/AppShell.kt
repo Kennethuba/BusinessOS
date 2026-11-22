@@ -337,8 +337,8 @@ fun AppShell(
         if (can(Permission.CREATE_CUSTOMER) || can(Permission.TAKE_PAYMENT)) {
             add(Entry(AppLanguageManager.tr("Customers and payments", "Wateja na malipo"), AppLanguageManager.tr("Add a customer, record a payment", "Ongeza mteja, rekodi malipo"), Icons.Default.People, onNavigateToDeni))
         }
-        if (shopOn && can(Permission.STOCK_TAKE_ADJUST)) {
-            add(Entry(AppLanguageManager.tr("Stock", "Akiba"), AppLanguageManager.tr("Count and correct stock", "Hesabu na rekebisha akiba"), Icons.Default.Inventory2, onNavigateToStockAudit))
+        if (shopOn && (can(Permission.STOCK_TAKE_ADJUST) || can(Permission.EDIT_STOCK))) {
+            add(Entry(AppLanguageManager.tr("Stock", "Akiba"), AppLanguageManager.tr("Add items, buy stock, count", "Ongeza bidhaa, nunua akiba, hesabu"), Icons.Default.Inventory2, onNavigateToStockAudit))
         }
         if (can(Permission.RECORD_EXPENSE)) {
             add(Entry(AppLanguageManager.tr("Purchases and expenses", "Manunuzi na gharama"), AppLanguageManager.tr("Suppliers, bills, expenses", "Wasambazaji, bili, gharama"), Icons.Default.ShoppingCart, onNavigateToAccounting))

@@ -307,9 +307,95 @@ class BusinessOsRepository(
                         unitCostCents = costPrice.cents
                     )
                 )
+                // Opening stock is worth money: Dr Inventory, Cr Owner's capital.
+                val value = costPrice * initialStock.toInt()
+                val inventory = accountDao.getAccountByCode("1300", bizId)
+                val capital = accountDao.getAccountByCode("3010", bizId)
+                if (value > Money.ZERO && inventory != null && capital != null) {
+                    postJournalEntry(
+                        businessId = bizId,
+                        date = System.currentTimeMillis(),
+                        description = "Opening stock: ${item.name}",
+                        sourceType = JournalSourceType.OPENING_BALANCE,
+                        sourceId = itemId,
+                        side = BusinessSide.SHOP,
+                        lines = listOf(
+                            JournalLineItem(inventory.id, inventory.code, inventory.name, debit = value),
+                            JournalLineItem(capital.id, capital.code, capital.name, credit = value)
+                        )
+                    )
+                }
             }
         }
         item
+    }
+
+    /**
+     * Buys more of an existing item. Stock goes up, and the books record where the money went:
+     * cash, M-Pesa or bank, or owed to the supplier when [paymentMethod] is CREDIT.
+     */
+    suspend fun receiveStock(
+        itemId: String,
+        quantity: Long,
+        unitCost: Money,
+        paymentMethod: PaymentMethod = PaymentMethod.CASH,
+        note: String = ""
+    ): Result<Unit> = runCatching {
+        checkPermission(Permission.EDIT_STOCK)
+        if (quantity <= 0) throw IllegalArgumentException("Quantity must be more than zero")
+        if (unitCost < Money.ZERO) throw IllegalArgumentException("Cost cannot be negative")
+        val bizId = getActiveBusinessId()
+        val userId = getActiveUserId()
+        database.withTransaction {
+            val item = itemDao.getItemById(itemId, bizId)
+                ?: throw IllegalArgumentException("Item not found")
+            val total = unitCost * quantity.toInt()
+            val newBalance = item.stockQty + quantity
+            itemDao.adjustStock(itemId, bizId, quantity)
+            if (unitCost > Money.ZERO) {
+                itemDao.updateItem(item.copy(costPriceCents = unitCost.cents, stockQty = newBalance, updatedAt = System.currentTimeMillis()))
+            }
+            val purchaseId = UUID.randomUUID().toString()
+            stockMovementDao.insertMovement(
+                newMovement(
+                    businessId = bizId,
+                    itemId = itemId,
+                    type = StockMovementType.PURCHASE,
+                    delta = quantity,
+                    balanceAfter = newBalance,
+                    referenceType = "PURCHASE",
+                    referenceId = purchaseId,
+                    notes = note.ifBlank { "Stock bought" },
+                    userId = userId,
+                    unitCostCents = unitCost.cents
+                )
+            )
+            if (total > Money.ZERO) {
+                val inventory = accountDao.getAccountByCode("1300", bizId)
+                    ?: throw IllegalStateException("Inventory account missing")
+                val payCode = when (paymentMethod) {
+                    PaymentMethod.CASH -> "1010"
+                    PaymentMethod.MPESA -> "1020"
+                    PaymentMethod.BANK -> "1030"
+                    PaymentMethod.CREDIT -> "2010"
+                    PaymentMethod.SPLIT -> throw IllegalArgumentException("Choose one way of paying")
+                }
+                val pay = accountDao.getAccountByCode(payCode, bizId)
+                    ?: throw IllegalStateException("Payment account missing")
+                postJournalEntry(
+                    businessId = bizId,
+                    date = System.currentTimeMillis(),
+                    description = "Bought ${quantity} x ${item.name}",
+                    sourceType = JournalSourceType.PURCHASE_BILL,
+                    sourceId = purchaseId,
+                    side = BusinessSide.SHOP,
+                    lines = listOf(
+                        JournalLineItem(inventory.id, inventory.code, inventory.name, debit = total),
+                        JournalLineItem(pay.id, pay.code, pay.name, credit = total)
+                    )
+                )
+            }
+        }
     }
 
     suspend fun updateStockItemCount(

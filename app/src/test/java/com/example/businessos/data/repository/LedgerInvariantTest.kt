@@ -182,4 +182,18 @@ class LedgerInvariantTest {
         assertEquals(1L, scalar("SELECT COUNT(*) FROM customers"))
         assertEquals("+254722000111", db.openHelper.readableDatabase.query("SELECT phone FROM customers").use { it.moveToFirst(); it.getString(0) })
     }
+
+    @Test
+    fun buyingStockOnCreditOwesTheSupplierAndKeepsBooksBalanced() = runBlocking {
+        val item = repo.createItem("Shoe", Money(150_000), Money(120_000), initialStock = 2, costPrice = Money(90_000)).getOrThrow()
+        assertBooksBalance()
+        repo.receiveStock(item.id, 10, Money(95_000), PaymentMethod.CREDIT).getOrThrow()
+        assertEquals(12L, scalar("SELECT stockQty FROM items WHERE id='${item.id}'"))
+        assertEquals(950_000L, scalar("SELECT balanceCents FROM accounts WHERE code='2010'"))
+        assertBooksBalance()
+        repo.receiveStock(item.id, 5, Money(95_000), PaymentMethod.CASH).getOrThrow()
+        assertEquals(100_000L - 475_000L, scalar("SELECT balanceCents FROM accounts WHERE code='1010'"))
+        assertBooksBalance()
+        assertTrue(repo.receiveStock(item.id, 0, Money(1)).isFailure)
+    }
 }

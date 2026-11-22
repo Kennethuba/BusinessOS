@@ -136,7 +136,7 @@ fun NavGraph(
                 onNavigateToJobOrders = { navController.navigate(Screen.GarageJobs.route) },
                 onNavigateToDeni = { navController.navigate(Screen.DeniLedger.route) },
                 onNavigateToAccounting = { navController.navigate(Screen.Accounting.route) },
-                onNavigateToStockAudit = { navController.navigate(Screen.StockAudit.route) },
+                onNavigateToStockAudit = { navController.navigate(Screen.Stock.route) },
                 onNavigateToLayaway = { navController.navigate(Screen.Layaway.route) },
                 onNavigateToVehicleHistory = { navController.navigate(Screen.VehicleHistory.route) },
                 onNavigateToStaff = { navController.navigate(Screen.StaffManagement.route) },
@@ -246,6 +246,15 @@ fun NavGraph(
                 businessName = session?.activeBusinessName,
                 onSwitchWorkspace = { navController.navigate(Screen.WorkspaceSwitcher.route) },
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Stock.route) {
+            val posViewModel: PosViewModel = viewModel(factory = viewModelFactory)
+            com.example.businessos.ui.pos.StockScreen(
+                viewModel = posViewModel,
+                onBack = { navController.popBackStack() },
+                onStockCount = { navController.navigate(Screen.StockAudit.route) }
             )
         }
 

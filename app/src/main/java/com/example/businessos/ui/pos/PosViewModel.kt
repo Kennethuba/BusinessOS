@@ -123,6 +123,7 @@ class PosViewModel(
         wholesale: Money,
         stock: Long,
         minStockLevel: Int = 3,
+        cost: Money = Money.ZERO,
         onItemCreated: ((ItemEntity) -> Unit)? = null
     ) {
         viewModelScope.launch {
@@ -132,7 +133,8 @@ class PosViewModel(
                 retailPrice = retail,
                 wholesalePrice = wholesale,
                 initialStock = stock,
-                lowStockThreshold = minStockLevel
+                lowStockThreshold = minStockLevel,
+                costPrice = cost
             )
             result.onSuccess {
                 _successMessage.value = "Bidhaa ${it.name} imeongezwa dukani"
@@ -181,6 +183,15 @@ class PosViewModel(
             }.onFailure {
                 _errorMessage.value = it.message ?: "Failed to complete checkout"
             }
+        }
+    }
+
+    fun receiveStock(itemId: String, qty: Long, unitCost: Money, method: PaymentMethod, onDone: () -> Unit) {
+        viewModelScope.launch {
+            _errorMessage.value = null
+            repository.receiveStock(itemId, qty, unitCost, method)
+                .onSuccess { _successMessage.value = "Stock added"; onDone() }
+                .onFailure { _errorMessage.value = it.message }
         }
     }
 
