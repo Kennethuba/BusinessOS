@@ -99,6 +99,7 @@ fun JobCardListScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val successMessage by viewModel.successMessage.collectAsState()
 
+    val isGarage = session?.isGarageEnabled == true && session?.isShopEnabled != true
     var showCreateDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -127,7 +128,7 @@ fun JobCardListScreen(
                 containerColor = AmberAccent,
                 contentColor = TextOnAccent
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Create Job Card")
+                Icon(Icons.Default.Add, contentDescription = AppLanguageManager.tr("New order", "Oda mpya"))
             }
         }
     ) { padding ->
@@ -137,7 +138,7 @@ fun JobCardListScreen(
                 .padding(padding)
         ) {
             BusinessOsTopBar(
-                title = "Job Cards",
+                title = if (isGarage) AppLanguageManager.tr("Job orders", "Kazi za wateja") else AppLanguageManager.tr("Orders", "Oda"),
                 businessName = session?.activeBusinessName,
                 role = session?.activeRole,
                 onSwitchWorkspace = onSwitchWorkspace
@@ -154,7 +155,7 @@ fun JobCardListScreen(
                 FilterChip(
                     selected = selectedStage == null,
                     onClick = { viewModel.setStageFilter(null) },
-                    label = { Text("All (${allJobs.size})") },
+                    label = { Text("${AppLanguageManager.tr("All", "Zote")} (${allJobs.size})") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AmberAccent,
                         selectedLabelColor = TextOnAccent,
@@ -179,8 +180,8 @@ fun JobCardListScreen(
                 }
             }
 
-            // Quick History Search Banner
-            Row(
+            // Quick History Search Banner (auto garage only)
+            if (isGarage) Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)
@@ -195,7 +196,7 @@ fun JobCardListScreen(
                     Icon(Icons.Default.History, contentDescription = null, tint = TealAccent, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Search Vehicle Repair History",
+                        text = AppLanguageManager.tr("Find a vehicle's repair history", "Tafuta historia ya gari"),
                         color = TealAccent,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
@@ -238,12 +239,12 @@ fun JobCardListScreen(
                                 Icon(Icons.Default.Build, contentDescription = null, tint = AmberAccent, modifier = Modifier.size(40.dp))
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = if (selectedStage == null) "No Job Cards in Garage" else "No jobs in ${selectedStage?.title}",
+                                    text = if (selectedStage == null) AppLanguageManager.tr("No orders yet", "Hakuna oda bado") else AppLanguageManager.tr("Nothing in ${selectedStage?.title}", "Hakuna katika ${selectedStage?.title}"),
                                     color = TextPrimary,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Tap the + button to book a vehicle into intake.",
+                                    text = if (isGarage) AppLanguageManager.tr("Tap + to book a vehicle in.", "Gusa + kupokea gari.") else AppLanguageManager.tr("Tap + to add an order.", "Gusa + kuongeza oda."),
                                     color = TextSecondary,
                                     fontSize = 14.sp
                                 )
@@ -256,6 +257,7 @@ fun JobCardListScreen(
 
         if (showCreateDialog) {
             CreateJobCardDialog(
+                isGarage = isGarage,
                 onDismiss = { showCreateDialog = false },
                 onCreate = { kind, reference, name, phone, desc ->
                     viewModel.createJobCard(kind, reference, name, phone, desc) { created ->
@@ -377,6 +379,7 @@ fun JobStagePill(stage: JobStage) {
 
 @Composable
 fun CreateJobCardDialog(
+    isGarage: Boolean,
     onDismiss: () -> Unit,
     onCreate: (kind: JobOrderKind, reference: String, name: String, phone: String, desc: String) -> Unit
 ) {
@@ -397,19 +400,19 @@ fun CreateJobCardDialog(
     FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
-        title = { Text(AppLanguageManager.tr("New job order", "Kazi mpya"), color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = { Text(if (isGarage) AppLanguageManager.tr("New job order", "Kazi mpya") else AppLanguageManager.tr("New order", "Oda mpya"), color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (!isGarage) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
                         selected = isClientOrder,
                         onClick = { kind = JobOrderKind.CLIENT_ORDER },
-                        label = { Text(AppLanguageManager.tr("For a customer", "Ya mteja")) }
+                        label = { Text(AppLanguageManager.tr("Customer order", "Oda ya mteja")) }
                     )
                     FilterChip(
                         selected = !isClientOrder,
                         onClick = { kind = JobOrderKind.PRODUCTION },
-                        label = { Text(AppLanguageManager.tr("Make for stock", "Tengeneza kwa akiba")) }
+                        label = { Text(AppLanguageManager.tr("Make for stock", "Tengeneza akiba")) }
                     )
                 }
 
@@ -420,7 +423,7 @@ fun CreateJobCardDialog(
                     onValueChange = { reference = it },
                     label = {
                         Text(
-                            if (isClientOrder) AppLanguageManager.tr("Vehicle plate or item", "Namba ya gari au bidhaa")
+                            if (isGarage) AppLanguageManager.tr("Vehicle plate, e.g. KDL 456Z", "Namba ya gari, mf. KDL 456Z") else if (isClientOrder) AppLanguageManager.tr("What does the customer want?", "Mteja anataka nini?")
                             else AppLanguageManager.tr("What are you making?", "Unatengeneza nini?")
                         )
                     },

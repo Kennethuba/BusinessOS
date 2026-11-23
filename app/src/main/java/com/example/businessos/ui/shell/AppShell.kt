@@ -213,8 +213,14 @@ fun AppShell(
     val message by viewModel.message.collectAsState()
 
     val role = session?.activeRole ?: Role.VIEWER
-    val shopOn = business?.isShopEnabled ?: session?.isShopEnabled ?: true
-    val jobsOn = business?.isGarageEnabled ?: session?.isGarageEnabled ?: false
+    // A company is one of two kinds, chosen when it is created: an auto garage or a leather shop.
+    val garageFlag = business?.isGarageEnabled ?: session?.isGarageEnabled ?: false
+    val shopFlag = business?.isShopEnabled ?: session?.isShopEnabled ?: true
+    val isGarage = garageFlag && !shopFlag
+    val shopOn = !isGarage // selling (sales, layaway) belongs to the leather shop
+    val jobsOn = true      // both kinds take orders: vehicle jobs, or customer and production orders
+    val ordersLabel = if (isGarage) AppLanguageManager.tr("Job orders", "Kazi za wateja") else AppLanguageManager.tr("Orders", "Oda")
+    val newOrderLabel = if (isGarage) AppLanguageManager.tr("New job order", "Kazi mpya") else AppLanguageManager.tr("New order", "Oda mpya")
     val companyName = business?.name ?: session?.activeBusinessName ?: ""
     var showColours by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     if (showColours) {
@@ -326,10 +332,10 @@ fun AppShell(
                 } else {
                     AppLanguageManager.tr("${open.size} open", "${open.size} wazi")
                 }
-                add(Entry(AppLanguageManager.tr("Job orders in progress", "Kazi zinazoendelea"), detail, Icons.Default.Build, onNavigateToJobOrders))
+                add(Entry(AppLanguageManager.tr("Orders in progress", "Kazi zinazoendelea"), detail, Icons.Default.Build, onNavigateToJobOrders))
             }
         }
-        if (shopOn && can(Permission.STOCK_TAKE_ADJUST)) {
+        if (can(Permission.STOCK_TAKE_ADJUST)) {
             val low = items.filter { it.isActive && it.stockQty <= it.lowStockThreshold }
             if (low.isNotEmpty()) {
                 add(
@@ -364,13 +370,13 @@ fun AppShell(
             add(Entry(AppLanguageManager.tr("New sale", "Mauzo mapya"), AppLanguageManager.tr("Sell items", "Uza bidhaa"), Icons.Default.AddShoppingCart, onNavigateToPos))
         }
         if (jobsOn && can(Permission.INTAKE_JOB)) {
-            add(Entry(AppLanguageManager.tr("New job order", "Kazi mpya"), AppLanguageManager.tr("For a customer or to make stock", "Ya mteja au ya kutengeneza akiba"), Icons.Default.Build, onNavigateToJobOrders))
+            add(Entry(newOrderLabel, if (isGarage) AppLanguageManager.tr("Repair a customer's vehicle", "Tengeneza gari la mteja") else AppLanguageManager.tr("For a customer, or to make stock", "Ya mteja, au ya kutengeneza akiba"), Icons.Default.Build, onNavigateToJobOrders))
         }
         if (can(Permission.CREATE_CUSTOMER) || can(Permission.TAKE_PAYMENT)) {
             add(Entry(AppLanguageManager.tr("Customers and payments", "Wateja na malipo"), AppLanguageManager.tr("Add a customer, record a payment", "Ongeza mteja, rekodi malipo"), Icons.Default.People, onNavigateToDeni))
         }
-        if (shopOn && (can(Permission.STOCK_TAKE_ADJUST) || can(Permission.EDIT_STOCK))) {
-            add(Entry(AppLanguageManager.tr("Stock", "Akiba"), AppLanguageManager.tr("Add items, buy stock, count", "Ongeza bidhaa, nunua akiba, hesabu"), Icons.Default.Inventory2, onNavigateToStockAudit))
+        if (can(Permission.STOCK_TAKE_ADJUST) || can(Permission.EDIT_STOCK)) {
+            add(Entry(if (isGarage) AppLanguageManager.tr("Spare parts", "Vipuri") else AppLanguageManager.tr("Stock", "Akiba"), AppLanguageManager.tr("Add items, buy stock, count", "Ongeza bidhaa, nunua akiba, hesabu"), Icons.Default.Inventory2, onNavigateToStockAudit))
         }
         if (can(Permission.RECORD_EXPENSE)) {
             add(Entry(AppLanguageManager.tr("Purchases and expenses", "Manunuzi na gharama"), AppLanguageManager.tr("Suppliers, bills, expenses", "Wasambazaji, bili, gharama"), Icons.Default.ShoppingCart, onNavigateToAccounting))
@@ -411,7 +417,7 @@ fun AppShell(
                     if ((shopOn && can(Permission.MAKE_SALE)) || (jobsOn && can(Permission.INTAKE_JOB))) {
                         DrawerItem(
                             icon = Icons.Default.Storefront,
-                            label = AppLanguageManager.tr("Sales / Job orders", "Mauzo / Kazi"),
+                            label = if (isGarage) ordersLabel else AppLanguageManager.tr("Sales and orders", "Mauzo na oda"),
                             trailing = if (salesJobsOpen) Icons.Default.ExpandLess else Icons.Default.ExpandMore
                         ) { salesJobsOpen = !salesJobsOpen }
                         if (salesJobsOpen) {
@@ -419,7 +425,7 @@ fun AppShell(
                                 DrawerItem(Icons.Default.AddShoppingCart, AppLanguageManager.tr("Sales", "Mauzo"), indent = true) { go(onNavigateToPos) }
                             }
                             if (jobsOn && can(Permission.INTAKE_JOB)) {
-                                DrawerItem(Icons.Default.Build, AppLanguageManager.tr("Job orders", "Kazi"), indent = true) { go(onNavigateToJobOrders) }
+                                DrawerItem(Icons.Default.Build, ordersLabel, indent = true) { go(onNavigateToJobOrders) }
                             }
                         }
                     }
@@ -519,6 +525,7 @@ fun AppShell(
                         owed = owedTotal,
                         showNewSale = shopOn && can(Permission.MAKE_SALE),
                         showNewJob = jobsOn && can(Permission.INTAKE_JOB),
+                        newOrderLabel = newOrderLabel,
                         attentionCount = pendings.size,
                         canSeeReports = can(Permission.VIEW_FINANCIAL_REPORTS),
                         canSeeSalesToday = can(Permission.VIEW_FINANCIAL_REPORTS) || can(Permission.MAKE_SALE),
@@ -551,8 +558,8 @@ fun AppShell(
                             if (shopOn && can(Permission.MAKE_SALE)) {
                                 add(Entry(AppLanguageManager.tr("Layaway", "Awali"), AppLanguageManager.tr("Pay in instalments", "Lipa kidogo kidogo"), Icons.Default.Receipt, onNavigateToLayaway))
                             }
-                            if (jobsOn) {
-                                add(Entry(AppLanguageManager.tr("Job order history", "Historia ya kazi"), AppLanguageManager.tr("Find past jobs", "Tafuta kazi za zamani"), Icons.Default.Build, onNavigateToVehicleHistory))
+                            if (isGarage) {
+                                add(Entry(AppLanguageManager.tr("Vehicle history", "Historia ya gari"), AppLanguageManager.tr("Find past jobs", "Tafuta kazi za zamani"), Icons.Default.Build, onNavigateToVehicleHistory))
                             }
                             if (can(Permission.BACKUP_RESTORE)) {
                                 add(Entry(AppLanguageManager.tr("Backup", "Hifadhi nakala"), AppLanguageManager.tr("Save a copy of your data", "Hifadhi nakala ya data"), Icons.Default.CloudUpload) {
@@ -653,6 +660,7 @@ private fun HomeContent(
     owed: Money,
     showNewSale: Boolean,
     showNewJob: Boolean,
+    newOrderLabel: String,
     attentionCount: Int,
     canSeeReports: Boolean,
     canSeeSalesToday: Boolean,
@@ -688,7 +696,7 @@ private fun HomeContent(
             BigButton(AppLanguageManager.tr("New sale", "Mauzo mapya"), Icons.Default.AddShoppingCart, onNewSale)
         }
         if (showNewJob) {
-            BigButton(AppLanguageManager.tr("New job order", "Kazi mpya"), Icons.Default.Build, onNewJob)
+            BigButton(newOrderLabel, Icons.Default.Build, onNewJob)
         }
 
         if (attentionCount > 0) {
@@ -873,9 +881,7 @@ private fun MoreContent(
         }
 
         val header: @Composable () -> Unit = {
-            if (canEditSettings) {
-                ModulesCard(shopOn, jobsOn, onSetModules)
-            }
+            // The kind of company is fixed when it is created, so there are no switches here.
         }
 
         if (gridView) {

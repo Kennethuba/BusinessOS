@@ -101,8 +101,9 @@ fun NavGraph(
                 viewModel = workspaceViewModel,
                 onAddBusiness = { navController.navigate(Screen.SetupWizard.route) },
                 onWorkspaceSelected = {
+                    // Clear every earlier screen, so nothing from the previous company stays on the back stack.
                     navController.navigate(Screen.BusinessHome.route) {
-                        popUpTo(Screen.WorkspaceSwitcher.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onLogout = {
@@ -120,7 +121,7 @@ fun NavGraph(
                 onCancel = { navController.popBackStack() },
                 onDone = {
                     navController.navigate(Screen.BusinessHome.route) {
-                        popUpTo(Screen.WorkspaceSwitcher.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )

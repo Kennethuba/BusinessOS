@@ -206,4 +206,28 @@ class LedgerInvariantTest {
         assertTrue(repo.recordDeniPayment(c.id, Money.ZERO).isFailure)
         assertBooksBalance()
     }
+
+    @Test
+    fun twoCompaniesNeverShareData() = runBlocking {
+        // Company A (the one from setUp) gets an item, a customer and a sale.
+        val itemA = repo.createItem("Hide", Money(100_000), Money(80_000), initialStock = 5).getOrThrow()
+        repo.createCustomer("Mama A", "0722000111").getOrThrow()
+        repo.recordSale(null, null, listOf(SaleLineItem(itemA.id, itemA.name, 1, Money(100_000)))).getOrThrow()
+
+        // Company B is created next, as a garage, with its own opening cash.
+        val b = auth.createBusiness("Garage B", isShopEnabled = false, isGarageEnabled = true, openingCash = Money(25_000)).getOrThrow()
+        fun countFor(table: String, biz: String) =
+            scalar("SELECT COUNT(*) FROM $table WHERE businessId='$biz'")
+        assertEquals(0L, countFor("items", b.id))
+        assertEquals(0L, countFor("customers", b.id))
+        assertEquals(0L, countFor("sales", b.id))
+        assertEquals(25_000L, scalar("SELECT balanceCents FROM accounts WHERE code='1010' AND businessId='${b.id}'"))
+        // A's cash is untouched by B's setup.
+        assertEquals(100_000L + 100_000L, scalar("SELECT balanceCents FROM accounts WHERE code='1010' AND businessId='$bizId'"))
+        // The same phone number can be a customer in both companies.
+        assertTrue(repo.createCustomer("Mama B", "0722000111").isSuccess)
+        assertEquals(1L, countFor("customers", b.id))
+        assertEquals(1L, countFor("customers", bizId))
+        assertBooksBalance()
+    }
 }

@@ -49,7 +49,6 @@ import com.example.businessos.ui.theme.TextPrimary
 import com.example.businessos.ui.theme.TextSecondary
 import com.example.businessos.ui.util.AppLanguageManager
 import com.example.businessos.util.BusinessKind
-import com.example.businessos.util.BusinessKindStore
 import com.example.businessos.util.CompanyLogo
 
 /** Three steps: name and modules, opening balances (optional), what to do next. */
@@ -62,9 +61,7 @@ fun SetupWizardScreen(
 ) {
     var step by rememberSaveable { mutableIntStateOf(0) }
     var name by rememberSaveable { mutableStateOf("") }
-    var useSales by rememberSaveable { mutableStateOf(true) }
-    var useJobOrders by rememberSaveable { mutableStateOf(false) }
-    var kind by rememberSaveable { mutableStateOf(BusinessKind.GENERAL) }
+    var kind by rememberSaveable { mutableStateOf(BusinessKind.GENERAL) } // must pick garage or leather shop
     var logoUri by rememberSaveable { mutableStateOf<String?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val logoPicker = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -79,7 +76,6 @@ fun SetupWizardScreen(
     val cash = parseShillings(cashText)
     val mpesa = parseShillings(mpesaText)
     val balancesValid = cash != null && mpesa != null
-    val modulesValid = useSales || useJobOrders
 
     BackHandler(enabled = !created) {
         if (step > 0) step-- else onCancel()
@@ -134,46 +130,30 @@ fun SetupWizardScreen(
                     )
                     ModuleChoiceRow(
                         title = AppLanguageManager.tr("Auto garage", "Gereji"),
-                        description = AppLanguageManager.tr("Repairs, spare parts, job orders", "Ukarabati, vipuri, kazi za wateja"),
+                        description = AppLanguageManager.tr("Vehicle job orders, spare parts, customers who owe", "Kazi za magari, vipuri, wateja wanaodaiwa"),
                         checked = kind == BusinessKind.GARAGE,
-                        onCheckedChange = { kind = BusinessKind.GARAGE; useSales = true; useJobOrders = true }
+                        onCheckedChange = { kind = BusinessKind.GARAGE }
                     )
                     ModuleChoiceRow(
                         title = AppLanguageManager.tr("Kariakor stall (leather)", "Kibanda cha Kariakor (ngozi)"),
-                        description = AppLanguageManager.tr("Leather, soles and goods; sell and make to order", "Ngozi, soli na bidhaa; uza na tengeneza kwa oda"),
+                        description = AppLanguageManager.tr("Sales, leather and goods in stock, orders to make, layaway", "Mauzo, ngozi na bidhaa, oda za kutengeneza, awali"),
                         checked = kind == BusinessKind.STALL,
-                        onCheckedChange = { kind = BusinessKind.STALL; useSales = true; useJobOrders = true }
+                        onCheckedChange = { kind = BusinessKind.STALL }
                     )
                     OutlinedButton(
                         onClick = { logoPicker.launch("image/*") },
                         modifier = Modifier.fillMaxWidth()
                     ) { Text(if (logoUri == null) AppLanguageManager.tr("Add your logo (optional)", "Ongeza nembo yako (si lazima)") else AppLanguageManager.tr("Logo chosen. Tap to change", "Nembo imechaguliwa. Gusa kubadilisha")) }
                     Text(
-                        AppLanguageManager.tr("What will you use? Pick one or both.", "Utatumia nini? Chagua kimoja au vyote."),
-                        style = MaterialTheme.typography.bodyLarge, color = TextSecondary
-                    )
-                    ModuleChoiceRow(
-                        title = AppLanguageManager.tr("Sales", "Mauzo"),
-                        description = AppLanguageManager.tr("Sell items and keep stock", "Uza bidhaa na utunze akiba"),
-                        checked = useSales,
-                        onCheckedChange = { useSales = it }
-                    )
-                    ModuleChoiceRow(
-                        title = AppLanguageManager.tr("Job orders", "Kazi za wateja"),
-                        description = AppLanguageManager.tr(
-                            "Repairs, orders for customers, or making goods for sale",
-                            "Ukarabati, oda za wateja, au kutengeneza bidhaa za kuuza"
+                        AppLanguageManager.tr(
+                            "Each company is one kind of business with its own features and its own data. For the other kind, add a second company.",
+                            "Kila kampuni ni aina moja ya biashara yenye kazi zake na data yake. Kwa aina nyingine, ongeza kampuni ya pili."
                         ),
-                        checked = useJobOrders,
-                        onCheckedChange = { useJobOrders = it }
-                    )
-                    Text(
-                        AppLanguageManager.tr("You can change this later in Settings.", "Unaweza kubadilisha baadaye kwenye Mipangilio."),
                         style = MaterialTheme.typography.bodyMedium, color = TextMuted
                     )
                     Button(
                         onClick = { step = 1 },
-                        enabled = name.isNotBlank() && modulesValid,
+                        enabled = name.isNotBlank() && kind != BusinessKind.GENERAL,
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
                     ) { Text(AppLanguageManager.tr("Next", "Endelea")) }
@@ -216,12 +196,11 @@ fun SetupWizardScreen(
                         onClick = {
                             viewModel.createBusiness(
                                 name = name,
-                                isShopEnabled = useSales,
-                                isGarageEnabled = useJobOrders,
+                                isShopEnabled = kind == BusinessKind.STALL,
+                                isGarageEnabled = kind == BusinessKind.GARAGE,
                                 openingCash = cash ?: Money.ZERO,
                                 openingMpesa = mpesa ?: Money.ZERO
                             ) { newId ->
-                                BusinessKindStore.set(context, newId, kind)
                                 logoUri?.let { CompanyLogo.save(context, newId, android.net.Uri.parse(it)) }
                                 created = true
                                 step = 2
@@ -247,11 +226,13 @@ fun SetupWizardScreen(
                         style = MaterialTheme.typography.bodyLarge, color = TextSecondary
                     )
                     val steps = buildList {
-                        if (useSales) {
-                            add(AppLanguageManager.tr("Add your items and stock", "Ongeza bidhaa na akiba yako"))
+                        if (kind == BusinessKind.STALL) {
+                            add(AppLanguageManager.tr("Add your leather, soles and goods under Stock", "Ongeza ngozi, soli na bidhaa kwenye Akiba"))
                             add(AppLanguageManager.tr("Make your first sale", "Fanya mauzo ya kwanza"))
+                        } else {
+                            add(AppLanguageManager.tr("Add your spare parts under Spare parts", "Ongeza vipuri kwenye Vipuri"))
+                            add(AppLanguageManager.tr("Create your first job order", "Unda kazi ya kwanza"))
                         }
-                        if (useJobOrders) add(AppLanguageManager.tr("Create your first job order", "Unda kazi ya kwanza"))
                         add(AppLanguageManager.tr("Add your staff under Users", "Ongeza wafanyakazi kwenye Watumiaji"))
                     }
                     steps.forEachIndexed { i, t ->

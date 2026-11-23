@@ -11,18 +11,6 @@ import java.io.File
 /** What kind of business this company is. Used only to suggest categories and units. */
 enum class BusinessKind { GENERAL, GARAGE, STALL }
 
-object BusinessKindStore {
-    private const val PREFS = "business_kinds"
-    fun get(context: Context, businessId: String?): BusinessKind {
-        if (businessId == null) return BusinessKind.GENERAL
-        val v = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(businessId, null)
-        return try { if (v == null) BusinessKind.GENERAL else BusinessKind.valueOf(v) } catch (e: Exception) { BusinessKind.GENERAL }
-    }
-    fun set(context: Context, businessId: String, kind: BusinessKind) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(businessId, kind.name).apply()
-    }
-}
-
 /** A company logo kept as a small picture file on the phone. */
 object CompanyLogo {
     /** Changes whenever a logo is saved or removed, so screens showing it redraw. */

@@ -1,5 +1,9 @@
+@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+
 package com.example.businessos.data.repository
 
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import com.example.businessos.data.model.DocumentType
 import com.example.businessos.data.model.PaymentType
 import com.example.businessos.data.local.entity.SaleItemEntity
@@ -128,9 +132,14 @@ class BusinessOsRepository(
 
     // ── Business & Observables ───────────────────────────────────────────────
 
+    /** The active company's id, changing whenever the user switches company. */
+    private fun activeBusinessFlow(): Flow<String?> =
+        authRepository.session.map { it?.activeBusinessId }.distinctUntilChanged()
+
     fun observeCurrentBusiness(): Flow<BusinessEntity?> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(null)
-        return businessDao.observeBusinessById(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(null) else businessDao.observeBusinessById(bizId)
+        }
     }
 
     suspend fun getBusiness(businessId: String): BusinessEntity? =
@@ -163,23 +172,27 @@ class BusinessOsRepository(
     }
 
     fun observeItems(): Flow<List<ItemEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return itemDao.observeItems(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else itemDao.observeItems(bizId)
+        }
     }
 
     fun observeCustomers(): Flow<List<CustomerEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return customerDao.observeCustomersForBusiness(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else customerDao.observeCustomersForBusiness(bizId)
+        }
     }
 
     fun observeDeniLedger(): Flow<List<CustomerEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return customerDao.observeDeniLedger(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else customerDao.observeDeniLedger(bizId)
+        }
     }
 
     fun observeSales(): Flow<List<SaleEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return saleDao.observeSalesForBusiness(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else saleDao.observeSalesForBusiness(bizId)
+        }
     }
 
     fun observeJobParts(jobCardId: String): Flow<List<PartItem>> =
@@ -209,43 +222,51 @@ class BusinessOsRepository(
         }
 
     fun observeJobCards(): Flow<List<JobCardEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return jobCardDao.observeJobCardsForBusiness(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else jobCardDao.observeJobCardsForBusiness(bizId)
+        }
     }
 
     fun observeExpenses(): Flow<List<ExpenseEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return expenseDao.observeExpenses(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else expenseDao.observeExpenses(bizId)
+        }
     }
 
     fun observeStaffMembers(): Flow<List<MemberWithUser>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return businessMemberDao.observeMembersWithUser(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else businessMemberDao.observeMembersWithUser(bizId)
+        }
     }
 
     fun observeAuditLogs(): Flow<List<AuditLogEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return auditLogDao.observeAuditLogsForBusiness(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else auditLogDao.observeAuditLogsForBusiness(bizId)
+        }
     }
 
     fun observeAccounts(): Flow<List<AccountEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return accountDao.observeAccounts(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else accountDao.observeAccounts(bizId)
+        }
     }
 
     fun observeJournalEntries(): Flow<List<JournalEntryEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return journalEntryDao.observeJournalEntries(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else journalEntryDao.observeJournalEntries(bizId)
+        }
     }
 
     fun observeInvoices(): Flow<List<InvoiceEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return invoiceDao.observeInvoices(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else invoiceDao.observeInvoices(bizId)
+        }
     }
 
     fun observeSuppliers(): Flow<List<SupplierEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return supplierDao.observeSuppliers(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else supplierDao.observeSuppliers(bizId)
+        }
     }
 
     suspend fun getSaleItems(saleId: String): List<SaleItemEntity> = saleItemDao.getBySale(saleId)
@@ -254,18 +275,21 @@ class BusinessOsRepository(
         businessDao.getBusinessById(getActiveBusinessId())?.name.orEmpty()
 
     fun observePayments(): Flow<List<PaymentEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return paymentDao.observePayments(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else paymentDao.observePayments(bizId)
+        }
     }
 
     fun observeWagePayments(): Flow<List<WagePaymentEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return wagePaymentDao.observeWagePayments(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else wagePaymentDao.observeWagePayments(bizId)
+        }
     }
 
     fun observeLayaways(): Flow<List<LayawayEntity>> {
-        val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
-        return layawayDao.observeLayaways(bizId)
+        return activeBusinessFlow().flatMapLatest { bizId ->
+            if (bizId == null) flowOf(emptyList()) else layawayDao.observeLayaways(bizId)
+        }
     }
 
     // ── Item / Inventory Operations ──────────────────────────────────────────
