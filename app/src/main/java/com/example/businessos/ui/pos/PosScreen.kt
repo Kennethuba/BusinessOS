@@ -157,7 +157,7 @@ fun PosScreen(
                     containerColor = AmberAccent,
                     contentColor = TextOnAccent
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Inventory Item")
+                    Icon(Icons.Default.Add, contentDescription = AppLanguageManager.tr("Add Inventory Item", "Ongeza bidhaa"))
                 }
             }
         }
@@ -168,7 +168,7 @@ fun PosScreen(
                 .padding(padding)
         ) {
             BusinessOsTopBar(
-                title = "Kariakor POS",
+                title = AppLanguageManager.tr("Sales", "Mauzo"),
                 businessName = session?.activeBusinessName,
                 role = session?.activeRole,
                 onSwitchWorkspace = onSwitchWorkspace
@@ -183,12 +183,12 @@ fun PosScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { viewModel.setSearchQuery(it) },
-                    placeholder = { Text("Search shoes, spares, items...", color = TextMuted) },
+                    placeholder = { Text(AppLanguageManager.tr("Search shoes, spares, items...", "Tafuta bidhaa..."), color = TextMuted) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = AmberAccent) },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = TextMuted)
+                                Icon(Icons.Default.Clear, contentDescription = AppLanguageManager.tr("Clear", "Futa"), tint = TextMuted)
                             }
                         }
                     },
@@ -419,7 +419,7 @@ fun PosScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Tap to view items & toggle prices",
+                                    text = AppLanguageManager.tr("Tap to view items & toggle prices", "Gusa kuona bidhaa na kubadilisha bei"),
                                     fontSize = 12.sp,
                                     color = TealAccent
                                 )
@@ -436,7 +436,7 @@ fun PosScreen(
                         ) {
                             Icon(Icons.Default.Payment, contentDescription = null)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Checkout", fontWeight = FontWeight.Bold)
+                            Text(AppLanguageManager.tr("Checkout", "Lipa"), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -589,7 +589,7 @@ fun PosItemGridCard(
                 ) {
                     Icon(
                         Icons.Default.AddCircle,
-                        contentDescription = "Add",
+                        contentDescription = AppLanguageManager.tr("Add", "Ongeza"),
                         tint = AmberAccent,
                         modifier = Modifier.size(24.dp)
                     )
@@ -636,14 +636,14 @@ fun PosItemRow(
                 Spacer(modifier = Modifier.height(3.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Retail: KSh ${item.retailPrice.toInt()}",
+                        text = AppLanguageManager.tr("Retail: KSh ${item.retailPrice.toInt()}", "Rejareja: KSh ${item.retailPrice.toInt()}"),
                         color = StatusGreen,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Wholesale: KSh ${item.wholesalePrice.toInt()}",
+                        text = AppLanguageManager.tr("Wholesale: KSh ${item.wholesalePrice.toInt()}", "Jumla: KSh ${item.wholesalePrice.toInt()}"),
                         color = AmberAccent,
                         fontSize = 14.sp
                     )
@@ -673,7 +673,7 @@ fun PosItemRow(
                 }
             } else {
                 IconButton(onClick = onAddToCart) {
-                    Icon(Icons.Default.Add, contentDescription = "Add", tint = AmberAccent)
+                    Icon(Icons.Default.Add, contentDescription = AppLanguageManager.tr("Add", "Ongeza"), tint = AmberAccent)
                 }
             }
         }
@@ -704,13 +704,13 @@ fun CartSheetContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Current Sale Items",
+                text = AppLanguageManager.tr("Current Sale Items", "Bidhaa za mauzo haya"),
                 style = MaterialTheme.typography.titleLarge,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold
             )
             TextButton(onClick = onClear) {
-                Text("Clear All", color = StatusRed)
+                Text(AppLanguageManager.tr("Clear All", "Futa zote"), color = StatusRed)
             }
         }
 
@@ -760,7 +760,7 @@ fun CartSheetContent(
                                 modifier = Modifier.clickable { onTogglePriceType(cartItem.item.id) }
                             ) {
                                 Text(
-                                    text = if (cartItem.priceType == PriceType.RETAIL) "Retail @ ${cartItem.unitPrice.formatCompact()}" else "Wholesale @ ${cartItem.unitPrice.formatCompact()}",
+                                    text = if (cartItem.priceType == PriceType.RETAIL) AppLanguageManager.tr("Retail @ ${cartItem.unitPrice.formatCompact()}", "Rejareja @ ${cartItem.unitPrice.formatCompact()}") else AppLanguageManager.tr("Wholesale @ ${cartItem.unitPrice.formatCompact()}", "Jumla @ ${cartItem.unitPrice.formatCompact()}"),
                                     color = if (cartItem.priceType == PriceType.RETAIL) StatusGreen else AmberAccent,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
@@ -773,13 +773,13 @@ fun CartSheetContent(
                                     overrideTargetId = cartItem.item.id
                                     overridePriceInput = cartItem.unitPrice.toString()
                                 }) {
-                                    Icon(Icons.Default.Edit, contentDescription = "Override", tint = TextMuted, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Default.Edit, contentDescription = AppLanguageManager.tr("Override", "Badilisha bei"), tint = TextMuted, modifier = Modifier.size(16.dp))
                                 }
                             }
 
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = { onQtyDelta(cartItem.item.id, -1) }) {
-                                    Icon(Icons.Default.Remove, contentDescription = "Minus", tint = TextPrimary, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.Remove, contentDescription = AppLanguageManager.tr("Minus", "Punguza"), tint = TextPrimary, modifier = Modifier.size(18.dp))
                                 }
                                 Text(
                                     text = "${cartItem.qty}",
@@ -788,7 +788,7 @@ fun CartSheetContent(
                                     modifier = Modifier.padding(horizontal = 4.dp)
                                 )
                                 IconButton(onClick = { onQtyDelta(cartItem.item.id, 1) }) {
-                                    Icon(Icons.Default.Add, contentDescription = "Plus", tint = AmberAccent, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.Add, contentDescription = AppLanguageManager.tr("Plus", "Ongeza"), tint = AmberAccent, modifier = Modifier.size(18.dp))
                                 }
                             }
                         }
@@ -807,7 +807,7 @@ fun CartSheetContent(
             colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent),
             shape = RoundedCornerShape(10.dp)
         ) {
-            Text("Proceed to Payment", fontWeight = FontWeight.Bold)
+            Text(AppLanguageManager.tr("Proceed to Payment", "Endelea kulipa"), fontWeight = FontWeight.Bold)
         }
     }
 
@@ -815,15 +815,15 @@ fun CartSheetContent(
         FullScreenForm(
             onDismissRequest = { overrideTargetId = null },
             containerColor = DarkSurface,
-            title = { Text("Manager Price Override", color = TextPrimary) },
+            title = { Text(AppLanguageManager.tr("Manager Price Override", "Badilisha bei (meneja)"), color = TextPrimary) },
             text = {
                 Column {
-                    Text("Enter custom unit price (will be audit logged).", color = TextSecondary, fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("Enter custom unit price (will be audit logged).", "Weka bei mpya (itarekodiwa)."), color = TextSecondary, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = overridePriceInput,
                         onValueChange = { overridePriceInput = it },
-                        label = { Text("Price (KSh)") },
+                        label = { Text(AppLanguageManager.tr("Price (KSh)", "Bei (KSh)")) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -846,12 +846,12 @@ fun CartSheetContent(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
                 ) {
-                    Text("Apply")
+                    Text(AppLanguageManager.tr("Apply", "Tumia"))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { overrideTargetId = null }) {
-                    Text("Cancel", color = TextSecondary)
+                    Text(AppLanguageManager.tr("Cancel", AppLanguageManager.tr("Cancel", "Ghairi")), color = TextSecondary)
                 }
             }
         )
@@ -893,7 +893,7 @@ fun CheckoutDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("PAYABLE AMOUNT", style = MaterialTheme.typography.labelSmall, color = TealAccent)
+                            Text(AppLanguageManager.tr("Amount to pay", "Kiasi cha kulipa"), style = MaterialTheme.typography.labelSmall, color = TealAccent)
                             Text(totalAmount.formatCompact(), style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.Bold)
                         }
                     }
@@ -902,7 +902,7 @@ fun CheckoutDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "SELECT PAYMENT METHOD",
+                    text = AppLanguageManager.tr("Payment method", "Njia ya malipo"),
                     style = MaterialTheme.typography.labelSmall,
                     color = TextMuted
                 )
@@ -914,13 +914,13 @@ fun CheckoutDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     PaymentMethodPill(
-                        label = "CASH",
+                        label = AppLanguageManager.tr("Cash", "Taslimu"),
                         isSelected = selectedMethod == PaymentMethod.CASH,
                         onClick = { selectedMethod = PaymentMethod.CASH },
                         modifier = Modifier.weight(1f)
                     )
                     PaymentMethodPill(
-                        label = "M-PESA",
+                        label = AppLanguageManager.tr("M-Pesa", "M-Pesa"),
                         isSelected = selectedMethod == PaymentMethod.MPESA,
                         onClick = { selectedMethod = PaymentMethod.MPESA },
                         modifier = Modifier.weight(1f)
@@ -934,13 +934,13 @@ fun CheckoutDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     PaymentMethodPill(
-                        label = "SPLIT",
+                        label = AppLanguageManager.tr("Split", "Gawanya"),
                         isSelected = selectedMethod == PaymentMethod.SPLIT,
                         onClick = { selectedMethod = PaymentMethod.SPLIT },
                         modifier = Modifier.weight(1f)
                     )
                     PaymentMethodPill(
-                        label = "CREDIT (DENI)",
+                        label = AppLanguageManager.tr("On credit", "Deni"),
                         isSelected = selectedMethod == PaymentMethod.CREDIT,
                         onClick = { selectedMethod = PaymentMethod.CREDIT },
                         modifier = Modifier.weight(1f)
@@ -958,7 +958,7 @@ fun CheckoutDialog(
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Text(
-                                text = "Bandika SMS ya M-Pesa (Auto-Extract)",
+                                text = AppLanguageManager.tr("Paste M-Pesa SMS (fills in for you)", "Bandika SMS ya M-Pesa (inajaza yenyewe)"),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = StatusGreen
@@ -973,7 +973,7 @@ fun CheckoutDialog(
                                         mpesaCode = parsed.code
                                     }
                                 },
-                                placeholder = { Text("Paste M-Pesa SMS hapa...", fontSize = 14.sp) },
+                                placeholder = { Text(AppLanguageManager.tr("Paste the M-Pesa SMS here...", "Bandika SMS ya M-Pesa hapa..."), fontSize = 14.sp) },
                                 maxLines = 2,
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -990,8 +990,8 @@ fun CheckoutDialog(
                     OutlinedTextField(
                         value = mpesaCode,
                         onValueChange = { mpesaCode = it.uppercase() },
-                        label = { Text("M-Pesa Confirmation Code") },
-                        placeholder = { Text("e.g. QKH719JXZ") },
+                        label = { Text(AppLanguageManager.tr("M-Pesa confirmation code", "Msimbo wa M-Pesa")) },
+                        placeholder = { Text(AppLanguageManager.tr("e.g. QKH719JXZ", "mf. QKH719JXZ")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -1007,7 +1007,7 @@ fun CheckoutDialog(
                 if (selectedMethod == PaymentMethod.CREDIT) {
                     Spacer(modifier = Modifier.height(14.dp))
                     Text(
-                        text = "SELECT DEBTOR (CUSTOMER)",
+                        text = AppLanguageManager.tr("Customer who owes", "Mteja anayedaiwa"),
                         style = MaterialTheme.typography.labelSmall,
                         color = AmberAccent
                     )
@@ -1044,7 +1044,7 @@ fun CheckoutDialog(
                                     text = {
                                         Column {
                                             Text(cust.name, fontWeight = FontWeight.Bold, color = TextPrimary)
-                                            Text("${cust.phone} • Bal: KSh ${cust.balance.toInt()}", fontSize = 12.sp, color = TextSecondary)
+                                            Text(AppLanguageManager.tr("${cust.phone} - Owes: KSh ${cust.balance.toInt()}", "${cust.phone} - Deni: KSh ${cust.balance.toInt()}"), fontSize = 12.sp, color = TextSecondary)
                                         }
                                     },
                                     onClick = {
@@ -1065,12 +1065,12 @@ fun CheckoutDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
             ) {
-                Text("Confirm Sale")
+                Text(AppLanguageManager.tr("Confirm Sale", "Thibitisha mauzo"))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextSecondary)
+                Text(AppLanguageManager.tr("Cancel", AppLanguageManager.tr("Cancel", "Ghairi")), color = TextSecondary)
             }
         }
     )
@@ -1139,8 +1139,8 @@ fun AddItemDialog(
         containerColor = DarkSurface,
         title = {
             Column {
-                Text("Ongeza Bidhaa Dukani (Add Stock)", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                Text("Picha na maelezo huhifadhiwa ndani ya app pekee", color = TextMuted, fontSize = 12.sp)
+                Text(AppLanguageManager.tr("Add item", "Ongeza bidhaa"), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                Text(AppLanguageManager.tr("Photos stay inside the app only", "Picha huhifadhiwa ndani ya programu pekee"), color = TextMuted, fontSize = 12.sp)
             }
         },
         text = {
@@ -1165,7 +1165,7 @@ fun AddItemDialog(
                         if (bmp != null) {
                             Image(
                                 bitmap = bmp.asImageBitmap(),
-                                contentDescription = "Captured Item Photo",
+                                contentDescription = AppLanguageManager.tr("Item photo", "Picha ya bidhaa"),
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .size(46.dp)
@@ -1174,7 +1174,7 @@ fun AddItemDialog(
                             Spacer(Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(AppLanguageManager.tr("Photo taken", "Picha imepigwa"), color = StatusGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                Text("Gusa hapa kubadilisha picha", color = TextSecondary, fontSize = 12.sp)
+                                Text(AppLanguageManager.tr("Tap here to change the photo", "Gusa hapa kubadilisha picha"), color = TextSecondary, fontSize = 12.sp)
                             }
                         } else {
                             Box(
@@ -1184,19 +1184,19 @@ fun AddItemDialog(
                                     .background(AmberAccent.copy(alpha = 0.15f)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.PhotoCamera, contentDescription = "Camera", tint = AmberAccent)
+                                Icon(Icons.Default.PhotoCamera, contentDescription = AppLanguageManager.tr("Camera", "Kamera"), tint = AmberAccent)
                             }
                             Spacer(Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Piga Picha ya Bidhaa (Camera)", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                Text("Hifadhi picha ya bidhaa ndani ya app bila kujaza gallery", color = TextMuted, fontSize = 12.sp)
+                                Text(AppLanguageManager.tr("Take a photo of the item", "Piga picha ya bidhaa"), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text(AppLanguageManager.tr("Saved inside the app, not in your gallery", "Inahifadhiwa ndani ya programu, si kwenye gallery"), color = TextMuted, fontSize = 12.sp)
                             }
                         }
                     }
                 }
 
                 Text(
-                    text = "Chagua Kiolezo (Quick Preset):",
+                    text = AppLanguageManager.tr("Quick pick:", "Chagua haraka:"),
                     fontSize = 12.sp,
                     color = AmberAccent,
                     fontWeight = FontWeight.Bold
@@ -1231,8 +1231,8 @@ fun AddItemDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Jina la Bidhaa (Item Name)") },
-                    placeholder = { Text("e.g. Safari Boots Size 42") },
+                    label = { Text(AppLanguageManager.tr("Item name", "Jina la bidhaa")) },
+                    placeholder = { Text(AppLanguageManager.tr("e.g. Safari boots size 42", "mf. Viatu vya safari size 42")) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -1247,7 +1247,7 @@ fun AddItemDialog(
                     OutlinedTextField(
                         value = retailPrice,
                         onValueChange = { retailPrice = it },
-                        label = { Text("Bei ya Rejareja (Retail)") },
+                        label = { Text(AppLanguageManager.tr("Retail price", "Bei ya rejareja")) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -1262,7 +1262,7 @@ fun AddItemDialog(
                     OutlinedTextField(
                         value = wholesalePrice,
                         onValueChange = { wholesalePrice = it },
-                        label = { Text("Bei ya Jumla (Wholesale)") },
+                        label = { Text(AppLanguageManager.tr("Wholesale price", "Bei ya jumla")) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -1279,7 +1279,7 @@ fun AddItemDialog(
                     OutlinedTextField(
                         value = stockQty,
                         onValueChange = { stockQty = it },
-                        label = { Text("Idadi ya Mwanzo (Qty)") },
+                        label = { Text(AppLanguageManager.tr("Starting quantity", "Idadi ya mwanzo")) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -1294,7 +1294,7 @@ fun AddItemDialog(
                     OutlinedTextField(
                         value = minStockLevel,
                         onValueChange = { minStockLevel = it },
-                        label = { Text("Kiwango cha Chini (Alert <=)") },
+                        label = { Text(AppLanguageManager.tr("Warn me at or below", "Nionye ikiwa chini ya")) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -1321,11 +1321,11 @@ fun AddItemDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
             ) {
-                Text("Hifadhi Bidhaa", fontWeight = FontWeight.Bold)
+                Text(AppLanguageManager.tr("Save item", "Hifadhi bidhaa"), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Ghairi", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary) }
         }
     )
 }

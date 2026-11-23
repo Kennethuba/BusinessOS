@@ -140,7 +140,7 @@ fun DeniLedgerScreen(
                 containerColor = AmberAccent,
                 contentColor = TextOnAccent
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Customer")
+                Icon(Icons.Default.Add, contentDescription = AppLanguageManager.tr("Add Customer", "Ongeza mteja"))
             }
         }
     ) { padding ->
@@ -150,7 +150,7 @@ fun DeniLedgerScreen(
                 .padding(padding)
         ) {
             BusinessOsTopBar(
-                title = "Deni Ledger (Madeni)",
+                title = AppLanguageManager.tr("Customers who owe", "Wateja wanaodaiwa"),
                 businessName = session?.activeBusinessName,
                 role = session?.activeRole,
                 onSwitchWorkspace = onSwitchWorkspace
@@ -174,7 +174,7 @@ fun DeniLedgerScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = "JUMLA YA MADENI (CREDIT OWED)",
+                                    text = AppLanguageManager.tr("Total owed", "Jumla ya madeni"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = AmberAccent,
                                     fontWeight = FontWeight.Bold
@@ -204,7 +204,7 @@ fun DeniLedgerScreen(
                                     .padding(horizontal = 12.dp, vertical = 8.dp)
                             ) {
                                 Text(
-                                    text = "${deniCustomers.size} Wateja",
+                                    text = AppLanguageManager.tr("${deniCustomers.size} customers", "wateja ${deniCustomers.size}"),
                                     color = AmberAccent,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp
@@ -223,7 +223,7 @@ fun DeniLedgerScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "ORODHA YA MADENI (${deniCustomers.size})",
+                    text = AppLanguageManager.tr("Customers who owe (${deniCustomers.size})", "Orodha ya madeni (${deniCustomers.size})"),
                     style = MaterialTheme.typography.labelSmall,
                     color = TextMuted,
                     fontWeight = FontWeight.Bold
@@ -239,7 +239,7 @@ fun DeniLedgerScreen(
                     ) {
                         Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(14.dp), tint = StatusGreen)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Kumbusha Wote WhatsApp", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(AppLanguageManager.tr("Remind all on WhatsApp", "Kumbusha wote WhatsApp"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -290,14 +290,14 @@ fun DeniLedgerScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "Hakuna Deni Lililobaki",
+                                    text = AppLanguageManager.tr("Nobody owes you", "Hakuna deni lililobaki"),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = StatusGreen,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Wateja wote wamelipa au bado hujaweka mauzo ya deni.",
+                                    text = AppLanguageManager.tr("Everyone has paid, or no credit sales yet.", "Wateja wote wamelipa au bado hujaweka mauzo ya deni."),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = TextSecondary
                                 )
@@ -341,7 +341,7 @@ fun DeniLedgerScreen(
                 containerColor = DarkSurface,
                 title = {
                     Text(
-                        text = "Lipa Deni • ${paymentTargetCustomer?.name}",
+                        text = AppLanguageManager.tr("Take payment: ${paymentTargetCustomer?.name}", "Lipa deni: ${paymentTargetCustomer?.name}"),
                         style = MaterialTheme.typography.titleLarge,
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold
@@ -350,14 +350,14 @@ fun DeniLedgerScreen(
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            text = "Deni Lililopo: KSh ${paymentTargetCustomer?.balance?.toInt()}",
+                            text = AppLanguageManager.tr("Owes: KSh ${paymentTargetCustomer?.balance?.toInt()}", "Deni lililopo: KSh ${paymentTargetCustomer?.balance?.toInt()}"),
                             color = AmberAccent,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
                         )
 
                         Text(
-                            text = "Njia ya Malipo:",
+                            text = AppLanguageManager.tr("Payment method:", "Njia ya malipo:"),
                             fontSize = 14.sp,
                             color = TextSecondary,
                             fontWeight = FontWeight.Bold
@@ -401,7 +401,7 @@ fun DeniLedgerScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "SMS ya M-Pesa (Auto-Fill):",
+                                            text = AppLanguageManager.tr("M-Pesa SMS (fills in for you):", "SMS ya M-Pesa (inajaza yenyewe):"),
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = StatusGreen
@@ -409,7 +409,7 @@ fun DeniLedgerScreen(
                                         TextButton(onClick = { showMpesaPasteBox = !showMpesaPasteBox }) {
                                             Icon(Icons.Default.ContentPaste, contentDescription = null, tint = StatusGreen, modifier = Modifier.size(14.dp))
                                             Spacer(Modifier.width(4.dp))
-                                            Text(if (showMpesaPasteBox) "Funga" else "Bandika SMS", color = StatusGreen, fontSize = 12.sp)
+                                            Text(if (showMpesaPasteBox) AppLanguageManager.tr("Close", "Funga") else AppLanguageManager.tr("Paste SMS", "Bandika SMS"), color = StatusGreen, fontSize = 12.sp)
                                         }
                                     }
 
@@ -429,7 +429,7 @@ fun DeniLedgerScreen(
                                                     }
                                                 }
                                             },
-                                            label = { Text("Bandika SMS ya M-Pesa hapa...") },
+                                            label = { Text(AppLanguageManager.tr("Paste the M-Pesa SMS here...", "Bandika SMS ya M-Pesa hapa...")) },
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = StatusGreen,
                                                 unfocusedBorderColor = DarkBorder,
@@ -464,7 +464,7 @@ fun DeniLedgerScreen(
                                     OutlinedTextField(
                                         value = mpesaCodeInput,
                                         onValueChange = { mpesaCodeInput = it.uppercase() },
-                                        label = { Text("M-Pesa Reference Code") },
+                                        label = { Text(AppLanguageManager.tr("M-Pesa code", "Msimbo wa M-Pesa")) },
                                         singleLine = true,
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedBorderColor = StatusGreen,
@@ -482,7 +482,7 @@ fun DeniLedgerScreen(
                         OutlinedTextField(
                             value = paymentAmountInput,
                             onValueChange = { paymentAmountInput = it },
-                            label = { Text("Kiasi Kilicholipwa (KSh)") },
+                            label = { Text(AppLanguageManager.tr("Amount paid (KSh)", "Kiasi kilicholipwa (KSh)")) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
@@ -516,7 +516,7 @@ fun DeniLedgerScreen(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = StatusGreen, contentColor = TextOnAccent)
                     ) {
-                        Text("Hifadhi Malipo", fontWeight = FontWeight.Bold)
+                        Text(AppLanguageManager.tr("Save payment", "Hifadhi malipo"), fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
@@ -527,7 +527,7 @@ fun DeniLedgerScreen(
                         mpesaCodeInput = ""
                         mpesaSmsInput = ""
                     }) {
-                        Text("Ghairi (Cancel)", color = TextSecondary)
+                        Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary)
                     }
                 }
             )
@@ -540,7 +540,7 @@ fun DeniLedgerScreen(
                 containerColor = DarkSurface,
                 title = {
                     Text(
-                        text = "Kumbusha Wateja WhatsApp (${debtors.size})",
+                        text = AppLanguageManager.tr("Remind customers on WhatsApp (${debtors.size})", "Kumbusha wateja WhatsApp (${debtors.size})"),
                         style = MaterialTheme.typography.titleLarge,
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold
@@ -549,7 +549,7 @@ fun DeniLedgerScreen(
                 text = {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            text = "Tuma ujumbe wa makubaliano ya deni kwa kila mteja kwa mbofyo 1:",
+                            text = AppLanguageManager.tr("Send each customer a reminder with one tap:", "Tuma ujumbe wa kumbusho kwa kila mteja kwa mbofyo 1:"),
                             fontSize = 14.sp,
                             color = TextSecondary
                         )
@@ -576,7 +576,7 @@ fun DeniLedgerScreen(
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(cust.name, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 14.sp)
-                                            Text("Deni: KSh ${cust.balance.toInt()} • ${cust.phone}", color = AmberAccent, fontSize = 12.sp)
+                                            Text(AppLanguageManager.tr("Owes: KSh ${cust.balance.toInt()} - ${cust.phone}", "Deni: KSh ${cust.balance.toInt()} - ${cust.phone}"), color = AmberAccent, fontSize = 12.sp)
                                         }
 
                                         Button(
@@ -597,7 +597,7 @@ fun DeniLedgerScreen(
                                         ) {
                                             Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(13.dp))
                                             Spacer(Modifier.width(4.dp))
-                                            Text("Tuma", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            Text(AppLanguageManager.tr("Send", "Tuma"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                         }
                                     }
                                 }
@@ -607,7 +607,7 @@ fun DeniLedgerScreen(
                 },
                 confirmButton = {
                     TextButton(onClick = { showBulkReminderDialog = false }) {
-                        Text("Imekamilika", color = AmberAccent, fontWeight = FontWeight.Bold)
+                        Text(AppLanguageManager.tr("Done", "Imekamilika"), color = AmberAccent, fontWeight = FontWeight.Bold)
                     }
                 }
             )
@@ -665,7 +665,7 @@ fun DeniCustomerCard(
                         fontWeight = FontWeight.ExtraBold
                     )
                     Text(
-                        text = "Deni Linadaiwa",
+                        text = AppLanguageManager.tr("Owes", "Deni linadaiwa"),
                         fontSize = 12.sp,
                         color = TextMuted
                     )
@@ -704,7 +704,7 @@ fun DeniCustomerCard(
                     }
 
                     Text(
-                        text = "Badilisha",
+                        text = AppLanguageManager.tr("Change", "Badilisha"),
                         color = AmberAccent,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
@@ -718,12 +718,12 @@ fun DeniCustomerCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Bado hujaweka tarehe ya makubaliano",
+                        text = AppLanguageManager.tr("No due date set yet", "Bado hujaweka tarehe ya makubaliano"),
                         color = TextMuted,
                         fontSize = 12.sp
                     )
                     Text(
-                        text = "+ Weka Tarehe",
+                        text = AppLanguageManager.tr("Set a date", "Weka tarehe"),
                         color = AmberAccent,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
@@ -735,7 +735,7 @@ fun DeniCustomerCard(
             if (customer.notes.isNotBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Maelezo: ${customer.notes}",
+                    text = AppLanguageManager.tr("Notes: ${customer.notes}", "Maelezo: ${customer.notes}"),
                     color = TextSecondary,
                     fontSize = 12.sp
                 )
@@ -768,7 +768,7 @@ fun DeniCustomerCard(
                 ) {
                     Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("WhatsApp Kikumbusho", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(AppLanguageManager.tr("WhatsApp reminder", "Kikumbusho cha WhatsApp"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Button(
@@ -782,7 +782,7 @@ fun DeniCustomerCard(
                 ) {
                     Icon(Icons.Default.Payment, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Lipa Deni", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(AppLanguageManager.tr("Take payment", "Lipa deni"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -806,7 +806,7 @@ fun SetDueDateDialog(
         containerColor = DarkSurface,
         title = {
             Text(
-                text = "Tarehe ya Makubaliano • ${customer.name}",
+                text = AppLanguageManager.tr("Due date: ${customer.name}", "Tarehe ya makubaliano: ${customer.name}"),
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
@@ -815,7 +815,7 @@ fun SetDueDateDialog(
         text = {
             Column {
                 Text(
-                    text = "Chagua lini mteja anatarajiwa kukamilisha deni hili:",
+                    text = AppLanguageManager.tr("Choose when the customer should finish paying:", "Chagua lini mteja anatarajiwa kukamilisha deni hili:"),
                     color = TextSecondary,
                     fontSize = 14.sp
                 )
@@ -855,7 +855,7 @@ fun SetDueDateDialog(
 
                 if (selectedDueDate != null) {
                     Text(
-                        text = "Tarehe iliyochaguliwa: ${dateFormat.format(Date(selectedDueDate!!))}",
+                        text = AppLanguageManager.tr("Chosen date: ${dateFormat.format(Date(selectedDueDate!!))}", "Tarehe iliyochaguliwa: ${dateFormat.format(Date(selectedDueDate!!))}"),
                         color = TealAccent,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
@@ -867,8 +867,8 @@ fun SetDueDateDialog(
                 OutlinedTextField(
                     value = notesInput,
                     onValueChange = { notesInput = it },
-                    label = { Text("Maelezo ya makubaliano") },
-                    placeholder = { Text("Mfano: Aliahidi kulipa baada ya mshahara") },
+                    label = { Text(AppLanguageManager.tr("Notes", "Maelezo")) },
+                    placeholder = { Text(AppLanguageManager.tr("e.g. Promised to pay after payday", "Mfano: Aliahidi kulipa baada ya mshahara")) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AmberAccent,
                         unfocusedBorderColor = DarkBorder,
@@ -882,7 +882,7 @@ fun SetDueDateDialog(
                 if (selectedDueDate != null) {
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Ondoa tarehe ya makubaliano",
+                        text = AppLanguageManager.tr("Remove the date", "Ondoa tarehe"),
                         color = StatusRed,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
@@ -896,7 +896,7 @@ fun SetDueDateDialog(
                 onClick = { onSave(selectedDueDate, notesInput) },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
             ) {
-                Text("Hifadhi", fontWeight = FontWeight.Bold)
+                Text(AppLanguageManager.tr("Save", "Hifadhi"), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
@@ -923,14 +923,14 @@ fun AddCustomerDialog(
     FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
-        title = { Text("Ongeza Mteja Mpya / Deni", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = { Text(AppLanguageManager.tr("New customer", "Mteja mpya"), color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Jina la Mteja") },
-                    placeholder = { Text("Mfano: Mama Boi Kibanda 4") },
+                    label = { Text(AppLanguageManager.tr("Customer name", "Jina la mteja")) },
+                    placeholder = { Text(AppLanguageManager.tr("e.g. Mama Boi, stall 4", "Mfano: Mama Boi Kibanda 4")) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -946,7 +946,7 @@ fun AddCustomerDialog(
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
-                    label = { Text("Nambari ya Simu") },
+                    label = { Text(AppLanguageManager.tr("Phone number", "Nambari ya simu")) },
                     placeholder = { Text("0712345678") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
@@ -964,7 +964,7 @@ fun AddCustomerDialog(
                 OutlinedTextField(
                     value = initialBalance,
                     onValueChange = { initialBalance = it },
-                    label = { Text("Kiasi cha Deni la Kwanza (KSh)") },
+                    label = { Text(AppLanguageManager.tr("Amount owed now (KSh)", "Kiasi cha deni la kwanza (KSh)")) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -979,7 +979,7 @@ fun AddCustomerDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "Lini anatarajiwa kulipa? (Due Date):",
+                    text = AppLanguageManager.tr("When will they pay?", "Lini anatarajiwa kulipa?"),
                     color = TextSecondary,
                     fontSize = 12.sp
                 )
@@ -1026,7 +1026,7 @@ fun AddCustomerDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
             ) {
-                Text("Hifadhi Mteja", fontWeight = FontWeight.Bold)
+                Text(AppLanguageManager.tr("Save customer", "Hifadhi mteja"), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
