@@ -755,7 +755,7 @@ fun CartSheetContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Surface(
-                                color = if (cartItem.priceType == PriceType.RETAIL) Color(0xFF103828) else Color(0xFF382A10),
+                                color = if (cartItem.priceType == PriceType.RETAIL) StatusGreen.copy(alpha = 0.14f) else AmberAccent.copy(alpha = 0.14f),
                                 shape = RoundedCornerShape(6.dp),
                                 modifier = Modifier.clickable { onTogglePriceType(cartItem.item.id) }
                             ) {

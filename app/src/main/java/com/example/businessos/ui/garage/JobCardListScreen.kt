@@ -351,14 +351,14 @@ fun JobCardRow(
 @Composable
 fun JobStagePill(stage: JobStage) {
     val (bgColor, textColor) = when (stage) {
-        JobStage.INTAKE -> Pair(Color(0xFF1E2638), Color(0xFF93C5FD))
+        JobStage.INTAKE -> Pair(DarkSurface, Color(0xFF93C5FD))
         JobStage.DIAGNOSIS -> Pair(Color(0xFF2E1A38), StatusPurple)
         JobStage.PARTS_ASSIGNED -> Pair(Color(0xFF1B2B38), StatusBlue)
-        JobStage.AWAITING_APPROVAL -> Pair(Color(0xFF382A10), StatusAmber)
+        JobStage.AWAITING_APPROVAL -> Pair(AmberAccent.copy(alpha = 0.14f), StatusAmber)
         JobStage.IN_PROGRESS -> Pair(Color(0xFF381010), StatusRed)
-        JobStage.COMPLETED -> Pair(Color(0xFF103828), StatusGreen)
-        JobStage.INVOICED -> Pair(Color(0xFF103828), TealAccent)
-        JobStage.CANCELLED -> Pair(Color(0xFF282828), Color(0xFF9CA3AF))
+        JobStage.COMPLETED -> Pair(StatusGreen.copy(alpha = 0.14f), StatusGreen)
+        JobStage.INVOICED -> Pair(StatusGreen.copy(alpha = 0.14f), TealAccent)
+        JobStage.CANCELLED -> Pair(DarkSurface, Color(0xFF9CA3AF))
     }
 
     Surface(

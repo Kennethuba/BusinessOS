@@ -48,6 +48,9 @@ import com.example.businessos.ui.theme.TextOnAccent
 import com.example.businessos.ui.theme.TextPrimary
 import com.example.businessos.ui.theme.TextSecondary
 import com.example.businessos.ui.util.AppLanguageManager
+import com.example.businessos.util.BusinessKind
+import com.example.businessos.util.BusinessKindStore
+import com.example.businessos.util.CompanyLogo
 
 /** Three steps: name and modules, opening balances (optional), what to do next. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,6 +64,12 @@ fun SetupWizardScreen(
     var name by rememberSaveable { mutableStateOf("") }
     var useSales by rememberSaveable { mutableStateOf(true) }
     var useJobOrders by rememberSaveable { mutableStateOf(false) }
+    var kind by rememberSaveable { mutableStateOf(BusinessKind.GENERAL) }
+    var logoUri by rememberSaveable { mutableStateOf<String?>(null) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val logoPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri -> if (uri != null) logoUri = uri.toString() }
     var cashText by rememberSaveable { mutableStateOf("") }
     var mpesaText by rememberSaveable { mutableStateOf("") }
     var created by rememberSaveable { mutableStateOf(false) }
@@ -119,6 +128,26 @@ fun SetupWizardScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = fieldColors()
                     )
+                    Text(
+                        AppLanguageManager.tr("What kind of business is it?", "Biashara yako ni ya aina gani?"),
+                        style = MaterialTheme.typography.bodyLarge, color = TextSecondary
+                    )
+                    ModuleChoiceRow(
+                        title = AppLanguageManager.tr("Auto garage", "Gereji"),
+                        description = AppLanguageManager.tr("Repairs, spare parts, job orders", "Ukarabati, vipuri, kazi za wateja"),
+                        checked = kind == BusinessKind.GARAGE,
+                        onCheckedChange = { kind = BusinessKind.GARAGE; useSales = true; useJobOrders = true }
+                    )
+                    ModuleChoiceRow(
+                        title = AppLanguageManager.tr("Kariakor stall (leather)", "Kibanda cha Kariakor (ngozi)"),
+                        description = AppLanguageManager.tr("Leather, soles and goods; sell and make to order", "Ngozi, soli na bidhaa; uza na tengeneza kwa oda"),
+                        checked = kind == BusinessKind.STALL,
+                        onCheckedChange = { kind = BusinessKind.STALL; useSales = true; useJobOrders = true }
+                    )
+                    OutlinedButton(
+                        onClick = { logoPicker.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(if (logoUri == null) AppLanguageManager.tr("Add your logo (optional)", "Ongeza nembo yako (si lazima)") else AppLanguageManager.tr("Logo chosen. Tap to change", "Nembo imechaguliwa. Gusa kubadilisha")) }
                     Text(
                         AppLanguageManager.tr("What will you use? Pick one or both.", "Utatumia nini? Chagua kimoja au vyote."),
                         style = MaterialTheme.typography.bodyLarge, color = TextSecondary
@@ -191,7 +220,9 @@ fun SetupWizardScreen(
                                 isGarageEnabled = useJobOrders,
                                 openingCash = cash ?: Money.ZERO,
                                 openingMpesa = mpesa ?: Money.ZERO
-                            ) {
+                            ) { newId ->
+                                BusinessKindStore.set(context, newId, kind)
+                                logoUri?.let { CompanyLogo.save(context, newId, android.net.Uri.parse(it)) }
                                 created = true
                                 step = 2
                             }

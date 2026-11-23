@@ -1,5 +1,7 @@
 package com.example.businessos.ui.audit
 
+import com.example.businessos.ui.theme.DarkBackground
+import com.example.businessos.ui.theme.TextPrimary
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -81,7 +83,7 @@ private fun AuditShieldBanner(modifier: Modifier = Modifier) {
                 Text(
                     text = "Rekodi Zote za Wafanyakazi Zinalindwa Kisheria",
                     fontSize = 14.sp,
-                    color = Color.White,
+                    color = TextPrimary,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
@@ -114,7 +116,7 @@ fun AuditLogScreen(
     Scaffold(
         topBar = {
             Row(
-                modifier = Modifier.fillMaxWidth().background(Color(0xFF131824)),
+                modifier = Modifier.fillMaxWidth().background(DarkBackground),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {

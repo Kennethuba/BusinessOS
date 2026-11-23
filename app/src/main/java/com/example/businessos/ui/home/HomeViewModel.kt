@@ -54,6 +54,25 @@ class HomeViewModel(
         _message.value = null
     }
 
+    /** Saves the company name and contact details. */
+    fun saveProfile(name: String, phone: String, address: String, receiptFooter: String, onDone: () -> Unit) {
+        val business = currentBusiness.value ?: return
+        if (name.isBlank()) {
+            _message.value = "Enter the company name"
+            return
+        }
+        viewModelScope.launch {
+            repository.updateBusinessSettings(
+                name = name, phone = phone, address = address, receiptFooter = receiptFooter,
+                isShopEnabled = business.isShopEnabled, isGarageEnabled = business.isGarageEnabled,
+                allowNegativeStock = business.allowNegativeStock
+            ).onSuccess {
+                authRepository.updateActiveBusinessName(name.trim())
+                onDone()
+            }.onFailure { _message.value = it.message ?: "Could not save" }
+        }
+    }
+
     /** Turns the Sales and Job orders features on or off. Existing records are never deleted. */
     fun setModules(useSales: Boolean, useJobOrders: Boolean) {
         val business = currentBusiness.value ?: return

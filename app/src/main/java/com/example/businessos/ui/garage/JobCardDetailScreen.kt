@@ -464,7 +464,7 @@ fun JobCardDetailScreen(
                         }
                     } else {
                         Surface(
-                            color = Color(0xFF103828),
+                            color = StatusGreen.copy(alpha = 0.14f),
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.weight(1f)
                         ) {

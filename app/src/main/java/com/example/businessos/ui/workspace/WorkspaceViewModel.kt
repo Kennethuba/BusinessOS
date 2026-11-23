@@ -53,7 +53,7 @@ class WorkspaceViewModel(
         isGarageEnabled: Boolean,
         openingCash: Money = Money.ZERO,
         openingMpesa: Money = Money.ZERO,
-        onSuccess: () -> Unit
+        onSuccess: (String) -> Unit
     ) {
         if (name.isBlank()) {
             _errorMessage.value = "Business name cannot be empty"
@@ -71,7 +71,7 @@ class WorkspaceViewModel(
             )
             _isCreating.value = false
             result.onSuccess {
-                onSuccess()
+                onSuccess(it.id)
             }.onFailure {
                 _errorMessage.value = it.message ?: "Failed to create business"
             }

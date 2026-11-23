@@ -1,5 +1,6 @@
 package com.example.businessos
 
+import androidx.compose.foundation.layout.systemBarsPadding
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -48,7 +49,7 @@ class MainActivity : ComponentActivity() {
 
                 if (restored) {
                     val navController = rememberNavController()
-                    Box(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
                         NavGraph(
                             navController = navController,
                             viewModelFactory = app.viewModelFactory,

@@ -174,7 +174,7 @@ fun RoleBadge(role: Role) {
         Role.OWNER -> Pair(Color(0xFF3B2800), AmberAccent)
         Role.MANAGER -> Pair(Color(0xFF0C2E24), TealAccent)
         Role.CASHIER -> Pair(Color(0xFF1F2B1A), StatusGreen)
-        Role.VIEWER -> Pair(Color(0xFF282828), Color(0xFF9CA3AF))
+        Role.VIEWER -> Pair(DarkSurface, Color(0xFF9CA3AF))
     }
 
     Surface(
@@ -183,7 +183,7 @@ fun RoleBadge(role: Role) {
         border = androidx.compose.foundation.BorderStroke(1.dp, textColor.copy(alpha = 0.3f))
     ) {
         Text(
-            text = role.name,
+            text = role.name.lowercase().replaceFirstChar { it.uppercase() },
             style = MaterialTheme.typography.labelSmall,
             color = textColor,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),

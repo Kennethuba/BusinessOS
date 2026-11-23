@@ -1,5 +1,8 @@
 package com.example.businessos.ui.accounting
 
+import com.example.businessos.ui.theme.DarkBackground
+import com.example.businessos.ui.theme.TextPrimary
+import com.example.businessos.ui.theme.DarkSurface
 import com.example.businessos.ui.components.FullScreenForm
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -72,13 +75,13 @@ fun AccountingScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            Column(modifier = Modifier.fillMaxWidth().background(Color(0xFF131824))) {
+            Column(modifier = Modifier.fillMaxWidth().background(DarkBackground)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
                     BusinessOsTopBar(
                         title = com.example.businessos.ui.util.AppLanguageManager.tr("Accounts","Hesabu"),
@@ -91,7 +94,7 @@ fun AccountingScreen(
 
                 ScrollableTabRow(
                     selectedTabIndex = selectedTab,
-                    containerColor = Color(0xFF1A2234),
+                    containerColor = DarkSurface,
                     contentColor = AmberAccent,
                     edgePadding = 12.dp
                 ) {
@@ -319,7 +322,7 @@ private fun CashbookHeroCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF161E2E)),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface),
         border = BorderStroke(1.dp, AmberAccent.copy(alpha = 0.5f))
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
@@ -335,7 +338,7 @@ private fun CashbookHeroCard(
                 text = netProfit.formatted,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color.White
+                color = TextPrimary
             )
 
             Spacer(Modifier.height(16.dp))
@@ -621,7 +624,7 @@ private fun GeneralLedgerTab(
     val sdf = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        TabRow(selectedTabIndex = viewSubTab, containerColor = Color(0xFF161E2E)) {
+        TabRow(selectedTabIndex = viewSubTab, containerColor = DarkSurface) {
             Tab(selected = viewSubTab == 0, onClick = { viewSubTab = 0 }, text = { Text("Chati ya Akaunti", fontSize = 14.sp) })
             Tab(selected = viewSubTab == 1, onClick = { viewSubTab = 1 }, text = { Text("Miamala ya Journal", fontSize = 14.sp) })
         }
@@ -694,7 +697,7 @@ private fun ReportsTab(
             }
         }
 
-        if (advanced) TabRow(selectedTabIndex = reportType, containerColor = Color(0xFF1E2638)) {
+        if (advanced) TabRow(selectedTabIndex = reportType, containerColor = DarkSurface) {
             reportTitles.forEachIndexed { idx, title ->
                 Tab(
                     selected = reportType == idx,
@@ -945,7 +948,7 @@ private fun DailyCashUpTab(
     ) {
         item {
             Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF161E2E)),
+                colors = CardDefaults.cardColors(containerColor = DarkSurface),
                 shape = RoundedCornerShape(16.dp),
                 border = BorderStroke(1.dp, Color(0xFF3B82F6).copy(alpha = 0.5f)),
                 modifier = Modifier.fillMaxWidth()
@@ -976,11 +979,11 @@ private fun DailyCashUpTab(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("1. Hali ya Mauzo ya Leo Kwenye Mfumo", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 15.sp)
+                    Text("1. Hali ya Mauzo ya Leo Kwenye Mfumo", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 15.sp)
                     Spacer(Modifier.height(10.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("Mauzo ya Pesa Taslimu (Cash Sales):", color = Color(0xFF8B949E), fontSize = 14.sp)
-                        Text(expectedCashSales.formatted, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(expectedCashSales.formatted, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Spacer(Modifier.height(6.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -1011,7 +1014,7 @@ private fun DailyCashUpTab(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("2. Hesabu Pesa Zilizopo Sasa (Physical Count)", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 15.sp)
+                    Text("2. Hesabu Pesa Zilizopo Sasa (Physical Count)", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 15.sp)
                     Spacer(Modifier.height(12.dp))
 
                     OutlinedTextField(
@@ -1059,7 +1062,7 @@ private fun DailyCashUpTab(
                             Text(
                                 text = if (isBalanced) "HESABU ZIMELINGANA KIKAMILIFU" else if (isShortage) "TAHADHARI: KUNA UPUNGUFU (SHORTAGE)" else "KUNA ZIADA YA PESA (SURPLUS)",
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = TextPrimary,
                                 fontSize = 14.sp
                             )
                         }

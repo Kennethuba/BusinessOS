@@ -137,6 +137,23 @@ private fun AddItemForm(viewModel: PosViewModel, onClose: () -> Unit) {
     var cost by remember { mutableStateOf("") }
     var qty by remember { mutableStateOf("") }
     var low by remember { mutableStateOf("3") }
+    var category by remember { mutableStateOf("") }
+    var unit by remember { mutableStateOf("pcs") }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val kind = com.example.businessos.util.BusinessKindStore.get(context, viewModel.session.value?.activeBusinessId)
+    val categories = when (kind) {
+        com.example.businessos.util.BusinessKind.STALL -> listOf(
+            tr("Leather", "Ngozi"), tr("Soles", "Soli"), tr("Shoes", "Viatu"), tr("Belts", "Mikanda"),
+            tr("Bags", "Mikoba"), tr("Thread and glue", "Uzi na gundi"), tr("Dye and polish", "Rangi na kiwi")
+        )
+        com.example.businessos.util.BusinessKind.GARAGE -> listOf(
+            tr("Engine parts", "Vipuri vya injini"), tr("Brakes", "Breki"), tr("Tyres", "Matairi"),
+            tr("Oil and fluids", "Mafuta"), tr("Electrical", "Umeme"), tr("Body and paint", "Bodi na rangi"), tr("Tools", "Zana")
+        )
+        else -> emptyList()
+    }
+    val units = if (kind == com.example.businessos.util.BusinessKind.STALL)
+        listOf("pcs", "pair", "sq ft", "ft", "roll", "kg", "litre") else listOf("pcs", "pair", "set", "litre", "kg", "metre")
     val r = money(retail); val w = money(wholesale); val c = money(cost)
     val q = qty.trim().ifEmpty { "0" }.toLongOrNull()
     val valid = name.isNotBlank() && r != null && r > Money.ZERO && w != null && c != null && q != null && q >= 0
@@ -147,6 +164,14 @@ private fun AddItemForm(viewModel: PosViewModel, onClose: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(name, { name = it }, label = { Text(tr("Item name", "Jina la bidhaa")) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(category, { category = it }, label = { Text(tr("Category (optional)", "Aina (si lazima)")) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                if (categories.isNotEmpty()) androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(categories) { c -> FilterChip(selected = category == c, onClick = { category = c }, label = { Text(c) }) }
+                }
+                Text(tr("Sold by", "Inauzwa kwa"), color = TextSecondary)
+                androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(units) { u -> FilterChip(selected = unit == u, onClick = { unit = u }, label = { Text(u) }) }
+                }
                 NumberField(retail, { retail = it }, tr("Selling price (KES)", "Bei ya kuuza (KES)"))
                 NumberField(wholesale, { wholesale = it }, tr("Wholesale price (KES), optional", "Bei ya jumla (KES), si lazima"))
                 NumberField(cost, { cost = it }, tr("Buying price (KES), optional", "Bei ya kununua (KES), si lazima"))
@@ -160,7 +185,8 @@ private fun AddItemForm(viewModel: PosViewModel, onClose: () -> Unit) {
                 viewModel.addItemToInventory(
                     name = name.trim(), retail = r!!,
                     wholesale = if (w!! > Money.ZERO) w else r,
-                    stock = q!!, minStockLevel = low.toIntOrNull() ?: 3, cost = c!!
+                    stock = q!!, minStockLevel = low.toIntOrNull() ?: 3, cost = c!!,
+                    category = category.trim().ifBlank { null }, unit = unit
                 )
                 onClose()
             }) { Text(tr("Save", "Hifadhi")) }

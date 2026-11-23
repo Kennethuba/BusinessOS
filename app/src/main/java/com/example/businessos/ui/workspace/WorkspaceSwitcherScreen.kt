@@ -101,12 +101,12 @@ fun WorkspaceSwitcherScreen(
             ) {
                 Column {
                     Text(
-                        text = "Workspaces",
+                        text = AppLanguageManager.tr("Companies", "Kampuni"),
                         style = MaterialTheme.typography.headlineLarge,
                         color = TextPrimary
                     )
                     Text(
-                        text = "Signed in as ${session?.name ?: ""}",
+                        text = AppLanguageManager.tr("Signed in as", "Umeingia kama") + " ${session?.name ?: ""}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
                     )
@@ -138,14 +138,14 @@ fun WorkspaceSwitcherScreen(
                             modifier = Modifier.weight(1f)
                         )
                         TextButton(onClick = { viewModel.clearError() }) {
-                            Text("Dismiss", color = AmberAccent)
+                            Text(AppLanguageManager.tr("Dismiss", "Funga"), color = AmberAccent)
                         }
                     }
                 }
             }
 
             Text(
-                text = "SELECT ACTIVE BUSINESS",
+                text = AppLanguageManager.tr("Choose a company", "Chagua kampuni"),
                 style = MaterialTheme.typography.labelSmall,
                 color = TextMuted,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -191,12 +191,12 @@ fun WorkspaceSwitcherScreen(
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
-                                    text = "No Businesses Yet",
+                                    text = AppLanguageManager.tr("No companies yet", "Hakuna kampuni bado"),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = TextPrimary
                                 )
                                 Text(
-                                    text = "Create your auto garage or Kariakor market stall to begin.",
+                                    text = AppLanguageManager.tr("Add your auto garage or Kariakor stall to begin.", "Ongeza gereji yako au kibanda cha Kariakor kuanza."),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = TextSecondary,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
@@ -223,7 +223,7 @@ fun WorkspaceSwitcherScreen(
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Add New Business",
+                    text = AppLanguageManager.tr("Add a company", "Ongeza kampuni"),
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
@@ -257,20 +257,7 @@ fun BusinessCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (business.isGarageEnabled && !business.isShopEnabled) Color(0xFF2E2211) else Color(0xFF0F2B22)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (business.isGarageEnabled && !business.isShopEnabled) Icons.Default.Build else Icons.Default.Storefront,
-                    contentDescription = null,
-                    tint = if (business.isGarageEnabled && !business.isShopEnabled) AmberAccent else TealAccent,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            com.example.businessos.ui.components.BusinessLogo(business.id)
 
             Spacer(modifier = Modifier.width(14.dp))
 
@@ -284,7 +271,7 @@ fun BusinessCard(
                 Spacer(modifier = Modifier.height(2.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = if (business.isGarageEnabled && !business.isShopEnabled) "Auto Garage Pipeline" else if (business.isGarageEnabled && business.isShopEnabled) "Shop & Garage" else "Kariakor Stall (POS & Deni)",
+                        text = if (business.isGarageEnabled && business.isShopEnabled) AppLanguageManager.tr("Sales and job orders", "Mauzo na kazi") else if (business.isGarageEnabled) AppLanguageManager.tr("Job orders", "Kazi za wateja") else AppLanguageManager.tr("Sales", "Mauzo"),
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
                     )

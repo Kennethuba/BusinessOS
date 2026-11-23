@@ -1,5 +1,7 @@
 package com.example.businessos.ui.manual
 
+import com.example.businessos.ui.theme.DarkBackground
+import com.example.businessos.ui.theme.TextPrimary
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,11 +28,11 @@ fun UserManualScreen(
     Scaffold(
         topBar = {
             Row(
-                modifier = Modifier.fillMaxWidth().background(Color(0xFF131824)),
+                modifier = Modifier.fillMaxWidth().background(DarkBackground),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                 }
                 BusinessOsTopBar(
                     title = "Manual & User Guide",
@@ -159,7 +161,7 @@ private fun ManualHeaderCard() {
                         text = "Business OS Manual",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = TextPrimary
                     )
                     Text(
                         text = "Complete Field Guide & Operating Procedures",

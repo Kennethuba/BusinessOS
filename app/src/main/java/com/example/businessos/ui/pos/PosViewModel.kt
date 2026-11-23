@@ -124,6 +124,8 @@ class PosViewModel(
         stock: Long,
         minStockLevel: Int = 3,
         cost: Money = Money.ZERO,
+        category: String? = null,
+        unit: String = "pcs",
         onItemCreated: ((ItemEntity) -> Unit)? = null
     ) {
         viewModelScope.launch {
@@ -134,7 +136,9 @@ class PosViewModel(
                 wholesalePrice = wholesale,
                 initialStock = stock,
                 lowStockThreshold = minStockLevel,
-                costPrice = cost
+                costPrice = cost,
+                category = category,
+                unit = unit
             )
             result.onSuccess {
                 _successMessage.value = "Bidhaa ${it.name} imeongezwa dukani"

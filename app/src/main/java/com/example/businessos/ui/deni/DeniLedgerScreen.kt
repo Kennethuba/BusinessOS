@@ -200,7 +200,7 @@ fun DeniLedgerScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(10.dp))
-                                    .background(Color(0xFF382A10))
+                                    .background(AmberAccent.copy(alpha = 0.14f))
                                     .padding(horizontal = 12.dp, vertical = 8.dp)
                             ) {
                                 Text(
@@ -688,7 +688,7 @@ fun DeniCustomerCard(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (isOverdue) Color(0xFF451313) else if (diffDays <= 2) Color(0xFF382A10) else Color(0xFF0F2E28))
+                            .background(if (isOverdue) Color(0xFF451313) else if (diffDays <= 2) AmberAccent.copy(alpha = 0.14f) else Color(0xFF0F2E28))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
@@ -836,7 +836,7 @@ fun SetDueDateDialog(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) AmberAccent else Color(0xFF282828))
+                                .background(if (isSelected) AmberAccent else DarkSurface)
                                 .clickable { selectedDueDate = timestamp }
                                 .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center
@@ -1000,7 +1000,7 @@ fun AddCustomerDialog(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) AmberAccent else Color(0xFF282828))
+                                .background(if (isSelected) AmberAccent else DarkSurface)
                                 .clickable { selectedDueDate = timestamp }
                                 .padding(vertical = 6.dp),
                             contentAlignment = Alignment.Center

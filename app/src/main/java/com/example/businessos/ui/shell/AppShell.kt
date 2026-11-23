@@ -153,7 +153,8 @@ fun AppShell(
     onNavigateToAuditLog: () -> Unit,
     onNavigateToManual: () -> Unit,
     onNavigateToSecurity: () -> Unit,
-    onNavigateToReceipts: () -> Unit = {}
+    onNavigateToReceipts: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var backupMessage by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
@@ -388,6 +389,8 @@ fun AppShell(
             ModalDrawerSheet(drawerContainerColor = DarkSurface) {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
+                        com.example.businessos.ui.components.BusinessLogo(session?.activeBusinessId, size = 56.dp)
+                        Spacer(Modifier.height(10.dp))
                         Text(
                             text = companyName,
                             fontSize = 22.sp,
@@ -536,6 +539,9 @@ fun AppShell(
                         onSetModules = viewModel::setModules,
                         entries = buildList {
                             add(Entry(AppLanguageManager.tr("Companies", "Kampuni"), AppLanguageManager.tr("Switch or add a company", "Badilisha au ongeza kampuni"), Icons.Default.Business, onSwitchCompany))
+                            if (can(Permission.EDIT_BUSINESS_SETTINGS)) {
+                                add(Entry(AppLanguageManager.tr("Company profile", "Wasifu wa kampuni"), AppLanguageManager.tr("Name, logo, phone, address", "Jina, nembo, simu, anwani"), Icons.Default.Business, onNavigateToProfile))
+                            }
                             if (can(Permission.MANAGE_STAFF)) {
                                 add(Entry(AppLanguageManager.tr("Users", "Watumiaji"), AppLanguageManager.tr("Staff and roles", "Wafanyakazi na majukumu"), Icons.Default.People, onNavigateToStaff))
                             }

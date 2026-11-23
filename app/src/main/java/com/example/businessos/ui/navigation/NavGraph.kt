@@ -142,6 +142,7 @@ fun NavGraph(
                 onNavigateToStaff = { navController.navigate(Screen.StaffManagement.route) },
                 onNavigateToAuditLog = { navController.navigate(Screen.AuditLog.route) },
                 onNavigateToManual = { navController.navigate(Screen.UserManual.route) },
+                onNavigateToProfile = { navController.navigate(Screen.CompanyProfile.route) },
                 onNavigateToReceipts = { navController.navigate(Screen.Receipts.route) },
                 onNavigateToSecurity = { navController.navigate(Screen.Security.route) }
             )
@@ -248,6 +249,11 @@ fun NavGraph(
                 onSwitchWorkspace = { navController.navigate(Screen.WorkspaceSwitcher.route) },
                 onBack = { navController.popBackStack() }
             )
+        }
+
+        composable(Screen.CompanyProfile.route) {
+            val homeViewModel: HomeViewModel = viewModel(factory = viewModelFactory)
+            com.example.businessos.ui.workspace.CompanyProfileScreen(viewModel = homeViewModel, onBack = { navController.popBackStack() })
         }
 
         composable(Screen.Receipts.route) {

@@ -319,6 +319,13 @@ class AuthRepository(
         return Result.success(Unit)
     }
 
+    /** Keeps the signed-in session's company name in step after a rename. */
+    fun updateActiveBusinessName(name: String) {
+        val current = _session.value ?: return
+        _session.value = current.copy(activeBusinessName = name)
+        persist()
+    }
+
     fun logout() {
         _session.value = null
         sessionStore.clear()
