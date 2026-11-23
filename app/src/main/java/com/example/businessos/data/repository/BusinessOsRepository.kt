@@ -1,5 +1,9 @@
 package com.example.businessos.data.repository
 
+import com.example.businessos.data.model.DocumentType
+import com.example.businessos.data.model.PaymentType
+import com.example.businessos.data.local.entity.SaleItemEntity
+import com.example.businessos.data.local.entity.PaymentEntity
 import androidx.room.withTransaction
 import com.example.businessos.data.local.AppDatabase
 import com.example.businessos.data.local.dao.*
@@ -243,6 +247,11 @@ class BusinessOsRepository(
         val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
         return supplierDao.observeSuppliers(bizId)
     }
+
+    suspend fun getSaleItems(saleId: String): List<SaleItemEntity> = saleItemDao.getBySale(saleId)
+
+    suspend fun businessName(): String =
+        businessDao.getBusinessById(getActiveBusinessId())?.name.orEmpty()
 
     fun observePayments(): Flow<List<PaymentEntity>> {
         val bizId = authRepository.session.value?.activeBusinessId ?: return flowOf(emptyList())
@@ -774,7 +783,24 @@ class BusinessOsRepository(
             val customer = customerDao.getCustomerById(customerId, bizId)
                 ?: throw IllegalArgumentException("Customer not found")
 
+            if (amountPaid <= Money.ZERO) throw IllegalArgumentException("Enter an amount more than zero")
             customerDao.updateBalanceCents(customerId, bizId, -amountPaid.cents)
+
+            // A receipt record, so the payment can be listed and shared later.
+            paymentDao.insertPayment(
+                PaymentEntity(
+                    id = UUID.randomUUID().toString(),
+                    businessId = bizId,
+                    paymentNumber = documentCounterDao.nextNumber(bizId, DocumentType.PAYMENT, "RCT-"),
+                    paymentType = PaymentType.CUSTOMER_RECEIPT,
+                    amountCents = amountPaid.cents,
+                    paymentMethod = paymentMethod,
+                    referenceId = customerId,
+                    mpesaCode = mpesaCode,
+                    notes = customer.name,
+                    createdByUserId = getActiveUserId()
+                )
+            )
 
             val cashAccCode = if (paymentMethod == PaymentMethod.MPESA) "1020" else "1010"
             val cashAccount = accountDao.getAccountByCode(cashAccCode, bizId)

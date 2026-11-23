@@ -196,4 +196,14 @@ class LedgerInvariantTest {
         assertBooksBalance()
         assertTrue(repo.receiveStock(item.id, 0, Money(1)).isFailure)
     }
+
+    @Test
+    fun customerPaymentGetsAReceiptNumber() = runBlocking {
+        val c = repo.createCustomer("Mama Wanjiru", "0722000111", initialCredit = Money(100_000)).getOrThrow()
+        repo.recordDeniPayment(c.id, Money(40_000)).getOrThrow()
+        assertEquals(1L, scalar("SELECT COUNT(*) FROM payments"))
+        assertEquals(40_000L, scalar("SELECT amountCents FROM payments"))
+        assertTrue(repo.recordDeniPayment(c.id, Money.ZERO).isFailure)
+        assertBooksBalance()
+    }
 }

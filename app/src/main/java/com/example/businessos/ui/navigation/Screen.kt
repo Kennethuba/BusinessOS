@@ -26,6 +26,7 @@ sealed class Screen(val route: String) {
     object Accounting : Screen("accounting")
 
     // Operations & Sales Extensions
+    object Receipts : Screen("receipts")
     object Stock : Screen("stock")
     object StockAudit : Screen("stock_audit")
     object Layaway : Screen("layaway")

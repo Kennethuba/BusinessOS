@@ -53,6 +53,9 @@ class ViewModelFactory(
             modelClass.isAssignableFrom(LayawayViewModel::class.java) -> {
                 LayawayViewModel(authRepository, businessRepository) as T
             }
+            modelClass.isAssignableFrom(com.example.businessos.ui.receipts.ReceiptsViewModel::class.java) -> {
+                com.example.businessos.ui.receipts.ReceiptsViewModel(businessRepository) as T
+            }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
     }

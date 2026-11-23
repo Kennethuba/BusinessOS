@@ -152,7 +152,8 @@ fun AppShell(
     onNavigateToStaff: () -> Unit,
     onNavigateToAuditLog: () -> Unit,
     onNavigateToManual: () -> Unit,
-    onNavigateToSecurity: () -> Unit
+    onNavigateToSecurity: () -> Unit,
+    onNavigateToReceipts: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var backupMessage by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
@@ -373,8 +374,11 @@ fun AppShell(
         if (can(Permission.RECORD_EXPENSE)) {
             add(Entry(AppLanguageManager.tr("Purchases and expenses", "Manunuzi na gharama"), AppLanguageManager.tr("Suppliers, bills, expenses", "Wasambazaji, bili, gharama"), Icons.Default.ShoppingCart, onNavigateToAccounting))
         }
+        if (can(Permission.VIEW_FINANCIAL_REPORTS) || can(Permission.MAKE_SALE) || can(Permission.TAKE_PAYMENT)) {
+            add(Entry(AppLanguageManager.tr("Receipts", "Risiti"), AppLanguageManager.tr("Find and share a receipt", "Tafuta na tuma risiti"), Icons.Default.Receipt, onNavigateToReceipts))
+        }
         if (can(Permission.VIEW_FINANCIAL_REPORTS)) {
-            add(Entry(AppLanguageManager.tr("Invoices and receipts", "Ankara na risiti"), AppLanguageManager.tr("Invoices, cashbook", "Ankara, daftari la pesa"), Icons.Default.Receipt, onNavigateToAccounting))
+            add(Entry(AppLanguageManager.tr("Invoices", "Ankara"), AppLanguageManager.tr("Invoices, cashbook", "Ankara, daftari la pesa"), Icons.Default.Receipt, onNavigateToAccounting))
         }
     }
 
