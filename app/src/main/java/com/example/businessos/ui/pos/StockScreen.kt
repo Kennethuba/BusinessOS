@@ -140,7 +140,8 @@ private fun AddItemForm(viewModel: PosViewModel, onClose: () -> Unit) {
     var category by remember { mutableStateOf("") }
     var unit by remember { mutableStateOf("pcs") }
     val context = androidx.compose.ui.platform.LocalContext.current
-    val kind = com.example.businessos.util.BusinessKindStore.get(context, viewModel.session.value?.activeBusinessId)
+    val sessionNow by viewModel.session.collectAsState()
+    val kind = com.example.businessos.util.BusinessKindStore.get(context, sessionNow?.activeBusinessId)
     val categories = when (kind) {
         com.example.businessos.util.BusinessKind.STALL -> listOf(
             tr("Leather", "Ngozi"), tr("Soles", "Soli"), tr("Shoes", "Viatu"), tr("Belts", "Mikanda"),
