@@ -9,7 +9,4 @@
     <include domain="file" path="logos/" />
     <include domain="file" path="stock_images/" />
     <include domain="sharedpref" path="app_settings.xml" />
-    <exclude domain="sharedpref" path="session.xml" />
-    <exclude domain="sharedpref" path="app_lock.xml" />
-    <exclude domain="file" path="last_crash.txt" />
 </full-backup-content>
