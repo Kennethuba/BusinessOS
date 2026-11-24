@@ -1,5 +1,6 @@
 package com.example.businessos.ui.garage
 
+import com.example.businessos.ui.util.AppLanguageManager
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -77,10 +78,10 @@ fun VehicleHistoryScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.Default.ArrowBack, contentDescription = AppLanguageManager.tr("Back", "Rudi"), tint = TextPrimary)
                     }
                     Text(
-                        text = "Vehicle Repair History",
+                        text = AppLanguageManager.tr("Vehicle history", "Historia ya gari"),
                         style = MaterialTheme.typography.titleLarge,
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold
@@ -92,15 +93,15 @@ fun VehicleHistoryScreen(
                 OutlinedTextField(
                     value = searchPlate,
                     onValueChange = { searchPlate = it.uppercase() },
-                    label = { Text("Vehicle Registration Plate") },
-                    placeholder = { Text("e.g. KDL 456Z or KBZ") },
+                    label = { Text(AppLanguageManager.tr("Vehicle plate", "Namba ya gari")) },
+                    placeholder = { Text(AppLanguageManager.tr("e.g. KDL 456Z", "mf. KDL 456Z")) },
                     leadingIcon = {
                         Icon(Icons.Default.DirectionsCar, contentDescription = null, tint = AmberAccent)
                     },
                     trailingIcon = {
                         if (searchPlate.isNotEmpty()) {
                             IconButton(onClick = { searchPlate = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = TextMuted)
+                                Icon(Icons.Default.Clear, contentDescription = AppLanguageManager.tr("Clear", "Futa"), tint = TextMuted)
                             }
                         }
                     },
@@ -117,7 +118,7 @@ fun VehicleHistoryScreen(
             }
 
             Text(
-                text = "LIFETIME SERVICE RECORDS (${matchingJobs.size})",
+                text = AppLanguageManager.tr("Past jobs (${matchingJobs.size})", "Kazi za awali (${matchingJobs.size})"),
                 style = MaterialTheme.typography.labelSmall,
                 color = TextMuted,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
@@ -154,12 +155,12 @@ fun VehicleHistoryScreen(
                                 Icon(Icons.Default.History, contentDescription = null, tint = TealAccent, modifier = Modifier.size(40.dp))
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = if (searchPlate.isEmpty()) "Enter Plate to Search History" else "No repair records for $searchPlate",
+                                    text = if (searchPlate.isEmpty()) AppLanguageManager.tr("Enter a plate to search", "Weka namba ya gari kutafuta") else AppLanguageManager.tr("No records for $searchPlate", "Hakuna rekodi za $searchPlate"),
                                     color = TextPrimary,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "All past visits, parts replaced, and diagnoses for this vehicle will appear here.",
+                                    text = AppLanguageManager.tr("Past visits, parts and findings for this vehicle will show here.", "Ziara za awali, vipuri na matokeo ya gari hili yataonekana hapa."),
                                     color = TextSecondary,
                                     fontSize = 14.sp,
                                     modifier = Modifier.padding(top = 4.dp)

@@ -1,5 +1,6 @@
 package com.example.businessos.ui.accounting
 
+import com.example.businessos.ui.util.AppLanguageManager
 import com.example.businessos.ui.theme.DarkBackground
 import com.example.businessos.ui.theme.TextPrimary
 import com.example.businessos.ui.theme.DarkSurface
@@ -81,7 +82,7 @@ fun AccountingScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.Filled.ArrowBack, contentDescription = AppLanguageManager.tr("Back", "Rudi"), tint = TextPrimary)
                     }
                     BusinessOsTopBar(
                         title = com.example.businessos.ui.util.AppLanguageManager.tr("Accounts","Hesabu"),
@@ -125,7 +126,7 @@ fun AccountingScreen(
                         containerColor = Color(0xFFEF4444),
                         contentColor = Color.White,
                         icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                        text = { Text("Rekodi Matumizi", fontWeight = FontWeight.Bold) }
+                        text = { Text(AppLanguageManager.tr("Add expense", "Rekodi matumizi"), fontWeight = FontWeight.Bold) }
                     )
                 }
                 1 -> {
@@ -134,7 +135,7 @@ fun AccountingScreen(
                         containerColor = AmberAccent,
                         contentColor = TextOnAccent,
                         icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                        text = { Text("Ankara Mpya (New Invoice)", fontWeight = FontWeight.Bold) }
+                        text = { Text(AppLanguageManager.tr("New invoice", "Ankara mpya"), fontWeight = FontWeight.Bold) }
                     )
                 }
                 2 -> {
@@ -143,7 +144,7 @@ fun AccountingScreen(
                         containerColor = Color(0xFF3B82F6),
                         contentColor = Color.White,
                         icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                        text = { Text("Msambazaji Mpya (Add Supplier)", fontWeight = FontWeight.Bold) }
+                        text = { Text(AppLanguageManager.tr("New supplier", "Msambazaji mpya"), fontWeight = FontWeight.Bold) }
                     )
                 }
                 3 -> {
@@ -152,7 +153,7 @@ fun AccountingScreen(
                         containerColor = TealAccent,
                         contentColor = Color.White,
                         icon = { Icon(Icons.Filled.SwapHoriz, contentDescription = null) },
-                        text = { Text("Hamisha Pesa (Transfer)", fontWeight = FontWeight.Bold) }
+                        text = { Text(AppLanguageManager.tr("Move money", "Hamisha pesa"), fontWeight = FontWeight.Bold) }
                     )
                 }
                 else -> {}
@@ -296,8 +297,8 @@ private fun CashbookTab(
                         modifier = Modifier.fillMaxWidth().padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("Hakuna rekodi za matumizi", color = TextSecondary, fontWeight = FontWeight.Bold)
-                        Text("Bofya kitufe cha chini kuweka gharama za uendeshaji.", fontSize = 14.sp, color = TextMuted)
+                        Text(AppLanguageManager.tr("No expenses yet", "Hakuna matumizi bado"), color = TextSecondary, fontWeight = FontWeight.Bold)
+                        Text(AppLanguageManager.tr("Tap the button below to add an expense.", "Bofya kitufe cha chini kuweka gharama."), fontSize = 14.sp, color = TextMuted)
                     }
                 }
             }
@@ -327,7 +328,7 @@ private fun CashbookHeroCard(
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             Text(
-                text = "FAIDA SAFI YA BIASHARA (NET PROFIT)",
+                text = AppLanguageManager.tr("Net profit", "Faida safi"),
                 style = MaterialTheme.typography.labelSmall,
                 color = AmberAccent,
                 fontWeight = FontWeight.Bold,
@@ -347,7 +348,7 @@ private fun CashbookHeroCard(
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text("Pesa Zimeingia (Sales)", style = MaterialTheme.typography.bodySmall, color = Color(0xFF94A3B8))
+                    Text(AppLanguageManager.tr("Money in (sales)", "Pesa zilizoingia (mauzo)"), style = MaterialTheme.typography.bodySmall, color = Color(0xFF94A3B8))
                     Text(
                         totalSales.formatted,
                         fontWeight = FontWeight.Bold,
@@ -356,7 +357,7 @@ private fun CashbookHeroCard(
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("Gharama (Expenses)", style = MaterialTheme.typography.bodySmall, color = Color(0xFF94A3B8))
+                    Text(AppLanguageManager.tr("Expenses", "Gharama"), style = MaterialTheme.typography.bodySmall, color = Color(0xFF94A3B8))
                     Text(
                         "- ${totalExpenses.formatted}",
                         fontWeight = FontWeight.Bold,
@@ -374,7 +375,7 @@ private fun CashbookHeroCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        Text("Deni Nje (AR):", fontSize = 12.sp, color = Color(0xFFFBBF24))
+                        Text(AppLanguageManager.tr("Owed to you:", "Deni nje:"), fontSize = 12.sp, color = Color(0xFFFBBF24))
                         Text(totalDeni.formatted, fontWeight = FontWeight.Bold, color = Color(0xFFFBBF24), fontSize = 14.sp)
                     }
                 }
@@ -413,7 +414,7 @@ private fun ExpenseRowItem(expense: ExpenseEntity, onDelete: () -> Unit) {
                 )
                 Spacer(Modifier.width(8.dp))
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = Color(0xFFF87171).copy(alpha = 0.8f))
+                    Icon(Icons.Filled.Delete, contentDescription = AppLanguageManager.tr("Delete", "Futa"), tint = Color(0xFFF87171).copy(alpha = 0.8f))
                 }
             }
         }
@@ -449,10 +450,10 @@ private fun InvoicesTab(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("MADENI YA ANKARA (ACCOUNTS RECEIVABLE)", style = MaterialTheme.typography.labelSmall, color = StatusGreen, fontWeight = FontWeight.Bold)
+                        Text(AppLanguageManager.tr("Invoices owed to you", "Madeni ya ankara"), style = MaterialTheme.typography.labelSmall, color = StatusGreen, fontWeight = FontWeight.Bold)
                         Text(totalReceivables.formatted, style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.ExtraBold)
                     }
-                    Text("${invoices.size} Ankara", color = StatusGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("${invoices.size} invoices", "Ankara ${invoices.size}"), color = StatusGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
         }
@@ -465,8 +466,8 @@ private fun InvoicesTab(
                     border = BorderStroke(1.dp, CardBorder)
                 ) {
                     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Hakuna Ankara Zilizotolewa", color = TextSecondary, fontWeight = FontWeight.Bold)
-                        Text("Bofya 'Ankara Mpya' kutoa ankara ya huduma au mauzo.", fontSize = 14.sp, color = TextMuted)
+                        Text(AppLanguageManager.tr("No invoices yet", "Hakuna ankara bado"), color = TextSecondary, fontWeight = FontWeight.Bold)
+                        Text(AppLanguageManager.tr("Tap New invoice to bill a customer.", "Bofya 'Ankara mpya' kumtolea mteja ankara."), fontSize = 14.sp, color = TextMuted)
                     }
                 }
             }
@@ -511,7 +512,7 @@ private fun InvoicesTab(
                         Spacer(Modifier.height(8.dp))
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("Tarehe: ${sdf.format(Date(invoice.issueDate))}", fontSize = 12.sp, color = TextMuted)
+                            Text(AppLanguageManager.tr("Date: ${sdf.format(Date(invoice.issueDate))}", "Tarehe: ${sdf.format(Date(invoice.issueDate))}"), fontSize = 12.sp, color = TextMuted)
                             if (invoice.status != InvoiceStatus.PAID && invoice.status != InvoiceStatus.VOIDED) {
                                 Button(
                                     onClick = { onPayInvoice(invoice) },
@@ -519,7 +520,7 @@ private fun InvoicesTab(
                                     shape = RoundedCornerShape(8.dp),
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                                 ) {
-                                    Text("Pokea Malipo (${Money(invoice.balanceDueCents).formatted})", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text(AppLanguageManager.tr("Take payment (${Money(invoice.balanceDueCents).formatted})", "Pokea malipo (${Money(invoice.balanceDueCents).formatted})"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -556,8 +557,8 @@ private fun SuppliersTab(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("WASAMBAZAJI WA MZIGO (SUPPLIERS DIRECTORY)", style = MaterialTheme.typography.labelSmall, color = Color(0xFF60A5FA), fontWeight = FontWeight.Bold)
-                        Text("${suppliers.size} Wasambazaji", style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.ExtraBold)
+                        Text(AppLanguageManager.tr("Suppliers", "Wasambazaji"), style = MaterialTheme.typography.labelSmall, color = Color(0xFF60A5FA), fontWeight = FontWeight.Bold)
+                        Text(AppLanguageManager.tr("${suppliers.size} suppliers", "Wasambazaji ${suppliers.size}"), style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.ExtraBold)
                     }
                 }
             }
@@ -571,8 +572,8 @@ private fun SuppliersTab(
                     border = BorderStroke(1.dp, CardBorder)
                 ) {
                     Column(modifier = Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Hakuna Wasambazaji Waliorekodiwa", color = TextSecondary, fontWeight = FontWeight.Bold)
-                        Text("Bofya 'Msambazaji Mpya' kuongeza wasambazaji wa bidhaa au vipuri.", fontSize = 14.sp, color = TextMuted)
+                        Text(AppLanguageManager.tr("No suppliers yet", "Hakuna wasambazaji bado"), color = TextSecondary, fontWeight = FontWeight.Bold)
+                        Text(AppLanguageManager.tr("Tap New supplier to add one.", "Bofya 'Msambazaji mpya' kuongeza."), fontSize = 14.sp, color = TextMuted)
                     }
                 }
             }
@@ -625,8 +626,8 @@ private fun GeneralLedgerTab(
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         TabRow(selectedTabIndex = viewSubTab, containerColor = DarkSurface) {
-            Tab(selected = viewSubTab == 0, onClick = { viewSubTab = 0 }, text = { Text("Chati ya Akaunti", fontSize = 14.sp) })
-            Tab(selected = viewSubTab == 1, onClick = { viewSubTab = 1 }, text = { Text("Miamala ya Journal", fontSize = 14.sp) })
+            Tab(selected = viewSubTab == 0, onClick = { viewSubTab = 0 }, text = { Text(AppLanguageManager.tr("Accounts", AppLanguageManager.tr("Account", "Akaunti")), fontSize = 14.sp) })
+            Tab(selected = viewSubTab == 1, onClick = { viewSubTab = 1 }, text = { Text(AppLanguageManager.tr("Entries", "Miamala"), fontSize = 14.sp) })
         }
 
         Spacer(Modifier.height(12.dp))
@@ -657,8 +658,8 @@ private fun GeneralLedgerTab(
                             Text(entry.description, color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Aina: ${entry.sourceType.name} (${entry.side.name})", color = TextSecondary, fontSize = 12.sp)
-                                Text("Jumla: ${Money(entry.totalDebitCents).formatted}", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
+                                Text(AppLanguageManager.tr("Type: ${entry.sourceType.name}", "Aina: ${entry.sourceType.name}"), color = TextSecondary, fontSize = 12.sp)
+                                Text(AppLanguageManager.tr("Total: ${Money(entry.totalDebitCents).formatted}", "Jumla: ${Money(entry.totalDebitCents).formatted}"), fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
                             }
                         }
                     }
@@ -693,7 +694,7 @@ private fun ReportsTab(
                 label = { Text(com.example.businessos.ui.util.AppLanguageManager.tr("Advanced","Zaidi")) }
             )
             IconButton(onClick = onRefresh) {
-                Icon(Icons.Filled.Refresh, contentDescription = "Refresh", tint = AmberAccent)
+                Icon(Icons.Filled.Refresh, contentDescription = AppLanguageManager.tr("Refresh", "Onyesha upya"), tint = AmberAccent)
             }
         }
 
@@ -721,7 +722,7 @@ private fun ReportsTab(
 @Composable
 private fun ProfitAndLossView(pnl: ProfitAndLossReport?) {
     if (pnl == null) {
-        Text("Inapakia taarifa ya faida na hasara...", color = TextSecondary)
+        Text(AppLanguageManager.tr("Loading profit and loss...", "Inapakia faida na hasara..."), color = TextSecondary)
         return
     }
 
@@ -729,7 +730,7 @@ private fun ProfitAndLossView(pnl: ProfitAndLossReport?) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("MAPATO YA UENDESHAJI (REVENUE)", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("Income", "Mapato"), fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
                     pnl.revenueItems.forEach {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(it.accountName, color = TextSecondary, fontSize = 14.sp)
@@ -738,7 +739,7 @@ private fun ProfitAndLossView(pnl: ProfitAndLossReport?) {
                     }
                     Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.1f)).padding(vertical = 4.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Jumla ya Mapato:", fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Text(AppLanguageManager.tr("Total income:", "Jumla ya mapato:"), fontWeight = FontWeight.Bold, color = TextPrimary)
                         Text(pnl.totalRevenue.formatted, fontWeight = FontWeight.Bold, color = StatusGreen)
                     }
                 }
@@ -748,7 +749,7 @@ private fun ProfitAndLossView(pnl: ProfitAndLossReport?) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("GHARAMA ZA MOJA KWA MOJA (COGS)", fontWeight = FontWeight.Bold, color = Color(0xFFF87171), fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("Cost of goods sold", "Gharama za bidhaa zilizouzwa"), fontWeight = FontWeight.Bold, color = Color(0xFFF87171), fontSize = 14.sp)
                     pnl.costOfSalesItems.forEach {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(it.accountName, color = TextSecondary, fontSize = 14.sp)
@@ -757,7 +758,7 @@ private fun ProfitAndLossView(pnl: ProfitAndLossReport?) {
                     }
                     Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.1f)).padding(vertical = 4.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Faida ya Awali (Gross Profit):", fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Text(AppLanguageManager.tr("Gross profit:", "Faida ya awali:"), fontWeight = FontWeight.Bold, color = TextPrimary)
                         Text(pnl.grossProfit.formatted, fontWeight = FontWeight.Bold, color = if (pnl.grossProfit >= Money.ZERO) StatusGreen else StatusRed)
                     }
                 }
@@ -767,7 +768,7 @@ private fun ProfitAndLossView(pnl: ProfitAndLossReport?) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("MATUMIZI YA UENDESHAJI (OPERATING EXPENSES)", fontWeight = FontWeight.Bold, color = Color(0xFFF87171), fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("Running costs", "Gharama za uendeshaji"), fontWeight = FontWeight.Bold, color = Color(0xFFF87171), fontSize = 14.sp)
                     pnl.operatingExpenses.forEach {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(it.accountName, color = TextSecondary, fontSize = 14.sp)
@@ -776,7 +777,7 @@ private fun ProfitAndLossView(pnl: ProfitAndLossReport?) {
                     }
                     Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.1f)).padding(vertical = 4.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("FAIDA SAFI (NET PROFIT / LOSS):", fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+                        Text(AppLanguageManager.tr("Net profit or loss:", "Faida au hasara safi:"), fontWeight = FontWeight.ExtraBold, color = TextPrimary)
                         Text(pnl.netProfit.formatted, fontWeight = FontWeight.ExtraBold, color = if (pnl.netProfit >= Money.ZERO) StatusGreen else StatusRed, fontSize = 16.sp)
                     }
                 }
@@ -788,7 +789,7 @@ private fun ProfitAndLossView(pnl: ProfitAndLossReport?) {
 @Composable
 private fun BalanceSheetView(bs: BalanceSheetReport?) {
     if (bs == null) {
-        Text("Inapakia mizania ya biashara...", color = TextSecondary)
+        Text(AppLanguageManager.tr("Loading balance sheet...", "Inapakia mizania..."), color = TextSecondary)
         return
     }
 
@@ -796,12 +797,12 @@ private fun BalanceSheetView(bs: BalanceSheetReport?) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("RASILIMALI (ASSETS)", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
-                    Text("Current Assets: ${bs.totalCurrentAssets.formatted}", color = TextSecondary, fontSize = 14.sp)
-                    Text("Fixed Assets: ${bs.totalFixedAssets.formatted}", color = TextSecondary, fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("What you own", "Rasilimali"), fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("Current assets: ${bs.totalCurrentAssets.formatted}", "Rasilimali za sasa: ${bs.totalCurrentAssets.formatted}"), color = TextSecondary, fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("Fixed assets: ${bs.totalFixedAssets.formatted}", "Rasilimali za kudumu: ${bs.totalFixedAssets.formatted}"), color = TextSecondary, fontSize = 14.sp)
                     Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.1f)).padding(vertical = 4.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Jumla ya Rasilimali (Total Assets):", fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Text(AppLanguageManager.tr("Total assets:", "Jumla ya rasilimali:"), fontWeight = FontWeight.Bold, color = TextPrimary)
                         Text(bs.totalAssets.formatted, fontWeight = FontWeight.Bold, color = StatusGreen)
                     }
                 }
@@ -811,12 +812,12 @@ private fun BalanceSheetView(bs: BalanceSheetReport?) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("DHIMA & MTAJI (LIABILITIES & EQUITY)", fontWeight = FontWeight.Bold, color = Color(0xFF60A5FA), fontSize = 14.sp)
-                    Text("Current Liabilities: ${bs.totalCurrentLiabilities.formatted}", color = TextSecondary, fontSize = 14.sp)
-                    Text("Total Equity + Net Profit: ${bs.totalEquity.formatted}", color = TextSecondary, fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("What you owe and your capital", "Madeni na mtaji"), fontWeight = FontWeight.Bold, color = Color(0xFF60A5FA), fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("Current debts: ${bs.totalCurrentLiabilities.formatted}", "Madeni ya sasa: ${bs.totalCurrentLiabilities.formatted}"), color = TextSecondary, fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("Capital and profit: ${bs.totalEquity.formatted}", "Mtaji na faida: ${bs.totalEquity.formatted}"), color = TextSecondary, fontSize = 14.sp)
                     Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.1f)).padding(vertical = 4.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Jumla ya Dhima na Mtaji:", fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Text(AppLanguageManager.tr("Total debts and capital:", "Jumla ya madeni na mtaji:"), fontWeight = FontWeight.Bold, color = TextPrimary)
                         Text(bs.totalLiabilitiesAndEquity.formatted, fontWeight = FontWeight.Bold, color = Color(0xFF60A5FA))
                     }
                 }
@@ -830,8 +831,8 @@ private fun BalanceSheetView(bs: BalanceSheetReport?) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(modifier = Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Ulingano wa Mizania:", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextPrimary)
-                    Text(if (bs.isBalanced) "IMEPIMIKA (BALANCED)" else "HUKO SAWA", fontWeight = FontWeight.ExtraBold, color = if (bs.isBalanced) StatusGreen else StatusRed)
+                    Text(AppLanguageManager.tr("Balance check:", "Ukaguzi wa mizania:"), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextPrimary)
+                    Text(if (bs.isBalanced) AppLanguageManager.tr("Balanced", "Imelingana") else AppLanguageManager.tr("Does not balance", "Haijalingana"), fontWeight = FontWeight.ExtraBold, color = if (bs.isBalanced) StatusGreen else StatusRed)
                 }
             }
         }
@@ -841,18 +842,18 @@ private fun BalanceSheetView(bs: BalanceSheetReport?) {
 @Composable
 private fun TrialBalanceView(tb: TrialBalanceReport?) {
     if (tb == null) {
-        Text("Inapakia urari wa hesabu...", color = TextSecondary)
+        Text(AppLanguageManager.tr("Loading trial balance...", "Inapakia mizani ya majaribio..."), color = TextSecondary)
         return
     }
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         item {
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Akaunti", fontWeight = FontWeight.Bold, color = TextSecondary, fontSize = 14.sp)
+                Text(AppLanguageManager.tr("Account", "Akaunti"), fontWeight = FontWeight.Bold, color = TextSecondary, fontSize = 14.sp)
                 Row {
-                    Text("Debit", fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("Debit", "Debit"), fontWeight = FontWeight.Bold, color = StatusGreen, fontSize = 14.sp)
                     Spacer(Modifier.width(30.dp))
-                    Text("Credit", fontWeight = FontWeight.Bold, color = Color(0xFF60A5FA), fontSize = 14.sp)
+                    Text(AppLanguageManager.tr("Credit", "Credit"), fontWeight = FontWeight.Bold, color = Color(0xFF60A5FA), fontSize = 14.sp)
                 }
             }
         }
@@ -877,7 +878,7 @@ private fun TrialBalanceView(tb: TrialBalanceReport?) {
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
             ) {
                 Row(modifier = Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Jumla (Debits vs Credits):", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextPrimary)
+                    Text(AppLanguageManager.tr("Totals (debit and credit):", "Jumla (debit na credit):"), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextPrimary)
                     Text("${tb.totalDebit.formatted} / ${tb.totalCredit.formatted}", fontWeight = FontWeight.Bold, color = if (tb.isBalanced) StatusGreen else StatusRed)
                 }
             }
@@ -892,9 +893,9 @@ private fun AgeingAnalysisView(
 ) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
-            Text("Wateja Wanaodaiwa (AR Ageing)", fontWeight = FontWeight.Bold, color = AmberAccent, fontSize = 14.sp)
+            Text(AppLanguageManager.tr("Customers who owe", "Wateja wanaodaiwa"), fontWeight = FontWeight.Bold, color = AmberAccent, fontSize = 14.sp)
             if (ar == null || ar.customers.isEmpty()) {
-                Text("Hakuna wateja wa deni kwa sasa.", color = TextMuted, fontSize = 14.sp)
+                Text(AppLanguageManager.tr("Nobody owes you now.", "Hakuna anayekudai sasa."), color = TextMuted, fontSize = 14.sp)
             } else {
                 ar.customers.forEach { item ->
                     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
@@ -955,7 +956,7 @@ private fun DailyCashUpTab(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "KUFUNGA DAFTARI LA SIKU (DAILY CASH-UP)",
+                        text = AppLanguageManager.tr("Close the day", "Funga siku"),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF60A5FA),
                         fontWeight = FontWeight.Bold,
@@ -963,7 +964,7 @@ private fun DailyCashUpTab(
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        text = "Linganisha pesa taslimu kwenye droo na salio la M-Pesa dhidi ya mauzo ya mfumo wa leo.",
+                        text = AppLanguageManager.tr("Compare the cash in your drawer and your M-Pesa balance with today's sales.", "Linganisha pesa taslimu kwenye droo na salio la M-Pesa na mauzo ya leo."),
                         fontSize = 14.sp,
                         color = Color(0xFF8B949E)
                     )
@@ -979,27 +980,27 @@ private fun DailyCashUpTab(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("1. Hali ya Mauzo ya Leo Kwenye Mfumo", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 15.sp)
+                    Text(AppLanguageManager.tr("1. Today in the app", "1. Hali ya leo kwenye programu"), fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 15.sp)
                     Spacer(Modifier.height(10.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Mauzo ya Pesa Taslimu (Cash Sales):", color = Color(0xFF8B949E), fontSize = 14.sp)
+                        Text(AppLanguageManager.tr("Cash sales:", "Mauzo ya taslimu:"), color = Color(0xFF8B949E), fontSize = 14.sp)
                         Text(expectedCashSales.formatted, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Spacer(Modifier.height(6.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Matumizi ya Taslimu (Cash Outflows):", color = Color(0xFFF87171), fontSize = 14.sp)
+                        Text(AppLanguageManager.tr("Cash spent:", "Matumizi ya taslimu:"), color = Color(0xFFF87171), fontSize = 14.sp)
                         Text("- ${cashExpenses.formatted}", color = Color(0xFFF87171), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Spacer(Modifier.height(8.dp))
                     Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xFF30363D)))
                     Spacer(Modifier.height(8.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Pesa Inayotakiwa Drooni (Expected Cash):", color = AmberAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(AppLanguageManager.tr("Cash that should be in the drawer:", "Pesa inayotakiwa drooni:"), color = AmberAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         Text(expectedCashInDrawer.formatted, color = AmberAccent, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
                     }
                     Spacer(Modifier.height(10.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Mauzo ya M-Pesa Yanayotakiwa:", color = TealAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(AppLanguageManager.tr("M-Pesa sales expected:", "Mauzo ya M-Pesa yanayotarajiwa:"), color = TealAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         Text(expectedMpesaSales.formatted, color = TealAccent, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
                     }
                 }
@@ -1014,13 +1015,13 @@ private fun DailyCashUpTab(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("2. Hesabu Pesa Zilizopo Sasa (Physical Count)", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 15.sp)
+                    Text(AppLanguageManager.tr("2. Count what you have now", "2. Hesabu ulichonacho sasa"), fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 15.sp)
                     Spacer(Modifier.height(12.dp))
 
                     OutlinedTextField(
                         value = countedCashStr,
                         onValueChange = { countedCashStr = it },
-                        label = { Text("Pesa Taslimu Ulizohesabu Drooni (KSh)") },
+                        label = { Text(AppLanguageManager.tr("Cash you counted (KSh)", "Pesa taslimu ulizohesabu (KSh)")) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -1030,7 +1031,7 @@ private fun DailyCashUpTab(
                     OutlinedTextField(
                         value = actualMpesaStr,
                         onValueChange = { actualMpesaStr = it },
-                        label = { Text("Salio Halisi la M-Pesa Till / Paybill (KSh)") },
+                        label = { Text(AppLanguageManager.tr("Real M-Pesa till balance (KSh)", "Salio halisi la M-Pesa till (KSh)")) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -1060,7 +1061,7 @@ private fun DailyCashUpTab(
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                text = if (isBalanced) "HESABU ZIMELINGANA KIKAMILIFU" else if (isShortage) "TAHADHARI: KUNA UPUNGUFU (SHORTAGE)" else "KUNA ZIADA YA PESA (SURPLUS)",
+                                text = if (isBalanced) AppLanguageManager.tr("Everything matches", "Hesabu zimelingana kikamilifu") else if (isShortage) AppLanguageManager.tr("Warning: money is short", "Tahadhari: kuna upungufu") else AppLanguageManager.tr("There is extra money", "Kuna ziada ya pesa"),
                                 fontWeight = FontWeight.Bold,
                                 color = TextPrimary,
                                 fontSize = 14.sp
@@ -1093,22 +1094,22 @@ private fun AddExpenseDialog(
 
     FullScreenForm(
         onDismissRequest = onDismiss,
-        title = { Text("Rekodi Matumizi (Add Expense)", fontWeight = FontWeight.Bold) },
+        title = { Text(AppLanguageManager.tr("Add expense", "Rekodi matumizi"), fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Sababu ya Matumizi") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = amountStr, onValueChange = { amountStr = it }, label = { Text("Kiasi (KSh)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(AppLanguageManager.tr("What was it for", "Matumizi ya nini")) }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = amountStr, onValueChange = { amountStr = it }, label = { Text(AppLanguageManager.tr("Amount (KSh)", "Kiasi (KSh)")) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
 
-                Text("Aina ya Gharama:", fontSize = 14.sp, color = TextSecondary)
+                Text(AppLanguageManager.tr("Type of expense:", "Aina ya gharama:"), fontSize = 14.sp, color = TextSecondary)
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     categories.take(3).forEach { cat ->
                         FilterChip(selected = category == cat, onClick = { category = cat }, label = { Text(cat, fontSize = 12.sp) })
                     }
                 }
 
-                Text("Njia ya Malipo:", fontSize = 14.sp, color = TextSecondary)
+                Text(AppLanguageManager.tr("Paid with:", "Njia ya malipo:"), fontSize = 14.sp, color = TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = method == PaymentMethod.CASH, onClick = { method = PaymentMethod.CASH }, label = { Text("Cash") })
+                    FilterChip(selected = method == PaymentMethod.CASH, onClick = { method = PaymentMethod.CASH }, label = { Text(AppLanguageManager.tr("Cash", "Taslimu")) })
                     FilterChip(selected = method == PaymentMethod.MPESA, onClick = { method = PaymentMethod.MPESA }, label = { Text("M-Pesa") })
                 }
             }
@@ -1122,9 +1123,9 @@ private fun AddExpenseDialog(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
-            ) { Text("Hifadhi", fontWeight = FontWeight.Bold) }
+            ) { Text(AppLanguageManager.tr("Save", "Hifadhi"), fontWeight = FontWeight.Bold) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Ghairi") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi")) } }
     )
 }
 
@@ -1140,13 +1141,13 @@ private fun CreateInvoiceDialog(
 
     FullScreenForm(
         onDismissRequest = onDismiss,
-        title = { Text("Ankara Mpya (New Invoice)", fontWeight = FontWeight.Bold) },
+        title = { Text(AppLanguageManager.tr("New invoice", "Ankara mpya"), fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = customerName, onValueChange = { customerName = it }, label = { Text("Jina la Mteja") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = customerPhone, onValueChange = { customerPhone = it }, label = { Text("Nambari ya Simu") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Maelezo ya Huduma / Bidhaa") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = amountStr, onValueChange = { amountStr = it }, label = { Text("Kiasi cha Ankara (KSh)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = customerName, onValueChange = { customerName = it }, label = { Text(AppLanguageManager.tr("Customer name", "Jina la mteja")) }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = customerPhone, onValueChange = { customerPhone = it }, label = { Text(AppLanguageManager.tr("Phone number", "Nambari ya simu")) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text(AppLanguageManager.tr("What is it for", "Huduma au bidhaa")) }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = amountStr, onValueChange = { amountStr = it }, label = { Text(AppLanguageManager.tr("Invoice amount (KSh)", "Kiasi cha ankara (KSh)")) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
             }
         },
         confirmButton = {
@@ -1159,9 +1160,9 @@ private fun CreateInvoiceDialog(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
-            ) { Text("Toa Ankara", fontWeight = FontWeight.Bold) }
+            ) { Text(AppLanguageManager.tr("Create invoice", "Toa ankara"), fontWeight = FontWeight.Bold) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Ghairi") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi")) } }
     )
 }
 
@@ -1176,12 +1177,12 @@ private fun AddSupplierDialog(
 
     FullScreenForm(
         onDismissRequest = onDismiss,
-        title = { Text("Msambazaji Mpya (New Supplier)", fontWeight = FontWeight.Bold) },
+        title = { Text(AppLanguageManager.tr("New supplier", "Msambazaji mpya"), fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Jina la Msambazaji") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Nambari ya Simu") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Barua Pepe (Email)") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(AppLanguageManager.tr("Supplier name", "Jina la msambazaji")) }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text(AppLanguageManager.tr("Phone number", "Nambari ya simu")) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text(AppLanguageManager.tr("Email", "Barua pepe")) }, modifier = Modifier.fillMaxWidth())
             }
         },
         confirmButton = {
@@ -1192,9 +1193,9 @@ private fun AddSupplierDialog(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
-            ) { Text("Hifadhi", fontWeight = FontWeight.Bold) }
+            ) { Text(AppLanguageManager.tr("Save", "Hifadhi"), fontWeight = FontWeight.Bold) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Ghairi") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi")) } }
     )
 }
 
@@ -1211,10 +1212,10 @@ private fun AccountTransferDialog(
 
     FullScreenForm(
         onDismissRequest = onDismiss,
-        title = { Text("Uhamisho wa Pesa (Inter-Account Transfer)", fontWeight = FontWeight.Bold) },
+        title = { Text(AppLanguageManager.tr("Move money between accounts", "Hamisha pesa kati ya akaunti"), fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Chagua akaunti:", fontSize = 14.sp, color = TextSecondary)
+                Text(AppLanguageManager.tr("Choose accounts:", "Chagua akaunti:"), fontSize = 14.sp, color = TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = fromCode == "1020", onClick = { fromCode = "1020" }, label = { Text("Kutoka: M-Pesa") })
                     FilterChip(selected = fromCode == "1010", onClick = { fromCode = "1010" }, label = { Text("Kutoka: Cash") })
@@ -1226,14 +1227,14 @@ private fun AccountTransferDialog(
                 OutlinedTextField(
                     value = amountStr,
                     onValueChange = { amountStr = it },
-                    label = { Text("Kiasi cha Kuhamisha (KSh)") },
+                    label = { Text(AppLanguageManager.tr("Amount to move (KSh)", "Kiasi cha kuhamisha (KSh)")) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = reference,
                     onValueChange = { reference = it },
-                    label = { Text("Nambari ya Muamala / Ref") },
+                    label = { Text(AppLanguageManager.tr("Reference", "Namba ya muamala")) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -1247,9 +1248,9 @@ private fun AccountTransferDialog(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = TealAccent)
-            ) { Text("Tekeleza Uhamisho", fontWeight = FontWeight.Bold) }
+            ) { Text(AppLanguageManager.tr("Move the money", "Hamisha pesa"), fontWeight = FontWeight.Bold) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Ghairi") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi")) } }
     )
 }
 
@@ -1265,15 +1266,15 @@ private fun RecordInvoicePaymentDialog(
 
     FullScreenForm(
         onDismissRequest = onDismiss,
-        title = { Text("Pokea Malipo ya Ankara: ${invoice.invoiceNumber}", fontWeight = FontWeight.Bold) },
+        title = { Text(AppLanguageManager.tr("Take payment for invoice ${invoice.invoiceNumber}", "Pokea malipo ya ankara ${invoice.invoiceNumber}"), fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Mteja: ${invoice.customerName} • Baki: ${Money(invoice.balanceDueCents).formatted}", color = AmberAccent, fontWeight = FontWeight.SemiBold)
-                OutlinedTextField(value = amountStr, onValueChange = { amountStr = it }, label = { Text("Kiasi Kilicholipwa (KSh)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = reference, onValueChange = { reference = it }, label = { Text("Nambari ya M-Pesa / Cheque Ref") }, modifier = Modifier.fillMaxWidth())
+                Text(AppLanguageManager.tr("Customer: ${invoice.customerName} - Left: ${Money(invoice.balanceDueCents).formatted}", "Mteja: ${invoice.customerName} - Baki: ${Money(invoice.balanceDueCents).formatted}"), color = AmberAccent, fontWeight = FontWeight.SemiBold)
+                OutlinedTextField(value = amountStr, onValueChange = { amountStr = it }, label = { Text(AppLanguageManager.tr("Amount paid (KSh)", "Kiasi kilicholipwa (KSh)")) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = reference, onValueChange = { reference = it }, label = { Text(AppLanguageManager.tr("M-Pesa code or cheque number", "Msimbo wa M-Pesa au namba ya hundi")) }, modifier = Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = paymentMethod == PaymentMethod.MPESA, onClick = { paymentMethod = PaymentMethod.MPESA }, label = { Text("M-Pesa") })
-                    FilterChip(selected = paymentMethod == PaymentMethod.CASH, onClick = { paymentMethod = PaymentMethod.CASH }, label = { Text("Cash") })
+                    FilterChip(selected = paymentMethod == PaymentMethod.CASH, onClick = { paymentMethod = PaymentMethod.CASH }, label = { Text(AppLanguageManager.tr("Cash", "Taslimu")) })
                 }
             }
         },
@@ -1286,8 +1287,8 @@ private fun RecordInvoicePaymentDialog(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
-            ) { Text("Hifadhi Malipo", fontWeight = FontWeight.Bold) }
+            ) { Text(AppLanguageManager.tr("Save payment", "Hifadhi malipo"), fontWeight = FontWeight.Bold) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Ghairi") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi")) } }
     )
 }

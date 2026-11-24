@@ -1,5 +1,6 @@
 package com.example.businessos.ui.audit
 
+import com.example.businessos.ui.util.AppLanguageManager
 import com.example.businessos.ui.theme.DarkBackground
 import com.example.businessos.ui.theme.TextPrimary
 import androidx.compose.animation.*
@@ -73,7 +74,7 @@ private fun AuditShieldBanner(modifier: Modifier = Modifier) {
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(
-                    text = "DAFTARI LA USALAMA (AUDIT TRAIL)",
+                    text = AppLanguageManager.tr("Activity log", "Kumbukumbu ya shughuli"),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color(0xFF10B981),
                     fontWeight = FontWeight.Bold,
@@ -81,13 +82,13 @@ private fun AuditShieldBanner(modifier: Modifier = Modifier) {
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "Rekodi Zote za Wafanyakazi Zinalindwa Kisheria",
+                    text = AppLanguageManager.tr("Every staff action is recorded", "Kila kitendo cha mfanyakazi kinarekodiwa"),
                     fontSize = 14.sp,
                     color = TextPrimary,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "Mabadiliko ya bei, kufuta mauzo au kurekebisha hisa hayawezi kubadilishwa bila idhini ya mwenye biashara",
+                    text = AppLanguageManager.tr("Price changes, voided sales and stock changes cannot be hidden from the owner", "Mabadiliko ya bei, kufuta mauzo au kurekebisha akiba hayawezi kufichwa kwa mmiliki"),
                     fontSize = 12.sp,
                     color = Color(0xFF8B949E)
                 )
@@ -121,12 +122,12 @@ fun AuditLogScreen(
             ) {
                 IconButton(onClick = onBack) {
                     Icon(
-                        Icons.Filled.ArrowBack, contentDescription = "Back",
+                        Icons.Filled.ArrowBack, contentDescription = AppLanguageManager.tr("Back", "Rudi"),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 BusinessOsTopBar(
-                    title = "Audit Log",
+                    title = AppLanguageManager.tr("Activity log", "Kumbukumbu"),
                     businessName = businessName,
                     role = userRole,
                     onSwitchWorkspace = onSwitchWorkspace,
@@ -195,7 +196,7 @@ private fun AccessDeniedView(onBack: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(24.dp))
-            OutlinedButton(onClick = onBack) { Text("Go Back") }
+            OutlinedButton(onClick = onBack) { Text(AppLanguageManager.tr("Go back", "Rudi")) }
         }
     }
 }
@@ -246,7 +247,7 @@ private fun ActionTypeFilterRow(selected: ActionType?, onSelect: (ActionType?) -
             FilterChip(
                 selected = selected == null,
                 onClick = { onSelect(null) },
-                label = { Text("All") },
+                label = { Text(AppLanguageManager.tr("All", "Zote")) },
                 leadingIcon = if (selected == null) {
                     { Icon(Icons.Filled.Check, null, Modifier.size(14.dp)) }
                 } else null

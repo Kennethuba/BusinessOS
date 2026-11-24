@@ -1,5 +1,6 @@
 package com.example.businessos.ui.staff
 
+import com.example.businessos.ui.util.AppLanguageManager
 import com.example.businessos.ui.components.FullScreenForm
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -136,7 +137,7 @@ fun StaffManagementScreen(
                 ) {
                     Icon(
                         if (selectedTab == 0) Icons.Default.Add else Icons.Default.Payments,
-                        contentDescription = if (selectedTab == 0) "Invite Staff" else "Record Wage"
+                        contentDescription = if (selectedTab == 0) AppLanguageManager.tr("Add staff", "Ongeza mfanyakazi") else AppLanguageManager.tr("Pay wage", "Lipa mshahara")
                     )
                 }
             }
@@ -159,10 +160,10 @@ fun StaffManagementScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.Default.ArrowBack, contentDescription = AppLanguageManager.tr("Back", "Rudi"), tint = TextPrimary)
                     }
                     Text(
-                        text = "Wafanyakazi & Mishahara",
+                        text = AppLanguageManager.tr("Staff and wages", "Wafanyakazi na mishahara"),
                         style = MaterialTheme.typography.titleLarge,
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold
@@ -178,18 +179,18 @@ fun StaffManagementScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Wafanyakazi (${staffMembers.size})", fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) }
+                    text = { Text(AppLanguageManager.tr("Staff (${staffMembers.size})", "Wafanyakazi (${staffMembers.size})"), fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Mishahara (${wagePayments.size})", fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) }
+                    text = { Text(AppLanguageManager.tr("Wages (${wagePayments.size})", "Mishahara (${wagePayments.size})"), fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) }
                 )
             }
 
             if (selectedTab == 0) {
                 Text(
-                    text = "TEAM MEMBERS (${staffMembers.size})",
+                    text = AppLanguageManager.tr("Team (${staffMembers.size})", "Timu (${staffMembers.size})"),
                     style = MaterialTheme.typography.labelSmall,
                     color = TextMuted,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
@@ -224,7 +225,7 @@ fun StaffManagementScreen(
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(
-                            text = "JUMLA YA MISHAHARA ILIYOLIPWA (TOTAL WAGES)",
+                            text = AppLanguageManager.tr("Total wages paid", "Jumla ya mishahara iliyolipwa"),
                             style = MaterialTheme.typography.labelSmall,
                             color = AmberAccent
                         )
@@ -236,7 +237,7 @@ fun StaffManagementScreen(
                             color = StatusGreen
                         )
                         Text(
-                            text = "Malipo ${wagePayments.size} yaliyothibitishwa",
+                            text = AppLanguageManager.tr("${wagePayments.size} payments", "Malipo ${wagePayments.size}"),
                             fontSize = 12.sp,
                             color = TextSecondary
                         )
@@ -244,7 +245,7 @@ fun StaffManagementScreen(
                 }
 
                 Text(
-                    text = "HISTORIA YA MALIPO YA MISHAHARA",
+                    text = AppLanguageManager.tr("Wage payments", "Historia ya malipo ya mishahara"),
                     style = MaterialTheme.typography.labelSmall,
                     color = TextMuted,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
@@ -258,7 +259,7 @@ fun StaffManagementScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Hakuna malipo ya mishahara yaliyorekodiwa bado.\nBonyeza kitufe hapa chini kulipa mshahara.",
+                            text = AppLanguageManager.tr("No wages recorded yet.\nTap the button below to pay a wage.", "Hakuna malipo ya mishahara bado.\nBonyeza kitufe hapa chini kulipa mshahara."),
                             color = TextSecondary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             fontSize = 14.sp
@@ -349,7 +350,7 @@ fun StaffMemberCard(
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = member.name + if (isSelf) " (You)" else "",
+                        text = member.name + if (isSelf) AppLanguageManager.tr(" (you)", " (wewe)") else "",
                         style = MaterialTheme.typography.titleMedium,
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold
@@ -366,13 +367,13 @@ fun StaffMemberCard(
             if (isOwnerViewing && !isSelf && member.role != Role.OWNER) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onResetPin) {
-                        Icon(Icons.Default.Lock, contentDescription = "Reset PIN", tint = AmberAccent)
+                        Icon(Icons.Default.Lock, contentDescription = AppLanguageManager.tr("Reset PIN", "Weka PIN mpya"), tint = AmberAccent)
                     }
                     IconButton(onClick = onChangeRole) {
-                        Icon(Icons.Default.Edit, contentDescription = "Change Role", tint = AmberAccent)
+                        Icon(Icons.Default.Edit, contentDescription = AppLanguageManager.tr("Change role", "Badilisha jukumu"), tint = AmberAccent)
                     }
                     IconButton(onClick = onRemove) {
-                        Icon(Icons.Default.Delete, contentDescription = "Remove Staff", tint = StatusRed)
+                        Icon(Icons.Default.Delete, contentDescription = AppLanguageManager.tr("Remove", "Ondoa"), tint = StatusRed)
                     }
                 }
             }
@@ -399,13 +400,13 @@ fun InviteStaffDialog(
     FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
-        title = { Text("Add staff member", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = { Text(AppLanguageManager.tr("Add staff member", "Ongeza mfanyakazi"), color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Full name") },
+                    label = { Text(AppLanguageManager.tr("Full name", "Jina kamili")) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -421,7 +422,7 @@ fun InviteStaffDialog(
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
-                    label = { Text("Phone number") },
+                    label = { Text(AppLanguageManager.tr("Phone number", "Nambari ya simu")) },
                     placeholder = { Text("0712345678") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -439,12 +440,12 @@ fun InviteStaffDialog(
                 PinField(
                     value = pin,
                     onValueChange = { pin = it },
-                    label = "PIN for this person (${PinSecurity.PIN_LENGTH} digits)"
+                    label = AppLanguageManager.tr("PIN for this person (${PinSecurity.PIN_LENGTH} digits)", "PIN ya mtu huyu (tarakimu ${PinSecurity.PIN_LENGTH})")
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                Text("Role", style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                Text(AppLanguageManager.tr("Role", "Jukumu"), style = MaterialTheme.typography.labelSmall, color = TextMuted)
                 Spacer(modifier = Modifier.height(6.dp))
 
                 assignableRoles.forEach { (role, title, description) ->
@@ -481,11 +482,11 @@ fun InviteStaffDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
             ) {
-                Text("Add")
+                Text(AppLanguageManager.tr("Add", "Ongeza"))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", AppLanguageManager.tr("Cancel", "Ghairi")), color = TextSecondary) }
         }
     )
 }
@@ -501,7 +502,7 @@ fun EditRoleDialog(
     FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
-        title = { Text("Change role: ${member.name}", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = { Text(AppLanguageManager.tr("Change role: ${member.name}", "Badilisha jukumu: ${member.name}"), color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 assignableRoles.forEach { (role, title, _) ->
@@ -528,11 +529,11 @@ fun EditRoleDialog(
                 onClick = { onSave(selectedRole) },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
             ) {
-                Text("Save")
+                Text(AppLanguageManager.tr("Save", "Hifadhi"))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", AppLanguageManager.tr("Cancel", "Ghairi")), color = TextSecondary) }
         }
     )
 }
@@ -609,7 +610,7 @@ fun WagePaymentCard(payment: WagePaymentEntity) {
             if (!payment.notes.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Maelezo: ${payment.notes}",
+                    text = AppLanguageManager.tr("Notes: ${payment.notes}", "Maelezo: ${payment.notes}"),
                     fontSize = 12.sp,
                     color = TextSecondary
                 )
@@ -635,7 +636,7 @@ fun RecordWagePaymentDialog(
         containerColor = DarkSurface,
         title = {
             Text(
-                text = "Lipa Mshahara (Record Wage)",
+                text = AppLanguageManager.tr("Pay a wage", "Lipa mshahara"),
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold
             )
@@ -649,13 +650,13 @@ fun RecordWagePaymentDialog(
             ) {
                 if (staffMembers.isEmpty()) {
                     Text(
-                        text = "Hakuna wafanyakazi waliosajiliwa. Ongeza mfanyakazi kwanza.",
+                        text = AppLanguageManager.tr("No staff yet. Add a staff member first.", "Hakuna wafanyakazi bado. Ongeza mfanyakazi kwanza."),
                         color = StatusRed,
                         fontSize = 14.sp
                     )
                 } else {
                     Text(
-                        text = "Chagua Mfanyakazi:",
+                        text = AppLanguageManager.tr("Choose a staff member:", "Chagua mfanyakazi:"),
                         fontSize = 14.sp,
                         color = TextSecondary,
                         fontWeight = FontWeight.Bold
@@ -688,7 +689,7 @@ fun RecordWagePaymentDialog(
                     OutlinedTextField(
                         value = amountText,
                         onValueChange = { amountText = it },
-                        label = { Text("Kiasi cha Pesa (KSh)") },
+                        label = { Text(AppLanguageManager.tr("Amount (KSh)", "Kiasi cha pesa (KSh)")) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
@@ -701,7 +702,7 @@ fun RecordWagePaymentDialog(
                     )
 
                     Text(
-                        text = "Njia ya Malipo:",
+                        text = AppLanguageManager.tr("Payment method:", "Njia ya malipo:"),
                         fontSize = 14.sp,
                         color = TextSecondary,
                         fontWeight = FontWeight.Bold
@@ -738,7 +739,7 @@ fun RecordWagePaymentDialog(
                         OutlinedTextField(
                             value = mpesaCode,
                             onValueChange = { mpesaCode = it.uppercase() },
-                            label = { Text("M-Pesa Reference Code (e.g. QK89...)") },
+                            label = { Text(AppLanguageManager.tr("M-Pesa code (e.g. QK89...)", "Msimbo wa M-Pesa (mf. QK89...)")) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -753,7 +754,7 @@ fun RecordWagePaymentDialog(
                     OutlinedTextField(
                         value = notes,
                         onValueChange = { notes = it },
-                        label = { Text("Maelezo ya Ziada (Hiari)") },
+                        label = { Text(AppLanguageManager.tr("Notes (optional)", "Maelezo (si lazima)")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -788,12 +789,12 @@ fun RecordWagePaymentDialog(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
                 ) {
-                    Text("Thibitisha Malipo")
+                    Text(AppLanguageManager.tr("Confirm payment", "Thibitisha malipo"))
                 }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Ghairi", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary) }
         }
     )
 }
@@ -808,12 +809,12 @@ fun ResetPinDialog(
     FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
-        title = { Text("New PIN for $name", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = { Text(AppLanguageManager.tr("New PIN for $name", "PIN mpya ya $name"), color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
             Column {
-                Text("Choose a new ${PinSecurity.PIN_LENGTH}-digit PIN and tell $name privately.", color = TextSecondary, fontSize = 14.sp)
+                Text(AppLanguageManager.tr("Choose a new ${PinSecurity.PIN_LENGTH}-digit PIN and tell $name privately.", "Chagua PIN mpya ya tarakimu ${PinSecurity.PIN_LENGTH} na umwambie $name faraghani."), color = TextSecondary, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(10.dp))
-                PinField(value = pin, onValueChange = { pin = it }, label = "New PIN")
+                PinField(value = pin, onValueChange = { pin = it }, label = AppLanguageManager.tr("New PIN", "PIN mpya"))
             }
         },
         confirmButton = {
@@ -821,10 +822,10 @@ fun ResetPinDialog(
                 enabled = pin.length == PinSecurity.PIN_LENGTH,
                 onClick = { onReset(pin) },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
-            ) { Text("Save PIN") }
+            ) { Text(AppLanguageManager.tr("Save PIN", "Hifadhi PIN")) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", AppLanguageManager.tr("Cancel", "Ghairi")), color = TextSecondary) }
         }
     )
 }

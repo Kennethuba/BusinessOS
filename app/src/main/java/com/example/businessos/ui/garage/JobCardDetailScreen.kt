@@ -1,5 +1,6 @@
 package com.example.businessos.ui.garage
 
+import com.example.businessos.ui.util.AppLanguageManager
 import com.example.businessos.ui.components.FullScreenForm
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -134,8 +135,8 @@ fun JobCardDetailScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text("Job Card not found", color = TextSecondary)
-                TextButton(onClick = onNavigateBack) { Text("Go Back", color = AmberAccent) }
+                Text(AppLanguageManager.tr("Order not found", "Oda haipatikani"), color = TextSecondary)
+                TextButton(onClick = onNavigateBack) { Text(AppLanguageManager.tr("Go back", "Rudi"), color = AmberAccent) }
             }
         }
         return
@@ -164,7 +165,7 @@ fun JobCardDetailScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.Default.ArrowBack, contentDescription = AppLanguageManager.tr("Back", "Rudi"), tint = TextPrimary)
                     }
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -175,7 +176,7 @@ fun JobCardDetailScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Customer: ${jobCard.customerName}",
+                            text = AppLanguageManager.tr("Customer: ${jobCard.customerName}", "Mteja: ${jobCard.customerName}"),
                             fontSize = 14.sp,
                             color = TextSecondary
                         )
@@ -213,7 +214,7 @@ fun JobCardDetailScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "JOB DETAILS",
+                                text = AppLanguageManager.tr("Details", "Maelezo"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TextMuted
                             )
@@ -225,7 +226,7 @@ fun JobCardDetailScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Phone: ${jobCard.customerPhone}",
+                                text = AppLanguageManager.tr("Phone: ${jobCard.customerPhone}", "Simu: ${jobCard.customerPhone}"),
                                 fontSize = 14.sp,
                                 color = TextSecondary
                             )
@@ -247,7 +248,7 @@ fun JobCardDetailScreen(
                                     Icon(Icons.Default.Chat, contentDescription = null, tint = StatusGreen, modifier = Modifier.size(20.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "WHATSAPP ESTIMATE APPROVAL",
+                                        text = AppLanguageManager.tr("Ask for approval on WhatsApp", "Omba idhini kwa WhatsApp"),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = StatusGreen,
                                         fontWeight = FontWeight.Bold
@@ -255,7 +256,7 @@ fun JobCardDetailScreen(
                                 }
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "Send full cost breakdown of KSh ${jobCard.estimateTotal.toInt()} directly to ${jobCard.customerName}'s WhatsApp for 1-tap signoff.",
+                                    text = AppLanguageManager.tr("Send the full estimate of KSh ${jobCard.estimateTotal.toInt()} to ${jobCard.customerName} on WhatsApp.", "Tuma makadirio kamili ya KSh ${jobCard.estimateTotal.toInt()} kwa ${jobCard.customerName} kwa WhatsApp."),
                                     fontSize = 14.sp,
                                     color = TextPrimary
                                 )
@@ -275,7 +276,7 @@ fun JobCardDetailScreen(
                                 ) {
                                     Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Open WhatsApp with Estimate", fontWeight = FontWeight.Bold)
+                                    Text(AppLanguageManager.tr("Send estimate on WhatsApp", "Tuma makadirio kwa WhatsApp"), fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -297,7 +298,7 @@ fun JobCardDetailScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "PARTS & LABOR ESTIMATE",
+                                    text = AppLanguageManager.tr("Parts and labour estimate", "Makadirio ya vipuri na ufundi"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = TextMuted
                                 )
@@ -307,7 +308,7 @@ fun JobCardDetailScreen(
                                 }) {
                                     Icon(Icons.Default.Add, contentDescription = null, tint = AmberAccent, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Add Part", color = AmberAccent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                    Text(AppLanguageManager.tr("Add part", "Ongeza kipuri"), color = AmberAccent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
 
@@ -338,7 +339,7 @@ fun JobCardDetailScreen(
                                             onClick = { viewModel.removePartFromJob(jobCard.id, parts, part.id) },
                                             modifier = Modifier.size(24.dp)
                                         ) {
-                                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = StatusRed, modifier = Modifier.size(14.dp))
+                                            Icon(Icons.Default.Delete, contentDescription = AppLanguageManager.tr("Delete", "Futa"), tint = StatusRed, modifier = Modifier.size(14.dp))
                                         }
                                     }
                                 }
@@ -346,7 +347,7 @@ fun JobCardDetailScreen(
 
                             if (parts.isEmpty()) {
                                 Text(
-                                    text = "No parts or line items assigned yet.",
+                                    text = AppLanguageManager.tr("Nothing added yet.", "Hakuna kilichoongezwa bado."),
                                     color = TextMuted,
                                     fontSize = 14.sp,
                                     modifier = Modifier.padding(vertical = 8.dp)
@@ -359,7 +360,7 @@ fun JobCardDetailScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Total Estimate:", color = TextSecondary, fontWeight = FontWeight.Bold)
+                                Text(AppLanguageManager.tr("Total estimate:", "Jumla ya makadirio:"), color = TextSecondary, fontWeight = FontWeight.Bold)
                                 Text(
                                     text = "KSh ${jobCard.estimateTotal.toInt()}",
                                     style = MaterialTheme.typography.titleLarge,
@@ -381,7 +382,7 @@ fun JobCardDetailScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "STAGE AUDIT TIMELINE",
+                                text = AppLanguageManager.tr("History", "Historia"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TextMuted
                             )
@@ -446,7 +447,7 @@ fun JobCardDetailScreen(
                         ) {
                             Icon(Icons.Default.Replay, contentDescription = null, tint = StatusRed, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Reopen Stage", color = StatusRed, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text(AppLanguageManager.tr("Reopen a stage", "Fungua hatua tena"), color = StatusRed, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -458,7 +459,7 @@ fun JobCardDetailScreen(
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
                         ) {
-                            Text("Move to ${nextStage.title}", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text(AppLanguageManager.tr("Move to ${nextStage.title}", "Hamisha hadi ${nextStage.title}"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             Spacer(modifier = Modifier.width(6.dp))
                             Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
                         }
@@ -469,7 +470,7 @@ fun JobCardDetailScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Box(modifier = Modifier.padding(12.dp), contentAlignment = Alignment.Center) {
-                                Text("Vehicle Fully Invoiced", color = StatusGreen, fontWeight = FontWeight.Bold)
+                                Text(AppLanguageManager.tr("Fully invoiced", "Imeshatolewa ankara"), color = StatusGreen, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -540,14 +541,14 @@ fun AddPartDialog(
         containerColor = DarkSurface,
         title = {
             Column {
-                Text("Add Part / Labor Cost", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text("Ufundi wa Bodi, Rangi, Viti vya Ngozi, Matairi & Injini", color = TextMuted, fontSize = 14.sp)
+                Text(AppLanguageManager.tr("Add part or labour", "Ongeza kipuri au ufundi"), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(AppLanguageManager.tr("Body, paint, leather seats, tyres and engine work", "Ufundi wa bodi, rangi, viti vya ngozi, matairi na injini"), color = TextMuted, fontSize = 14.sp)
             }
         },
         text = {
             Column {
                 Text(
-                    text = "Quick Repair Presets (Gusa Kujaza Haraka):",
+                    text = AppLanguageManager.tr("Quick picks (tap to fill in):", "Chagua haraka (gusa kujaza):"),
                     fontSize = 12.sp,
                     color = AmberAccent,
                     fontWeight = FontWeight.Bold
@@ -583,8 +584,8 @@ fun AddPartDialog(
                 OutlinedTextField(
                     value = partName,
                     onValueChange = { partName = it },
-                    label = { Text("Item / Part Description") },
-                    placeholder = { Text("e.g. Front Shock Absorber Pair") },
+                    label = { Text(AppLanguageManager.tr("Item or part", "Bidhaa au kipuri")) },
+                    placeholder = { Text(AppLanguageManager.tr("e.g. Pair of front shock absorbers", "mf. Jozi ya shock absorber za mbele")) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -600,7 +601,7 @@ fun AddPartDialog(
                 OutlinedTextField(
                     value = partCost,
                     onValueChange = { partCost = it },
-                    label = { Text("Cost (KSh)") },
+                    label = { Text(AppLanguageManager.tr("Cost (KSh)", "Gharama (KSh)")) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -623,11 +624,11 @@ fun AddPartDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
             ) {
-                Text("Add to Estimate", fontWeight = FontWeight.Bold)
+                Text(AppLanguageManager.tr("Add to estimate", "Ongeza kwenye makadirio"), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary) }
         }
     )
 }
@@ -645,18 +646,18 @@ fun ReopenStageDialog(
     FullScreenForm(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
-        title = { Text("Roll Back / Reopen Stage", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = { Text(AppLanguageManager.tr("Reopen a stage", "Fungua hatua tena"), color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 Text(
-                    text = "Skipping stages backwards requires an explicit reason and will be logged to the business audit log.",
+                    text = AppLanguageManager.tr("Going back a stage needs a reason, and it is recorded in the activity log.", "Kurudi nyuma hatua kunahitaji sababu, na inarekodiwa kwenye kumbukumbu."),
                     color = StatusRed,
                     fontSize = 14.sp
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Text("Target Stage:", color = TextSecondary, fontSize = 14.sp)
+                Text(AppLanguageManager.tr("Go back to:", "Rudi hadi:"), color = TextSecondary, fontSize = 14.sp)
                 eligibleStages.forEach { stage ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -677,8 +678,8 @@ fun ReopenStageDialog(
                 OutlinedTextField(
                     value = reason,
                     onValueChange = { reason = it },
-                    label = { Text("Reason for Reopening") },
-                    placeholder = { Text("e.g. Customer requested additional diagnostic") },
+                    label = { Text(AppLanguageManager.tr("Reason", "Sababu")) },
+                    placeholder = { Text(AppLanguageManager.tr("e.g. Customer asked for another check", "mf. Mteja aliomba ukaguzi mwingine")) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AmberAccent,
@@ -698,11 +699,11 @@ fun ReopenStageDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = StatusRed, contentColor = TextOnAccent)
             ) {
-                Text("Confirm Rollback")
+                Text(AppLanguageManager.tr("Confirm", "Thibitisha"))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary) }
         }
     )
 }

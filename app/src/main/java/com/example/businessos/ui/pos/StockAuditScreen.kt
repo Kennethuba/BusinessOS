@@ -1,5 +1,6 @@
 package com.example.businessos.ui.pos
 
+import com.example.businessos.ui.util.AppLanguageManager
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -78,10 +79,10 @@ fun StockAuditScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.Default.ArrowBack, contentDescription = AppLanguageManager.tr("Back", "Rudi"), tint = TextPrimary)
                     }
                     BusinessOsTopBar(
-                        title = "Ukaguzi wa Akiba (Stock Take)",
+                        title = AppLanguageManager.tr("Count stock", "Hesabu akiba"),
                         businessName = businessName,
                         role = null,
                         onSwitchWorkspace = onSwitchWorkspace,
@@ -107,7 +108,7 @@ fun StockAuditScreen(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "MATOKEO YA UKAGUZI WA AKIBA (STOCK AUDIT SUMMARY)",
+                        text = AppLanguageManager.tr("Count summary", "Muhtasari wa hesabu"),
                         style = MaterialTheme.typography.labelSmall,
                         color = AmberAccent,
                         fontWeight = FontWeight.Bold
@@ -118,19 +119,19 @@ fun StockAuditScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Bidhaa Zote", fontSize = 12.sp, color = TextSecondary)
+                            Text(AppLanguageManager.tr("All items", "Bidhaa zote"), fontSize = 12.sp, color = TextSecondary)
                             Text("$totalItems", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                         }
                         Column {
-                            Text("Zilizolingana", fontSize = 12.sp, color = TextSecondary)
+                            Text(AppLanguageManager.tr("Matching", "Zilizolingana"), fontSize = 12.sp, color = TextSecondary)
                             Text("$balancedCount", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = StatusGreen)
                         }
                         Column {
-                            Text("Pungufu (Short)", fontSize = 12.sp, color = TextSecondary)
+                            Text(AppLanguageManager.tr("Short", "Pungufu"), fontSize = 12.sp, color = TextSecondary)
                             Text("$shortageCount", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (shortageCount > 0) StatusRed else TextPrimary)
                         }
                         Column {
-                            Text("Ziada (Surplus)", fontSize = 12.sp, color = TextSecondary)
+                            Text(AppLanguageManager.tr("Extra", "Ziada"), fontSize = 12.sp, color = TextSecondary)
                             Text("$surplusCount", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (surplusCount > 0) StatusAmber else TextPrimary)
                         }
                     }
@@ -145,7 +146,7 @@ fun StockAuditScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "HESABU HALISI DUKANI (ENTER PHYSICAL COUNT)",
+                    text = AppLanguageManager.tr("Enter what you counted", "Weka ulichohesabu"),
                     style = MaterialTheme.typography.labelSmall,
                     color = TextMuted,
                     fontWeight = FontWeight.Bold
@@ -157,7 +158,7 @@ fun StockAuditScreen(
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
-                            text = "${shortageCount + surplusCount} Zina Tofauti",
+                            text = AppLanguageManager.tr("${shortageCount + surplusCount} differ", "${shortageCount + surplusCount} zina tofauti"),
                             color = StatusAmber,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
@@ -213,7 +214,7 @@ fun StockAuditScreen(
                                 Spacer(Modifier.height(2.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = "Mfumo: ${item.stockQty}",
+                                        text = AppLanguageManager.tr("Book: ${item.stockQty}", "Mfumo: ${item.stockQty}"),
                                         color = TextSecondary,
                                         fontSize = 12.sp
                                     )
@@ -302,7 +303,7 @@ fun StockAuditScreen(
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = StatusGreen)
                         Spacer(Modifier.width(6.dp))
-                        Text("Tuma Ripoti", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(AppLanguageManager.tr("Send report", "Tuma ripoti"), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -328,7 +329,7 @@ fun StockAuditScreen(
                         } else {
                             Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Thibitisha Ukaguzi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text(AppLanguageManager.tr("Confirm count", "Thibitisha hesabu"), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

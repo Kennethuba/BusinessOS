@@ -69,10 +69,10 @@ fun LayawayScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.Default.ArrowBack, contentDescription = AppLanguageManager.tr("Back", "Rudi"), tint = TextPrimary)
                     }
                     BusinessOsTopBar(
-                        title = "Awali / Layaway (Malipo ya Kidogo)",
+                        title = AppLanguageManager.tr("Layaway (pay in instalments)", "Awali (lipa kidogo kidogo)"),
                         businessName = businessName,
                         role = null,
                         onSwitchWorkspace = onSwitchWorkspace,
@@ -87,7 +87,7 @@ fun LayawayScreen(
                 containerColor = AmberAccent,
                 contentColor = TextOnAccent
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Create Layaway")
+                Icon(Icons.Default.Add, contentDescription = AppLanguageManager.tr("New layaway", "Awali mpya"))
             }
         }
     ) { padding ->
@@ -107,7 +107,7 @@ fun LayawayScreen(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "JUMLA YA MALIPO YA AWALI (LAYAWAY OVERVIEW)",
+                        text = AppLanguageManager.tr("Layaway summary", "Muhtasari wa awali"),
                         style = MaterialTheme.typography.labelSmall,
                         color = AmberAccent,
                         fontWeight = FontWeight.Bold
@@ -118,15 +118,15 @@ fun LayawayScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Iliyolipwa (Deposits)", fontSize = 12.sp, color = TextSecondary)
+                            Text(AppLanguageManager.tr("Paid so far", "Iliyolipwa"), fontSize = 12.sp, color = TextSecondary)
                             Text("KSh ${totalDepositsCollected.toInt()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = StatusGreen)
                         }
                         Column {
-                            Text("Inayodaiwa (Balance)", fontSize = 12.sp, color = TextSecondary)
+                            Text(AppLanguageManager.tr("Still owed", "Inayodaiwa"), fontSize = 12.sp, color = TextSecondary)
                             Text("KSh ${totalBalanceRemaining.toInt()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = AmberAccent)
                         }
                         Column {
-                            Text("Thamani Yote", fontSize = 12.sp, color = TextSecondary)
+                            Text(AppLanguageManager.tr("Total value", "Thamani yote"), fontSize = 12.sp, color = TextSecondary)
                             Text("KSh ${totalActiveAmount.toInt()}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                         }
                     }
@@ -141,12 +141,12 @@ fun LayawayScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Zinazoendelea (${activeLayaways.size})", fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) }
+                    text = { Text(AppLanguageManager.tr("In progress (${activeLayaways.size})", "Zinazoendelea (${activeLayaways.size})"), fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Zilizokamilika (${completedLayaways.size})", fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) }
+                    text = { Text(AppLanguageManager.tr("Completed (${completedLayaways.size})", "Zilizokamilika (${completedLayaways.size})"), fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) }
                 )
             }
 
@@ -160,7 +160,7 @@ fun LayawayScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (selectedTab == 0) "Hakuna mauzo ya awali yanayoendelea kwa sasa.\nBonyeza + kuweka mteja wa awali."
+                        text = if (selectedTab == 0) AppLanguageManager.tr("No layaway in progress.\nTap + to add one.", "Hakuna awali inayoendelea.\nBonyeza + kuongeza.")
                         else "Hakuna mauzo yaliyokamilika bado.",
                         color = TextSecondary,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -274,7 +274,7 @@ fun LayawayCard(
 
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "Bidhaa: ${layaway.description}",
+                text = AppLanguageManager.tr("Item: ${layaway.description}", "Bidhaa: ${layaway.description}"),
                 fontWeight = FontWeight.SemiBold,
                 color = TextSecondary,
                 fontSize = 14.sp
@@ -298,13 +298,13 @@ fun LayawayCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Imelipwa: KSh ${layaway.totalPaid.toInt()} (${(progress * 100).toInt()}%)", color = StatusGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Text("Baki: KSh ${layaway.balanceDue.toInt()}", color = if (layaway.balanceDue > 0) AmberAccent else TextMuted, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Text("Jumla: KSh ${layaway.totalAmount.toInt()}", color = TextSecondary, fontSize = 14.sp)
+                Text(AppLanguageManager.tr("Paid: KSh ${layaway.totalPaid.toInt()} (${(progress * 100).toInt()}%)", "Imelipwa: KSh ${layaway.totalPaid.toInt()} (${(progress * 100).toInt()}%)"), color = StatusGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(AppLanguageManager.tr("Left: KSh ${layaway.balanceDue.toInt()}", "Baki: KSh ${layaway.balanceDue.toInt()}"), color = if (layaway.balanceDue > 0) AmberAccent else TextMuted, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(AppLanguageManager.tr("Total: KSh ${layaway.totalAmount.toInt()}", "Jumla: KSh ${layaway.totalAmount.toInt()}"), color = TextSecondary, fontSize = 14.sp)
             }
 
             Spacer(Modifier.height(6.dp))
-            Text("Tarehe ya Mwisho: $dueDateStr", color = if (isOverdue) StatusRed else TextMuted, fontSize = 12.sp)
+            Text(AppLanguageManager.tr("Due: $dueDateStr", "Tarehe ya mwisho: $dueDateStr"), color = if (isOverdue) StatusRed else TextMuted, fontSize = 12.sp)
 
             if (layaway.status == "ACTIVE") {
                 Spacer(Modifier.height(10.dp))
@@ -319,7 +319,7 @@ fun LayawayCard(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Kumbusha WhatsApp", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(AppLanguageManager.tr("Remind on WhatsApp", "Kumbusha WhatsApp"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -330,7 +330,7 @@ fun LayawayCard(
                     ) {
                         Icon(Icons.Default.Payment, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Lipa Sehemu", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(AppLanguageManager.tr("Take payment", "Lipa sehemu"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -354,14 +354,14 @@ fun CreateLayawayDialog(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = {
-            Text("Mauzo Mapya ya Awali (Layaway)", color = TextPrimary, fontWeight = FontWeight.Bold)
+            Text(AppLanguageManager.tr("New layaway", "Awali mpya"), color = TextPrimary, fontWeight = FontWeight.Bold)
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Jina la Mteja") },
+                    label = { Text(AppLanguageManager.tr("Customer name", "Jina la mteja")) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -369,7 +369,7 @@ fun CreateLayawayDialog(
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
-                    label = { Text("Nambari ya Simu (M-Pesa)") },
+                    label = { Text(AppLanguageManager.tr("Phone number (M-Pesa)", "Nambari ya simu (M-Pesa)")) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -378,7 +378,7 @@ fun CreateLayawayDialog(
                 OutlinedTextField(
                     value = desc,
                     onValueChange = { desc = it },
-                    label = { Text("Bidhaa Inayohifadhiwa (e.g. Leather Jacket)") },
+                    label = { Text(AppLanguageManager.tr("Item kept for them (e.g. leather jacket)", "Bidhaa inayohifadhiwa (mf. koti la ngozi)")) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -387,7 +387,7 @@ fun CreateLayawayDialog(
                     OutlinedTextField(
                         value = totalAmountText,
                         onValueChange = { totalAmountText = it },
-                        label = { Text("Jumla (KSh)") },
+                        label = { Text(AppLanguageManager.tr("Total (KSh)", "Jumla (KSh)")) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f)
@@ -396,7 +396,7 @@ fun CreateLayawayDialog(
                     OutlinedTextField(
                         value = depositPaidText,
                         onValueChange = { depositPaidText = it },
-                        label = { Text("Amana (Deposit)") },
+                        label = { Text(AppLanguageManager.tr("Deposit paid", "Amana")) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f)
@@ -406,7 +406,7 @@ fun CreateLayawayDialog(
                 OutlinedTextField(
                     value = daysCount,
                     onValueChange = { daysCount = it },
-                    label = { Text("Muda wa Kukamilisha (Siku, e.g. 30)") },
+                    label = { Text(AppLanguageManager.tr("Days to finish paying (e.g. 30)", "Siku za kukamilisha (mf. 30)")) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -426,11 +426,11 @@ fun CreateLayawayDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AmberAccent, contentColor = TextOnAccent)
             ) {
-                Text("Hifadhi Awali", fontWeight = FontWeight.Bold)
+                Text(AppLanguageManager.tr("Save", "Hifadhi"), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Ghairi", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary) }
         }
     )
 }
@@ -448,13 +448,13 @@ fun RecordLayawayPaymentDialog(
         onDismissRequest = onDismiss,
         containerColor = DarkSurface,
         title = {
-            Text("Lipa Sehemu ya Awali • ${layaway.customerName}", color = TextPrimary, fontWeight = FontWeight.Bold)
+            Text(AppLanguageManager.tr("Take payment: ${layaway.customerName}", "Lipa sehemu: ${layaway.customerName}"), color = TextPrimary, fontWeight = FontWeight.Bold)
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Salio Lililobaki: KSh ${layaway.balanceDue.toInt()}", color = AmberAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(AppLanguageManager.tr("Left to pay: KSh ${layaway.balanceDue.toInt()}", "Salio lililobaki: KSh ${layaway.balanceDue.toInt()}"), color = AmberAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
 
-                Text("Njia ya Malipo:", fontSize = 14.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
+                Text(AppLanguageManager.tr("Payment method:", "Njia ya malipo:"), fontSize = 14.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf(PaymentMethod.CASH to "Taslimu", PaymentMethod.MPESA to "M-Pesa", PaymentMethod.BANK to "Benki").forEach { (method, label) ->
                         val isSelected = selectedMethod == method
@@ -481,7 +481,7 @@ fun RecordLayawayPaymentDialog(
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { amountText = it },
-                    label = { Text("Kiasi Kinacholipwa Sasa (KSh)") },
+                    label = { Text(AppLanguageManager.tr("Amount paying now (KSh)", "Kiasi kinacholipwa sasa (KSh)")) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -498,11 +498,11 @@ fun RecordLayawayPaymentDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = StatusGreen, contentColor = TextOnAccent)
             ) {
-                Text("Thibitisha Malipo", fontWeight = FontWeight.Bold)
+                Text(AppLanguageManager.tr("Confirm payment", "Thibitisha malipo"), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Ghairi", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary) }
         }
     )
 }
