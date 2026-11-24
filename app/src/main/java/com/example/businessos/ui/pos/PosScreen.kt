@@ -273,13 +273,13 @@ fun PosScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.GridView,
-                                contentDescription = "Grid",
+                                contentDescription = AppLanguageManager.tr("Grid", "Gridi"),
                                 tint = if (isGridView) TextOnAccent else TextSecondary,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(Modifier.width(4.dp))
                             Text(
-                                text = "Grid",
+                                text = AppLanguageManager.tr("Grid", "Gridi"),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (isGridView) TextOnAccent else TextSecondary
@@ -297,13 +297,13 @@ fun PosScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.ViewList,
-                                contentDescription = "List",
+                                contentDescription = AppLanguageManager.tr("List", "Orodha"),
                                 tint = if (!isGridView) TextOnAccent else TextSecondary,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(Modifier.width(4.dp))
                             Text(
-                                text = "List",
+                                text = AppLanguageManager.tr("List", "Orodha"),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (!isGridView) TextOnAccent else TextSecondary
@@ -877,7 +877,7 @@ fun CheckoutDialog(
         containerColor = DarkSurface,
         title = {
             Text(
-                text = "Checkout • ${totalAmount.formatCompact()}",
+                text = AppLanguageManager.tr("Pay: ${totalAmount.formatCompact()}", "Lipa: ${totalAmount.formatCompact()}"),
                 style = MaterialTheme.typography.titleLarge,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold

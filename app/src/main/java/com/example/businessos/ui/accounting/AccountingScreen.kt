@@ -1217,12 +1217,12 @@ private fun AccountTransferDialog(
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(AppLanguageManager.tr("Choose accounts:", "Chagua akaunti:"), fontSize = 14.sp, color = TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = fromCode == "1020", onClick = { fromCode = "1020" }, label = { Text("Kutoka: M-Pesa") })
-                    FilterChip(selected = fromCode == "1010", onClick = { fromCode = "1010" }, label = { Text("Kutoka: Cash") })
+                    FilterChip(selected = fromCode == "1020", onClick = { fromCode = "1020" }, label = { Text(AppLanguageManager.tr("From: M-Pesa", "Kutoka: M-Pesa")) })
+                    FilterChip(selected = fromCode == "1010", onClick = { fromCode = "1010" }, label = { Text(AppLanguageManager.tr("From: Cash", "Kutoka: Taslimu")) })
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = toCode == "1030", onClick = { toCode = "1030" }, label = { Text("Kwenda: Benki") })
-                    FilterChip(selected = toCode == "1010", onClick = { toCode = "1010" }, label = { Text("Kwenda: Cash") })
+                    FilterChip(selected = toCode == "1030", onClick = { toCode = "1030" }, label = { Text(AppLanguageManager.tr("To: Bank", "Kwenda: Benki")) })
+                    FilterChip(selected = toCode == "1010", onClick = { toCode = "1010" }, label = { Text(AppLanguageManager.tr("To: Cash", "Kwenda: Taslimu")) })
                 }
                 OutlinedTextField(
                     value = amountStr,

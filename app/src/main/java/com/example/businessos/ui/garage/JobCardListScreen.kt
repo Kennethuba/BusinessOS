@@ -340,7 +340,7 @@ fun JobCardRow(
                 }
 
                 Text(
-                    text = "Estimate: KSh ${jobCard.estimateTotal.toInt()}",
+                    text = AppLanguageManager.tr("Estimate: KSh ${jobCard.estimateTotal.toInt()}", "Makadirio: KSh ${jobCard.estimateTotal.toInt()}"),
                     fontSize = 14.sp,
                     color = if (jobCard.estimateTotal > 0) StatusGreen else TextMuted,
                     fontWeight = FontWeight.Bold

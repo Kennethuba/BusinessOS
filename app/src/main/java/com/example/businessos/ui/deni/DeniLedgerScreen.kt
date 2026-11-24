@@ -527,7 +527,7 @@ fun DeniLedgerScreen(
                         mpesaCodeInput = ""
                         mpesaSmsInput = ""
                     }) {
-                        Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary)
+                        Text(AppLanguageManager.tr("Cancel", AppLanguageManager.tr("Cancel", "Ghairi")), color = TextSecondary)
                     }
                 }
             )
@@ -901,7 +901,7 @@ fun SetDueDateDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Ghairi", color = TextSecondary)
+                Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary)
             }
         }
     )
@@ -1030,7 +1030,7 @@ fun AddCustomerDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Ghairi", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(AppLanguageManager.tr("Cancel", "Ghairi"), color = TextSecondary) }
         }
     )
 }
