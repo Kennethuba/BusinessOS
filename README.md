@@ -29,6 +29,14 @@ Set these environment variables, then run `./gradlew assembleRelease` (or `bundl
 
 Without them the release build is created unsigned. Keep the keystore safe: losing it means you cannot update the app.
 
+## Backups and uninstalling
+- Uninstalling the app deletes everything stored on the phone.
+- Before uninstalling, open More, then Backup, and share the file to Google Drive or Gmail.
+- Android also backs the data up to your Google account on its own (usually daily, on Wi-Fi while charging).
+  It is restored when the app is installed again from the Play Store with the same Google account.
+  An APK installed by hand is not restored this way, so use Backup before updating or removing it.
+- After any restore, everyone enters their PIN again.
+
 ## Data safety
 - Money is stored as whole cents.
 - Sales and expenses are voided with a reason, never deleted.
